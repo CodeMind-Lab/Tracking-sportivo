@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.20.5';
+const APP_VERSION = '2026.08.20.7';
 
 const KEY = 'forma.v1';
 
@@ -1477,7 +1477,15 @@ function vistaReport() {
   const kp = media.p * 4, kc = media.c * 4, kg = media.g * 9, ks = kp + kc + kg || 1;
   const tp = t.prot * 4, tc = t.carb * 4, tg = t.gras * 9, ts = tp + tc + tg || 1;
   h += `<div class="panel"><div class="rep-h"><h3>Ripartizione dei macronutrienti</h3>
-      <span class="hint">media del periodo, a confronto con il piano</span></div>
+      <span class="hint">media del periodo, a confronto con il piano</span></div>`;
+
+  /* Senza registrazioni la ripartizione è 0/0/0 e la barra piatta: sembra un
+     dato, invece è l'assenza di dati. */
+  if (vuotoPer) {
+    h += `<p class="set-note" style="margin:0">Nessuna registrazione nel periodo: non c'è
+      niente da confrontare con il piano.</p></div>`;
+  } else {
+  h += `
     <div class="stat-row"><span>Come mangi</span><span>${r0(kp / ks * 100)} / ${r0(kc / ks * 100)} / ${r0(kg / ks * 100)}%</span></div>
     <div class="split">
       <i style="width:${kp / ks * 100}%;background:var(--prot)"></i>
@@ -1493,6 +1501,7 @@ function vistaReport() {
       <span><i style="background:var(--carb)"></i>carboidrati ${r0(media.c)} g</span>
       <span><i style="background:var(--gras)"></i>grassi ${r0(media.g)} g</span></div>
   </div>`;
+  }
 
   /* ---------- cosa mangio ---------- */
   const perAlimento = {};
@@ -1685,7 +1694,8 @@ function vistaSettings() {
     ${campo('giroObiettivo', 'Girovita da raggiungere', 'cm', 'profilo')}
     ${campo('altezza', 'Altezza', 'cm', 'profilo')}
     <p class="set-note">Le due righe tratteggiate nei grafici del report sono questi numeri.
-      Girovita diviso altezza sotto 0,50 è la soglia che il piano ti chiede di superare.</p>
+      Il rapporto girovita/altezza è l'indice che i nutrizionisti guardano più del peso:
+      sotto 0,50 è considerato il livello di riferimento.</p>
   </div>`;
 
   h += `<div class="panel"><div class="label">Recupero fra le serie</div>
@@ -1807,10 +1817,10 @@ function sheetQuantita() {
 
 function sheetMisura(m) {
   return `<h2 class="sheet-title">${m ? 'Modifica misura' : 'Nuova misura'}</h2>
-    <div class="field"><label>Data</label><input type="date" id="misD" value="${esc(m ? m.d : oggiISO())}"></div>
-    <div class="field"><label>Peso</label><input type="number" inputmode="decimal" step="0.1" id="misP" value="${m && m.peso ? m.peso : ''}" placeholder="kg"><span class="unit">kg</span></div>
-    <div class="field"><label>Girovita</label><input type="number" inputmode="decimal" step="0.5" id="misG" value="${m && m.giro ? m.giro : ''}" placeholder="cm"><span class="unit">cm</span></div>
-    <div class="field"><label>Massa grassa</label><input type="number" inputmode="decimal" step="0.1" id="misMg" value="${m && m.mg ? m.mg : ''}" placeholder="%"><span class="unit">%</span></div>
+    <div class="field"><label>Data</label><input type="date" id="misD" value="${esc(m ? m.d : oggiISO())}"><span class="unit"></span></div>
+    <div class="field"><label>Peso</label><input type="number" inputmode="decimal" step="0.1" id="misP" value="${m && m.peso ? m.peso : ''}"><span class="unit">kg</span></div>
+    <div class="field"><label>Girovita</label><input type="number" inputmode="decimal" step="0.5" id="misG" value="${m && m.giro ? m.giro : ''}"><span class="unit">cm</span></div>
+    <div class="field"><label>Massa grassa</label><input type="number" inputmode="decimal" step="0.1" id="misMg" value="${m && m.mg ? m.mg : ''}"><span class="unit">%</span></div>
     <p class="set-note">Peso e girovita ogni settimana, la bioimpedenza ogni otto.
       Pesati sempre nelle stesse condizioni: appena sveglio, a digiuno, dopo il bagno.</p>
     <button class="btn" data-act="salva-misura">Salva</button>
@@ -2064,7 +2074,9 @@ document.addEventListener('click', e => {
      motivo per cui da un pannello aperto non si poteva più uscire. */
   if (e.target.id === 'sheetBackdrop' || e.target.closest('#sheetClose')) { chiudiSheet(); return; }
 
-  const b = e.target.closest('button, [data-apri], [data-riga], [data-sess], [data-alim], [data-misura], [data-eser], [data-scheda], th[data-ord]');
+  /* [data-act] va incluso: senza, le due righe che non sono <button> — la data
+     in cima a Oggi e l'intestazione del piano — non rispondevano al tocco. */
+  const b = e.target.closest('button, [data-act], [data-apri], [data-riga], [data-sess], [data-alim], [data-misura], [data-eser], [data-scheda], th[data-ord]');
   if (!b) return;
   const d = b.dataset;
 
@@ -2605,7 +2617,7 @@ function sheetMappaPiano(giornate) {
     <p class="set-note" style="margin:0 0 12px">Assegna ogni giornata al giorno della
       settimana in cui la mangi. Puoi mettere la stessa giornata su più giorni, e
       lasciare "—" dove non vuoi un piano.</p>
-    ${GIORNI_SETT.map(g => `<div class="field">
+    ${GIORNI_SETT.map(g => `<div class="field sel">
       <label>${esc(g.l)}</label>
       <select id="map-${g.id}">
         <option value="-1">—</option>
