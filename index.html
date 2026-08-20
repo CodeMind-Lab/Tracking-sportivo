@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Forma</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Forma">
+<meta name="description" content="Gestionale di alimentazione e allenamento: diario, filtri, report.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- Sul Mac la navigazione sta a sinistra come nel gestionale; sul telefono
+     questa colonna sparisce e restano le schede in basso. -->
+<aside id="side">
+  <div class="side-logo">
+    <div class="mark"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div>
+    <div class="wm">CodeMind<span>.Lab</span></div>
+    <div class="sub">Forma · alimentazione e allenamento</div>
+  </div>
+  <nav class="side-menu">
+    <button data-tab="oggi"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg><span>Oggi</span></button>
+    <button data-tab="cibo"><svg viewBox="0 0 24 24"><path d="M5 3v8a3 3 0 0 0 6 0V3"/><path d="M8 11v10"/><path d="M18 3c-1.7 1.6-2.5 3.6-2.5 6 0 1.7.8 2.9 2.5 3.2V21"/></svg><span>Cibo</span></button>
+    <button data-tab="allena"><svg viewBox="0 0 24 24"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></svg><span>Allenamento</span></button>
+    <button data-tab="report"><svg viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M7 20V10M12 20V4M17 20v-7"/></svg><span>Report</span></button>
+    <button data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 14a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9h-.2a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 8a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5v-.2a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V10a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1z"/></svg><span>Impostazioni</span></button>
+  </nav>
+  <div class="side-foot" id="sideFoot"></div>
+</aside>
+
+<header id="topbar">
+  <button class="icon-btn" id="backBtn" hidden aria-label="Indietro">
+    <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+  <h1 id="topTitle">Forma</h1>
+  <button class="icon-btn" id="settingsBtn" aria-label="Impostazioni">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 14a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9h-.2a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 8a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5v-.2a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V10a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1z"/></svg>
+  </button>
+</header>
+
+<main id="app"></main>
+
+<button id="fab" aria-label="Aggiungi">
+  <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<nav id="tabbar">
+  <button data-tab="oggi"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg><span>Oggi</span></button>
+  <button data-tab="cibo"><svg viewBox="0 0 24 24"><path d="M5 3v8a3 3 0 0 0 6 0V3"/><path d="M8 11v10"/><path d="M18 3c-1.7 1.6-2.5 3.6-2.5 6 0 1.7.8 2.9 2.5 3.2V21"/></svg><span>Cibo</span></button>
+  <button data-tab="allena"><svg viewBox="0 0 24 24"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></svg><span>Allena</span></button>
+  <button data-tab="report"><svg viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M7 20V10M12 20V4M17 20v-7"/></svg><span>Report</span></button>
+</nav>
+
+<div id="rest" hidden>
+  <span id="restLabel">Recupero</span>
+  <b id="restTime">1:30</b>
+  <button id="restPlus">+30s</button>
+  <button id="restStop" aria-label="Ferma il recupero">
+    <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+</div>
+
+<div id="sheet" hidden>
+  <div id="sheetBackdrop"></div>
+  <div id="sheetPanel"><div id="sheetContent"></div></div>
+</div>
+
+<div id="toast" hidden></div>
+
+<script src="data.js"></script>
+<script src="importa.js"></script>
+<script src="app.js"></script>
+<script src="sync.js"></script>
+</body>
+</html>
