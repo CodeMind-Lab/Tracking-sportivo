@@ -273,6 +273,7 @@ const Sync = (() => {
         // Cancellato altrove. Se qui è stato modificato dopo, la modifica vince
         // e verrà ricaricato al prossimo invio.
         if (local && !(DB.dirty[r.id] && (local.updatedAt || 0) > remoteAt)) {
+          if (local.t === 'a') DB._alimentiCambiati = true;
           DB.items.splice(idx, 1);
           n++;
         }
@@ -284,9 +285,11 @@ const Sync = (() => {
         // Non farlo resuscitare se è stato cancellato qui più di recente.
         if (DB.graves[r.id] && DB.graves[r.id] > remoteAt) continue;
         DB.items.push(r.data);
+        if (r.data && r.data.t === 'a') DB._alimentiCambiati = true;
         n++;
       } else if (remoteAt > (local.updatedAt || 0)) {
         DB.items[idx] = r.data;
+        if (r.data && r.data.t === 'a') DB._alimentiCambiati = true;
         delete DB.dirty[r.id];
         n++;
       }

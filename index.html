@@ -66,6 +66,18 @@
   </button>
 </div>
 
+<div id="scan" hidden>
+  <video id="scanVideo" playsinline muted autoplay></video>
+  <div id="scanMask">
+    <div class="sm-box"><i></i></div>
+    <p id="scanStato">Inquadra il codice a barre</p>
+    <button id="scanManuale">Scrivi il codice a mano</button>
+  </div>
+  <button id="scanChiudi" aria-label="Chiudi">
+    <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+</div>
+
 <div id="sheet" hidden>
   <div id="sheetBackdrop"></div>
   <div id="sheetPanel">
@@ -80,6 +92,7 @@
 
 <script src="data.js"></script>
 <script src="importa.js"></script>
+<script src="scanner.js"></script>
 <script src="app.js"></script>
 <script src="sync.js"></script>
 </body>

@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.20.8';
+const APP_VERSION = '2026.08.20.9';
 
 const KEY = 'forma.v1';
 
@@ -70,6 +70,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 /* Ogni modifica passa da qui: segna l'ora e mette la riga in coda per il
    server. Chiamarla è l'unico modo perché una modifica esca dal telefono. */
 function tocca(it) {
+  if (it.t === 'a') scadeCatalogo();
   it.updatedAt = Date.now();
   DB.dirty[it.id] = 1;
   save();
@@ -86,6 +87,7 @@ function aggiungi(it) {
 function elimina(id) {
   const i = DB.items.findIndex(x => x.id === id);
   if (i < 0) return;
+  if (DB.items[i].t === 'a') scadeCatalogo();
   DB.items.splice(i, 1);
   DB.graves[id] = Date.now();
   delete DB.dirty[id];
@@ -194,14 +196,23 @@ function somma(righe) {
   return t;
 }
 
-/* Il catalogo completo: prima i tuoi alimenti, poi quelli del piano. In caso di
-   nome uguale vince il tuo, così puoi correggere un valore del database senza
-   toccare i file dell'app. */
+/* Il catalogo completo: prima i tuoi alimenti, poi quelli del database. In caso
+   di nome uguale vince il tuo, così puoi correggere un valore senza toccare i
+   file dell'app.
+ *
+ * Il risultato si tiene da parte: con quasi mille alimenti e quattordici punti
+ * del codice che lo chiedono, ricostruire la lista a ogni chiamata si sentiva
+ * mentre si scriveva nella casella di ricerca. Basta buttare la copia quando
+ * cambia qualcosa fra i TUOI alimenti — il resto è fisso. */
+let _catalogo = null;
 function catalogo() {
-  const miei = di('a').map(a => ({ n: a.n, k: a.k, p: a.p, c: a.c, g: a.g, cat: a.cat || 'Altro', nt: a.nt || '', id: a.id, mio: true }));
+  if (_catalogo) return _catalogo;
+  const miei = di('a').map(a => ({ n: a.n, k: a.k, p: a.p, c: a.c, g: a.g, cat: a.cat || 'Altro', nt: a.nt || '', id: a.id, ean: a.ean, mio: true }));
   const nomi = new Set(miei.map(a => a.n.toLowerCase()));
-  return miei.concat(ALIMENTI.filter(a => !nomi.has(a.n.toLowerCase())));
+  _catalogo = miei.concat(ALIMENTI.filter(a => !nomi.has(a.n.toLowerCase())));
+  return _catalogo;
 }
+const scadeCatalogo = () => { _catalogo = null; };
 
 /* Gli ultimi alimenti usati, dal più recente: nella pratica il 90% di ciò che
    mangi in una settimana sta nelle prime dieci righe. */
@@ -314,6 +325,9 @@ function vai(v, push) {
 function render() {
   const app = $('#app');
   const t = view.name;
+  /* Anche la sincronizzazione e il ripristino di un backup possono aver
+     cambiato i tuoi alimenti senza passare da tocca(). */
+  if (DB._alimentiCambiati) { DB._alimentiCambiati = false; scadeCatalogo(); }
 
   // vale anche per gli stati vecchi che tornano indietro dalla cronologia
   if (!view.d) view.d = oggiISO();
@@ -1831,6 +1845,9 @@ function sheetCerca(slot, q) {
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input id="cercaCibo" type="search" placeholder="Cerca fra ${catalogo().length} alimenti"
         value="${esc(q || '')}" autocapitalize="off" spellcheck="false" ${q ? '' : 'autofocus'}>
+      <button class="scan-btn" data-act="scansiona" aria-label="Scansiona il codice a barre">
+        <svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10.5 8v8M14 8v8M17 8v8"/></svg>
+      </button>
     </div>`;
 
   if (!query && ric.length) {
@@ -1900,7 +1917,10 @@ function sheetMisura(m) {
 }
 
 function sheetNuovoAlimento(nome, a) {
-  return `<h2 class="sheet-title">${a ? 'Modifica alimento' : 'Nuovo alimento'}</h2>
+  /* Il titolo dipende dall'id, non dal fatto che ci siano dei valori: quando
+     arriva dal codice a barre o da una copia i campi sono già pieni, ma
+     l'alimento non esiste ancora. */
+  return `<h2 class="sheet-title">${a && a.id ? 'Modifica alimento' : 'Nuovo alimento'}</h2>
     <p class="set-note" style="margin:0 0 12px">Valori per <b>100 g</b>, come sul database del piano.
       Se li copi da un'etichetta, controlla che non siano riferiti a una porzione.</p>
     <input class="txtin" id="alN" placeholder="Nome" value="${esc(a ? a.n : (nome || ''))}" style="margin-bottom:9px">
@@ -2001,6 +2021,129 @@ function sheetAzioniAlimento(nome) {
       ? `<button class="sheet-row" data-modal="${esc(a.n)}"><span class="ic">✏️</span><span>Modifica i valori</span></button>`
       : `<button class="sheet-row" data-copia="${esc(a.n)}"><span class="ic">📄</span>
           <span>Crea una copia mia<span class="hint">per correggere i valori</span></span></button>`}`;
+}
+
+/* ============================================================
+   Codice a barre
+   ============================================================
+
+   Il codice si cerca prima fra i tuoi alimenti: un prodotto già scansionato
+   una volta si ritrova senza rete. Solo se non c'è si chiede a Open Food
+   Facts, che è gratuito, non vuole chiavi ed è pieno di prodotti italiani.
+*/
+
+const OFF = 'https://world.openfoodfacts.org/api/v2/product/';
+
+function alimentoDaCodice(codice) {
+  return di('a').find(a => a.ean === codice) || null;
+}
+
+/* Le categorie di Open Food Facts sono migliaia: qui si tenta solo di
+   indovinare quella giusta fra le nostre otto, e in caso di dubbio si mette
+   "Altro" — tanto la si può cambiare prima di salvare. */
+function categoriaDaOFF(tags) {
+  const t = (tags || []).join(' ');
+  if (/dairy|milk|yogurt|cheese|egg|latt|formagg|uov/i.test(t)) return 'Latticini/Uova';
+  if (/meat|poultry|chicken|beef|pork|ham|salumi|carn/i.test(t)) return 'Carne';
+  if (/fish|seafood|tuna|salmon|pesc|tonn/i.test(t)) return 'Pesce';
+  if (/cereal|bread|pasta|rice|flour|pane|pasta|ris|farin|biscot/i.test(t)) return 'Cereali';
+  if (/legume|bean|lentil|chickpea|fagiol|lentic|cec/i.test(t)) return 'Legumi';
+  if (/fruit|vegetable|frutt|verdur|ortagg/i.test(t)) return 'Frutta/Verdura';
+  if (/oil|nut|seed|olio|frutta-secca|semi/i.test(t)) return 'Grassi';
+  return 'Altro';
+}
+
+async function cercaCodice(codice) {
+  const campi = 'product_name,product_name_it,brands,quantity,nutriments,categories_tags';
+  const r = await fetch(OFF + encodeURIComponent(codice) + '?fields=' + campi);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const d = await r.json();
+  if (d.status !== 1 || !d.product) return null;
+
+  const pr = d.product, nut = pr.nutriments || {};
+  /* Le calorie a volte ci sono già in kcal, a volte solo in kJ. */
+  let kcal = num(nut['energy-kcal_100g'], 0);
+  if (!kcal) kcal = num(nut['energy_100g'], 0) / 4.184;
+
+  const marca = (pr.brands || '').split(',')[0].trim();
+  const nome = (pr.product_name_it || pr.product_name || '').trim();
+  if (!nome) return null;
+
+  return {
+    n: nome + (marca && !nome.toLowerCase().includes(marca.toLowerCase()) ? ' · ' + marca : ''),
+    k: r1(kcal), p: r1(num(nut.proteins_100g, 0)),
+    c: r1(num(nut.carbohydrates_100g, 0)), g: r1(num(nut.fat_100g, 0)),
+    cat: categoriaDaOFF(pr.categories_tags), nt: pr.quantity || '', ean: codice
+  };
+}
+
+function avviaScansione() {
+  if (!Scanner.disponibile()) { sheetCodiceManuale('La fotocamera non è disponibile qui.'); return; }
+  const ctx = Object.assign({}, sheetCtx);      // il pasto scelto non va perso
+  chiudiSheet();
+  Scanner.apri(codice => { sheetCtx = ctx; gestisciCodice(codice); });
+}
+
+async function gestisciCodice(codice) {
+  /* Prima in casa: se l'hai già scansionato una volta salti la rete e vai
+     dritto alla quantità. */
+  const mio = alimentoDaCodice(codice);
+  if (mio) {
+    sheetCtx = Object.assign({}, sheetCtx, { alim: mio, q: '', slot: sheetCtx.slot || slotOra(), rigaId: null, pIdx: null });
+    apriSheet('', sheetCtx);
+    $('#sheetContent').innerHTML = sheetQuantita();
+    return;
+  }
+
+  if (!navigator.onLine) {
+    apriSheet(sheetNuovoAlimento('', { n: '', k: '', p: '', c: '', g: '', cat: 'Altro', nt: '', ean: codice }), { ean: codice });
+    toast('Sei offline: i valori mettili tu');
+    return;
+  }
+
+  apriSheet(`<h2 class="sheet-title">Cerco il prodotto…</h2>
+    <p class="set-note" style="margin:0 0 10px">Codice <b>${esc(codice)}</b></p>
+    <div class="spinner"></div>`, { ean: codice });
+
+  try {
+    const p = await cercaCodice(codice);
+    if (!p) {
+      apriSheet(sheetNuovoAlimento('', { n: '', k: '', p: '', c: '', g: '', cat: 'Altro', nt: '', ean: codice }), { ean: codice });
+      toast('Prodotto non in archivio: aggiungilo tu');
+      return;
+    }
+    apriSheet(sheetProdotto(p), { prodotto: p });
+  } catch (e) {
+    apriSheet(sheetNuovoAlimento('', { n: '', k: '', p: '', c: '', g: '', cat: 'Altro', nt: '', ean: codice }), { ean: codice });
+    toast('Non raggiungo Open Food Facts');
+  }
+}
+
+function sheetProdotto(p) {
+  const dubbio = !p.k || (!p.p && !p.c && !p.g);
+  return `<h2 class="sheet-title">Prodotto trovato</h2>
+    <div class="trovato">
+      <span class="ic" style="font-size:22px">${CAT_ICON[p.cat] || '🍽️'}</span>
+      <span class="tb">
+        <h3>${esc(p.n)}</h3>
+        <span class="meta"><b>${p.k}</b> kcal · ${p.p}P ${p.c}C ${p.g}G per 100 g</span>
+        <span class="ean">${esc(p.ean)}${p.nt ? ' · ' + esc(p.nt) : ''}</span>
+      </span>
+    </div>
+    <p class="set-note">${dubbio
+      ? 'Su questo prodotto Open Food Facts ha dati incompleti: controllali sull’etichetta prima di salvare.'
+      : 'I dati vengono da Open Food Facts, dove li inseriscono gli utenti. Un’occhiata all’etichetta non fa male.'}</p>
+    <button class="btn" data-act="salva-prodotto">Aggiungi ai miei alimenti</button>
+    <button class="btn sec" data-act="correggi-prodotto">Correggi i valori</button>`;
+}
+
+function sheetCodiceManuale(avviso) {
+  return apriSheet(`<h2 class="sheet-title">Codice a barre</h2>
+    ${avviso ? `<p class="set-note" style="margin:0 0 10px">${esc(avviso)}</p>` : ''}
+    <p class="set-note" style="margin:0 0 10px">Le tredici cifre stampate sotto alle barre.</p>
+    <input class="txtin" id="eanVal" type="text" inputmode="numeric" autocomplete="off"
+      placeholder="8076809513692" autofocus>
+    <button class="btn" data-act="cerca-ean">Cerca</button>`, Object.assign({}, sheetCtx));
 }
 
 /* ============================================================
@@ -2160,6 +2303,9 @@ document.addEventListener('click', e => {
   if (d.sub) { SUB[view.name] = d.sub; render(); return; }
 
   /* ---------- barra del recupero ---------- */
+  if (b.id === 'scanChiudi') { Scanner.chiudi(); return; }
+  if (b.id === 'scanManuale') { Scanner.chiudi(); sheetCodiceManuale(''); return; }
+
   if (b.id === 'restPlus') { recFine += 30000; tickRecupero(); return; }
   if (b.id === 'restStop') { fermaRecupero(); return; }
 
@@ -2431,6 +2577,9 @@ function azione(a, b) {
       n, k: num($('#alK').value), p: num($('#alP').value), c: num($('#alC').value),
       g: num($('#alG').value), cat: $('#alCat').value, nt: $('#alNt').value.trim()
     };
+    // il codice resta attaccato all'alimento: la prossima scansione lo trova
+    // qui e non serve più la rete
+    if (sheetCtx.ean) dati.ean = sheetCtx.ean;
     if (sheetCtx.alimId) {
       const it = DB.items.find(i => i.id === sheetCtx.alimId);
       Object.assign(it, dati); tocca(it);
@@ -2498,6 +2647,25 @@ function azione(a, b) {
     tocca(p); render(); return;
   }
 
+  if (a === 'scansiona') { avviaScansione(); return; }
+  if (a === 'cerca-ean') {
+    const c = ($('#eanVal').value || '').replace(/\D/g, '');
+    if (c.length < 8) { toast('Servono almeno otto cifre'); return; }
+    gestisciCodice(c); return;
+  }
+  if (a === 'salva-prodotto') {
+    const p = sheetCtx.prodotto;
+    const it = aggiungi({ t: 'a', n: p.n, k: p.k, p: p.p, c: p.c, g: p.g, cat: p.cat, nt: p.nt, ean: p.ean });
+    sheetCtx = Object.assign({}, sheetCtx, { alim: it, q: '', slot: sheetCtx.slot || slotOra(), rigaId: null, pIdx: null });
+    $('#sheetContent').innerHTML = sheetQuantita();
+    toast('Salvato fra i tuoi alimenti');
+    return;
+  }
+  if (a === 'correggi-prodotto') {
+    const p = sheetCtx.prodotto;
+    apriSheet(sheetNuovoAlimento('', p), { ean: p.ean, slot: sheetCtx.slot });
+    return;
+  }
   if (a === 'importa-piano') { scegliFile('piano'); return; }
   if (a === 'importa-scheda') { scegliFile('scheda'); return; }
   if (a === 'conferma-piano') { confermaPiano(); return; }
@@ -2537,6 +2705,7 @@ function azione(a, b) {
             ' voci del backup?')) return;
           DB.items = dati.items;
           DB.settings = Object.assign(DB.settings, dati.settings || {});
+          scadeCatalogo();
           /* Tutto va rimandato al server: dal suo punto di vista è roba nuova. */
           DB.dirty = {};
           for (const i of DB.items) DB.dirty[i.id] = 1;
@@ -2677,10 +2846,20 @@ function indiceAlimenti() {
 
 function trovaAlimento(nome, ix) {
   const k = nomeRidotto(nome);
+  if (!k) return null;
   if (ix[k]) return ix[k];
+
+  /* Con quasi mille voci il primo che "contiene" non basta più: "riso"
+     pescherebbe un qualunque risotto. Si preferisce chi comincia allo stesso
+     modo, e fra i candidati il nome più corto — cioè il meno specifico, che è
+     quasi sempre quello giusto quando il piano scrive solo "Riso basmati". */
   const chiavi = Object.keys(ix);
-  const dentro = chiavi.find(c => c.includes(k) || k.includes(c));
-  return dentro ? ix[dentro] : null;
+  const inizia = chiavi.filter(c => c.startsWith(k) || k.startsWith(c));
+  if (inizia.length) return ix[inizia.sort((a, b) => a.length - b.length)[0]];
+
+  const dentro = chiavi.filter(c => c.includes(k) || k.includes(c));
+  if (!dentro.length) return null;
+  return ix[dentro.sort((a, b) => a.length - b.length)[0]];
 }
 
 /* ---------- piano: quale giornata in quale giorno ---------- */
@@ -2899,12 +3078,25 @@ document.addEventListener('change', e => {
    ============================================================ */
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !$('#sheet').hidden) chiudiSheet();
+  if (e.key !== 'Escape') return;
+  if (!$('#scan').hidden) { Scanner.chiudi(); return; }
+  if (!$('#sheet').hidden) chiudiSheet();
+});
+
+/* Uscendo dall'app la fotocamera va spenta: lasciarla accesa in sottofondo
+   consuma batteria e accende la spia senza motivo. */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && typeof Scanner !== 'undefined') Scanner.chiudi();
 });
 
 window.addEventListener('popstate', e => {
   /* Con un pannello aperto, il gesto "indietro" deve chiudere quello, non
      cambiare schermata: è quello che si aspetta chi lo usa. */
+  if (!$('#scan').hidden) {
+    Scanner.chiudi();
+    history.pushState(view, '', '');
+    return;
+  }
   if (!$('#sheet').hidden) {
     chiudiSheet();
     history.pushState(view, '', '');

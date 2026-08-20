@@ -30,9 +30,13 @@ una volta sola e si ritrovano sull'altro dispositivo.
 
 ### Cosa è già dentro e cosa metti tu
 
-È **precaricato** il **database dei 71 alimenti** (CREA-Alimenti / LARN IV revisione) con
-i valori per 100 g. I bersagli giornalieri partono da numeri generici: la prima cosa da
-fare è metterci i tuoi, in **Impostazioni → Bersagli giornalieri**.
+È **precaricato** il **database degli alimenti** con i valori per 100 g, preso dalle
+*Tabelle di Composizione degli Alimenti* del **CREA** (Centro di ricerca alimenti e
+nutrizione) — la fonte italiana di riferimento. Ai prodotti confezionati ci pensa la
+scansione del codice a barre.
+
+I bersagli giornalieri partono invece da numeri generici: la prima cosa da fare è
+metterci i tuoi, in **Impostazioni → Bersagli giornalieri**.
 
 Li **componi tu**: il piano della settimana e le schede di allenamento — a mano oppure
 **caricando un file** (vedi sotto).
@@ -187,6 +191,21 @@ In quel caso usa **Impostazioni → Backup → Esporta tutto**: è l'unica copia
 compare *Piano del giorno* → **Carica**: tutte le voci entrano nel diario in un tocco.
 Poi correggi solo quello che hai mangiato davvero diverso.
 
+**Scansionare un prodotto.** Nel pannello di ricerca, l'icona del codice a barre accanto
+alla lente accende la fotocamera: inquadri il codice sulla confezione e l'app cerca il
+prodotto su [Open Food Facts](https://it.openfoodfacts.org). Ti mostra nome e valori per
+100 g, li confermi (o li correggi) e finisce fra i tuoi alimenti. **Il codice resta
+attaccato all'alimento**: la seconda volta che scansioni quel prodotto lo trova in casa,
+senza rete e senza chiedere niente a nessuno.
+
+I dati di Open Food Facts li inseriscono gli utenti, quindi un'occhiata all'etichetta non
+fa male — se un prodotto ha valori incompleti l'app te lo dice. Se non lo trova, o se sei
+offline, si apre direttamente il modulo per inserirlo a mano col codice già compilato.
+C'è anche **Scrivi il codice a mano**, per quando la confezione è rovinata.
+
+La prima volta iOS chiede il permesso per la fotocamera. Se lo neghi per sbaglio:
+Impostazioni → Safari → Fotocamera → Consenti.
+
 **Registrare un pasto.** Pulsante rotondo corallo → cerchi l'alimento → tastierino per i
 grammi → **Aggiungi**. I macro si aggiornano mentre scrivi. Gli ultimi alimenti usati
 compaiono in cima senza cercare: dopo una settimana registri una giornata in una decina
@@ -243,7 +262,17 @@ settimana, `w` sessione, `m` misura, `s` scheda, `a` alimento tuo, `g` giorno,
 quindi aggiungere un campo in futuro non richiede toccare il database.
 
 Il database degli alimenti sta in `data.js` e non viene sincronizzato: è uguale su tutti
-i dispositivi perché è parte dell'app. Gli alimenti che aggiungi tu invece sì.
+i dispositivi perché è parte dell'app. Gli alimenti che aggiungi tu — compresi quelli
+arrivati dalla scansione — invece sì.
+
+## Fonti dei dati
+
+- **Alimenti di base**: CREA — *Tabelle di Composizione degli Alimenti*,
+  [alimentinutrizione.it](https://www.alimentinutrizione.it). Consultabili liberamente
+  citando la fonte, come qui.
+- **Prodotti confezionati**: [Open Food Facts](https://it.openfoodfacts.org), database
+  aperto sotto licenza ODbL, interrogato per codice a barre. Non serve nessuna chiave e
+  l'app non manda via niente oltre al codice del prodotto.
 
 ---
 
