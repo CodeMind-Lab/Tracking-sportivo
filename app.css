@@ -268,9 +268,26 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .ring .mid span{font-size:9.5px;color:rgba(255,255,255,.62);margin-top:4px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
 .kcal-side{flex:1;min-width:0}
 .kcal-side .big{font-size:15px;font-weight:700;margin-bottom:2px}
-.kcal-side .sub{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:12px}
-.kcal-side .sub b{color:var(--sky);font-weight:700}
-.kcal-side .sub b.over{color:var(--coral)}
+.kcal-side .sub{
+  font-size:12px;color:rgba(255,255,255,.6);
+  display:flex;align-items:center;flex-wrap:wrap;gap:6px;
+}
+.kcal-side .sub .link{
+  color:rgba(255,255,255,.72);font-size:12px;font-weight:650;
+  text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(255,255,255,.28);
+}
+/* L'etichetta è anche l'interruttore: dice quale dei due giorni è e cambiarlo
+   costa un tocco sulla parola che stai già leggendo. */
+.tipo-sw{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 9px;border-radius:99px;
+  background:rgba(108,211,240,.18);color:var(--sky);
+  font-size:11.5px;font-weight:750;letter-spacing:.01em;
+  font-variant-numeric:tabular-nums;
+}
+.tipo-sw.off{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
+.tipo-sw svg{width:12px;height:12px;stroke-width:2.4;opacity:.75}
+.tipo-sw:active{background:var(--sky);color:var(--navy)}
 
 .macros{display:flex;gap:12px;margin-top:14px;padding-top:13px;border-top:1px solid rgba(255,255,255,.12)}
 .macro{flex:1;min-width:0}
@@ -351,8 +368,29 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 }
 .ph-conf b{color:var(--navy);font-weight:750;font-variant-numeric:tabular-nums}
 
+/* ---------- l'acqua, dentro la scheda delle calorie ---------- */
+.acqua-row{
+  display:grid;grid-template-columns:1fr auto;gap:9px 12px;align-items:center;
+  margin-top:13px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);
+}
+.ar-t{display:flex;align-items:baseline;gap:9px;font-size:10.5px;font-weight:800;
+  letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.62);min-width:0}
+.ar-t b{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.ar-t b i{font-style:normal;font-size:11.5px;font-weight:650;color:rgba(255,255,255,.45);letter-spacing:0}
+.ar-b{display:flex;gap:6px;flex:none}
+.ar-b button{
+  padding:6px 11px;border-radius:9px;background:rgba(255,255,255,.14);
+  color:#fff;font-size:12px;font-weight:750;
+}
+.ar-b button:active{background:var(--sky);color:var(--navy)}
+.acqua-row .water{grid-column:1 / -1;margin-top:0}
+.acqua-row .water i{background:rgba(255,255,255,.16)}
+.acqua-row .water i.on{background:var(--sky)}
+
 /* ---------- contatori rapidi ---------- */
 .quick{display:flex;gap:10px;margin-top:12px}
+.qcard.largo{margin-top:12px}
+.qcard.largo .qb{max-width:200px}
 .qcard{
   flex:1;background:#fff;border:1px solid var(--line);border-radius:var(--radius);
   padding:11px 12px;box-shadow:var(--shadow-sm);min-width:0;
@@ -369,6 +407,24 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .water{display:flex;gap:4px;margin-top:8px}
 .water i{flex:1;height:7px;border-radius:99px;background:var(--bg-elev2)}
 .water i.on{background:var(--sky)}
+
+/* ---------- l'andamento della settimana ---------- */
+.wk-bars{display:flex;align-items:flex-end;gap:6px;height:96px}
+.wk-bars .wb{
+  flex:1;min-width:0;height:100%;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;
+  border-radius:9px;padding:3px 2px;
+}
+.wk-bars .wb.on{background:var(--bg-elev2)}
+.wk-bars .wb i{width:100%;max-width:26px;border-radius:5px 5px 0 0;background:var(--sky);display:block}
+.wk-bars .wb i.over{background:var(--coral)}
+.wk-bars .wb i.vuoto{background:var(--line)}
+/* Il puntino sotto la colonna dice che quel giorno hai anche allenato: due
+   informazioni nello stesso spazio, senza un secondo grafico. */
+.wk-bars .wb u{width:5px;height:5px;border-radius:50%;background:transparent;display:block}
+.wk-bars .wb u.si{background:var(--teal)}
+.wk-bars .wb span{font-size:9.5px;font-weight:750;color:var(--txt-faint);text-transform:uppercase}
+.wk-bars .wb.on span{color:var(--navy)}
 
 /* ---------- gruppi di pasto ---------- */
 .meal{

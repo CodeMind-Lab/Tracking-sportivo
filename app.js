@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.20.4';
+const APP_VERSION = '2026.08.20.5';
 
 const KEY = 'forma.v1';
 
@@ -402,7 +402,7 @@ function vistaOggi() {
   let h = barraGiorno(d);
 
   /* La settimana in cui cade il giorno mostrato: toccare "Gio" costa un tocco,
-     mentre con le sole frecce ci vorrebbero tre. */
+     mentre con le sole frecce ce ne vorrebbero tre. */
   const lun = lunediDi(d);
   h += `<div class="weekstrip">${GIORNI_SETT.map((wg, i) => {
     const data = spostaData(lun, i);
@@ -411,16 +411,26 @@ function vistaOggi() {
       ${wg.b}<i class="${suo ? 'pieno' : (pianoPieno(wg.id) ? 'piano' : '')}"></i></button>`;
   }).join('')}</div>`;
 
+  /* Turno o riposo non è sparito, è diventato la scritta stessa: dice già quale
+     dei due sei e toccandola passi all'altro. Due pulsanti che ripetevano i
+     numeri già scritti nell'anello occupavano un terzo della scheda per una
+     cosa che si cambia una volta al giorno. */
+  const bicchieri = Math.round(t.acqua / 250);
+  const bevuti = Math.round(g.acqua / 250);
+
   h += `<div class="kcal-card">
     <div class="kcal-top">
       ${anello(tot.k, kt)}
       <div class="kcal-side">
         <div class="big">${resta >= 0 ? resta + ' kcal disponibili' : Math.abs(resta) + ' kcal oltre'}</div>
-        <div class="sub">${righe.length ? righe.length + (righe.length === 1 ? ' voce registrata' : ' voci registrate') : 'Niente ancora'} ·
-          <b class="${resta < 0 ? 'over' : ''}">${g.tipo === 'off' ? 'giorno di riposo' : 'giorno di turno'}</b></div>
-        <div class="seg" data-seg="tipo">
-          <button data-tipo="turno" class="${g.tipo !== 'off' ? 'on' : ''}">Turno · ${t.kcal}</button>
-          <button data-tipo="off" class="${g.tipo === 'off' ? 'on' : ''}">Riposo · ${t.kcalOff}</button>
+        <div class="sub">
+          ${righe.length
+            ? `<button class="link" data-act="vai-diario">${righe.length}${righe.length === 1 ? ' voce registrata' : ' voci registrate'}</button>`
+            : 'Niente ancora'} ·
+          <button class="tipo-sw ${g.tipo === 'off' ? 'off' : ''}" data-act="cambia-tipo">
+            ${g.tipo === 'off' ? 'riposo' : 'turno'} · ${g.tipo === 'off' ? t.kcalOff : t.kcal}
+            <svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4M21 7H7M7 21l-4-4 4-4M3 17h14"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -429,34 +439,27 @@ function vistaOggi() {
       ${barraMacro('c', 'Carb', tot.c, t.carb)}
       ${barraMacro('g', 'Grassi', tot.g, t.gras)}
     </div>
+    <div class="acqua-row">
+      <span class="ar-t">💧 Acqua<b>${r1(g.acqua / 1000)}<i> / ${r1(t.acqua / 1000)} L</i></b></span>
+      <span class="ar-b">
+        <button data-acqua="-250" aria-label="Togli un bicchiere">−</button>
+        <button data-acqua="250">+250 ml</button>
+      </span>
+      <span class="water">${Array.from({ length: bicchieri }, (_, i) =>
+        `<i class="${i < bevuti ? 'on' : ''}"></i>`).join('')}</span>
+    </div>
   </div>`;
 
   h += riquadroPiano(d, righe, tot);
 
-  /* Acqua e passi: due leve che il piano tratta come parte del programma,
-     non come contorno. Stanno qui perché si toccano ogni giorno. */
-  const bicchieri = Math.round(t.acqua / 250);
-  const bevuti = Math.round(g.acqua / 250);
-  h += `<div class="quick">
-    <div class="qcard">
-      <div class="qh">💧 Acqua</div>
-      <div class="qv">${r1(g.acqua / 1000)}<small> / ${r1(t.acqua / 1000)} L</small></div>
-      <div class="water">${Array.from({ length: bicchieri }, (_, i) =>
-        `<i class="${i < bevuti ? 'on' : ''}"></i>`).join('')}</div>
-      <div class="qb">
-        <button data-acqua="-250">−</button>
-        <button data-acqua="250">+250 ml</button>
-      </div>
-    </div>
-    <div class="qcard">
-      <div class="qh">👟 Passi</div>
-      <div class="qv">${g.passi ? g.passi.toLocaleString('it-IT') : '—'}<small> / ${t.passi.toLocaleString('it-IT')}</small></div>
-      <div class="water">${Array.from({ length: 10 }, (_, i) =>
-        `<i class="${g.passi >= t.passi * (i + 1) / 10 ? 'on' : ''}"></i>`).join('')}</div>
-      <div class="qb">
-        <button data-act="passi">Aggiorna</button>
-      </div>
-    </div>
+  /* I passi restano fuori: sono l'unica leva sul dispendio finché la palestra
+     non è a regime, e a differenza dell'acqua si aggiornano una volta sola. */
+  h += `<div class="qcard largo">
+    <div class="qh">👟 Passi</div>
+    <div class="qv">${g.passi ? g.passi.toLocaleString('it-IT') : '—'}<small> / ${t.passi.toLocaleString('it-IT')}</small></div>
+    <div class="water">${Array.from({ length: 10 }, (_, i) =>
+      `<i class="${g.passi >= t.passi * (i + 1) / 10 ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="qb"><button data-act="passi">Aggiorna</button></div>
   </div>`;
 
   /* L'allenamento del giorno, se c'è. Sotto le calorie perché la domanda
@@ -474,26 +477,97 @@ function vistaOggi() {
     </button>`;
   }
 
-  h += `<div class="section-head"><h2>Pasti</h2>
-    <span class="count">${r0(tot.k)} kcal · ${r0(tot.p)} g prot</span></div>`;
+  h += riquadroSettimana(d);
+  return h;
+}
 
-  for (const p of PASTI) {
-    const rp = righe.filter(r => r.slot === p.id);
-    const tp = somma(rp);
-    h += `<div class="meal ${rp.length ? '' : 'vuoto'}">
-      <div class="mtop">
-        <span class="mic">${p.ic}</span>
-        <span class="mname">${esc(p.l)}</span>
-        ${rp.length ? `<span class="mkcal">${r0(tp.k)} kcal</span>` : ''}
-        <button class="madd" data-add-slot="${p.id}" aria-label="Aggiungi a ${esc(p.l)}">
-          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-      </div>
-      ${rp.length ? `<div class="rows">${rp.map(rigaCibo).join('')}</div>` : ''}
-    </div>`;
+/* Come sta andando la settimana. Prende il posto dell'elenco dei pasti, che
+   ripeteva quello che il riquadro del piano mostra già più in alto e che si
+   legge comunque nel Diario. Qui invece c'è la sola cosa che la giornata
+   singola non può dirti: se la direzione è giusta. */
+function riquadroSettimana(d) {
+  const t = cfg().target;
+  const lun = lunediDi(d);
+  const giorni = Array.from({ length: 7 }, (_, i) => spostaData(lun, i));
+  const oggi = oggiISO();
+
+  /* Solo i giorni già passati e con qualcosa scritto: contare i giorni futuri
+     come "zero calorie" farebbe crollare la media e non vorrebbe dire niente. */
+  const conDati = giorni.filter(x => x <= oggi && righeDi(x).length);
+  const kcal = conDati.map(x => somma(righeDi(x)).k);
+  const media = kcal.length ? kcal.reduce((a, b) => a + b, 0) / kcal.length : 0;
+  const prot = conDati.length
+    ? conDati.reduce((a, x) => a + somma(righeDi(x)).p, 0) / conDati.length : 0;
+  const inTarget = conDati.filter(x => Math.abs(somma(righeDi(x)).k - kcalTarget(x)) <= kcalTarget(x) * 0.10).length;
+
+  const sess = di('w').filter(w => w.d >= giorni[0] && w.d <= giorni[6]);
+  const volume = sess.reduce((v, w) => v + statSessione(w).volume, 0);
+
+  const ms = misure();
+  const ultima = ms[ms.length - 1];
+  const prec = ms[ms.length - 2];
+  const dPeso = ultima && prec && ultima.peso && prec.peso ? num(ultima.peso) - num(prec.peso) : null;
+
+  const maxK = Math.max(t.kcal, ...kcal) * 1.05 || 1;
+
+  let h = `<div class="section-head"><h2>La settimana</h2>
+    <button class="act" data-act="vai-report">Report completo</button></div>`;
+
+  if (!conDati.length && !sess.length) {
+    return h + vuoto('📈', 'Ancora niente questa settimana',
+      'Registra un pasto o un allenamento e qui compare l’andamento: media, aderenza al piano e volume.');
   }
 
-  if (righe.length) {
-    h += `<button class="btn sec sm" data-act="salva-ricetta">Salva questa giornata come combinazione</button>`;
+  h += `<div class="panel" style="margin-top:0">
+    <div class="wk-bars">${giorni.map(x => {
+      const futuro = x > oggi;
+      const k = righeDi(x).length ? somma(righeDi(x)).k : 0;
+      const kt = kcalTarget(x);
+      const allenato = di('w').some(w => w.d === x);
+      return `<button class="wb ${x === d ? 'on' : ''}" data-vaidata="${x}">
+        <i class="${!k ? 'vuoto' : (k > kt * 1.05 ? 'over' : '')}"
+           style="height:${k ? Math.max(4, k / maxK * 100) : 4}%"></i>
+        <u class="${allenato ? 'si' : ''}"></u>
+        <span>${GIORNI_SETT[(new Date(x + 'T12:00:00').getDay() + 6) % 7].b}</span>
+      </button>`;
+    }).join('')}</div>
+    <div class="legend" style="margin-top:9px">
+      <span><i style="background:var(--sky)"></i>entro il bersaglio</span>
+      <span><i style="background:var(--coral)"></i>oltre</span>
+      <span><i style="background:var(--teal);border-radius:50%"></i>allenamento</span>
+    </div>
+  </div>`;
+
+  h += `<div class="kpis" style="margin-top:12px">
+    <div class="kpi"><div class="kl">Media kcal</div>
+      <div class="kv">${conDati.length ? r0(media) : '—'}</div>
+      <div class="kd ${!conDati.length ? 'pari' : Math.abs(media - t.kcal) < t.kcal * .05 ? 'pari' : media > t.kcal ? 'su' : 'giu'}">
+        ${conDati.length ? conDati.length + (conDati.length === 1 ? ' giorno' : ' giorni') + ' su 7' : 'niente registrato'}</div></div>
+    <div class="kpi"><div class="kl">Media proteine</div>
+      <div class="kv">${conDati.length ? r0(prot) : '—'}<small> g</small></div>
+      <div class="kd ${prot >= t.prot * .95 ? 'giu' : 'su'}">bersaglio ${t.prot} g</div></div>
+    <div class="kpi"><div class="kl">Aderenza</div>
+      <div class="kv">${conDati.length ? r0(inTarget / conDati.length * 100) : '—'}<small>%</small></div>
+      <div class="kd pari">${inTarget} ${inTarget === 1 ? 'giorno' : 'giorni'} entro il 10%</div></div>
+    <div class="kpi"><div class="kl">Allenamenti</div>
+      <div class="kv">${sess.length}</div>
+      <div class="kd pari">${volume ? r0(volume).toLocaleString('it-IT') + ' kg' : 'nessun volume'}</div></div>
+  </div>`;
+
+  if (dPeso !== null) {
+    h += `<div class="card-row" style="margin-top:12px">
+      <span class="cbadge">⚖️</span>
+      <span class="cb"><h3>${r1(ultima.peso)} kg</h3>
+        <span class="meta">ultima misura del ${esc(dataCorta(ultima.d))}</span></span>
+      <span class="badge ${dPeso < 0 ? 'ok' : dPeso > 0 ? 'no' : 'neutro'}">${dPeso > 0 ? '+' : ''}${r1(dPeso)} kg</span>
+    </div>`;
+  } else {
+    h += `<button class="card-row" style="margin-top:12px" data-act="nuova-misura">
+      <span class="cbadge coral">⚖️</span>
+      <span class="cb"><h3>Registra il peso</h3>
+        <span class="meta">peso e girovita una volta a settimana</span></span>
+      <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+    </button>`;
   }
   return h;
 }
@@ -561,17 +635,6 @@ function riquadroPiano(d, righe, tot) {
       <button class="ph-cta sec" data-applica="${gs}" data-data="${d}">Ricarica il piano</button>`;
   }
   return h + `</div>`;
-}
-
-function rigaCibo(r) {
-  const m = macro(r);
-  return `<button class="frow" data-riga="${r.id}">
-    <span class="fb">
-      <span class="fn">${esc(r.n)}</span>
-      <span class="fm">${r1(r.q)} g · ${r0(m.p)}P ${r0(m.c)}C ${r0(m.g)}G</span>
-    </span>
-    <span class="fk">${r0(m.k)}</span>
-  </button>`;
 }
 
 function rigaSessione(w) {
@@ -2046,10 +2109,7 @@ document.addEventListener('click', e => {
 
   /* ---------- Oggi ---------- */
   if (d.day) { view.d = spostaData(view.d, num(d.day)); render(); return; }
-  if (d.tipo) {
-    const g = giorno(view.d, true);
-    g.tipo = d.tipo; tocca(g); render(); return;
-  }
+
   if (d.acqua) {
     const g = giorno(view.d, true);
     g.acqua = Math.max(0, (g.acqua || 0) + num(d.acqua));
@@ -2193,6 +2253,24 @@ function azione(a, b) {
   const W = () => DB.items.find(i => i.id === view.id);
 
   if (a === 'oggi-torna') { view.d = oggiISO(); render(); return; }
+
+  if (a === 'cambia-tipo') {
+    const g = giorno(view.d, true);
+    g.tipo = g.tipo === 'off' ? 'turno' : 'off';
+    tocca(g); haptic(); render(); return;
+  }
+
+  /* Dal riepilogo al dettaglio senza passare dai filtri: il Diario si apre
+     già ristretto al giorno che stavi guardando. */
+  if (a === 'vai-diario') {
+    const f = filtri('cibo');
+    f.per = 'custom'; f.da = view.d; f.a = view.d;
+    save();
+    SUB.cibo = 'diario';
+    vai({ name: 'cibo', d: view.d });
+    return;
+  }
+  if (a === 'vai-report') { vai({ name: 'report', d: view.d }); return; }
   if (a === 'stampa') { window.print(); return; }
   if (a === 'allena-vai') { apriSheet(sheetAvvioAllenamento(), {}); return; }
   if (a === 'nuova-misura') { apriSheet(sheetMisura(null), {}); return; }

@@ -19,7 +19,7 @@ una volta sola e si ritrovano sull'altro dispositivo.
 
 | Scheda | A cosa serve |
 |---|---|
-| **Oggi** | La giornata: anello delle calorie, macro contro bersaglio, acqua, passi, pasti, allenamento del giorno. Con le frecce ti sposti su qualsiasi data. |
+| **Oggi** | La giornata: anello delle calorie con acqua e macro, il piano del giorno, passi, allenamento, e in fondo **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Con le frecce o con la striscia Lun‑Dom ti sposti su qualsiasi data. |
 | **Cibo → Diario** | Il registro di tutto quello che hai mangiato. Filtri per periodo, pasto, categoria, ricerca sul nome. Totali e media al giorno in fondo alla tabella. Export CSV. |
 | **Cibo → Piano** | Il piano alimentare della settimana: scegli **Lun Mar Mer Gio Ven Sab Dom** in alto e componi la giornata di quel giorno. Da qui lo carichi nel diario di una data. |
 | **Cibo → Alimenti** | L'anagrafica: i 71 alimenti del tuo piano v3 più quelli che aggiungi tu. Ricerca e filtro per categoria. |
@@ -190,13 +190,18 @@ Poi correggi solo quello che hai mangiato davvero diverso.
 **Registrare un pasto.** Pulsante rotondo corallo → cerchi l'alimento → tastierino per i
 grammi → **Aggiungi**. I macro si aggiornano mentre scrivi. Gli ultimi alimenti usati
 compaiono in cima senza cercare: dopo una settimana registri una giornata in una decina
-di tocchi. Il **+** dentro ogni pasto salta direttamente a quella fascia oraria.
+di tocchi. Il pasto è già scelto in base all'ora, e nel tastierino puoi cambiarlo.
 
 Per alcuni alimenti ci sono le **porzioni pronte** ("1 uovo · 55 g", "2 cucchiai · 20 g",
 "3 scatolette · 150 g"): vengono dalle note del tuo database.
 
-**Correggere.** Tocca una riga, ovunque la vedi — nella scheda Oggi o nella tabella del
-Diario. Si riapre il tastierino, cambi i grammi o il pasto, oppure elimini.
+**Correggere.** Sulla scheda Oggi, tocca **“N voci registrate”** sotto le calorie: si apre
+il Diario già ristretto a quel giorno. Da lì tocca una riga qualsiasi, si riapre il
+tastierino, cambi i grammi o il pasto, oppure elimini.
+
+**Turno o riposo.** L'etichetta azzurra accanto alle voci registrate (*turno · 2050*) è
+anche l'interruttore: toccala e passa a *riposo · 1900*. Il bersaglio dell'anello cambia
+di conseguenza.
 
 **Allenarsi.** Scheda Allenamento → pulsante rotondo → scegli la giornata della scheda.
 Gli esercizi sono già lì con serie, ripetizioni e carico dell'ultima volta. Spunti una
@@ -221,8 +226,8 @@ chiedere niente. Su iPhone si apre il foglio di condivisione, sul Mac il file si
 
 Quando cambi i file, alza il numero di versione in **due punti** (devono corrispondere):
 
-- `app.js`, riga in alto: `const APP_VERSION = '2026.08.20.4';`
-- `sw.js`, riga in alto: `const VER = 'forma-2026.08.20.4';`
+- `app.js`, riga in alto: `const APP_VERSION = '2026.08.20.5';`
+- `sw.js`, riga in alto: `const VER = 'forma-2026.08.20.5';`
 
 Se non alzi quello di `sw.js`, i telefoni continuano a usare i file vecchi presi dalla
 cache. Poi ricarichi i file su GitHub. La versione in uso si legge in Impostazioni.
