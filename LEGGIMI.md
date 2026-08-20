@@ -20,9 +20,9 @@ una volta sola e si ritrovano sull'altro dispositivo.
 | Scheda | A cosa serve |
 |---|---|
 | **Oggi** | La giornata: anello delle calorie con acqua e macro, il piano del giorno, passi, allenamento, e in fondo **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Con le frecce o con la striscia Lun‑Dom ti sposti su qualsiasi data. |
-| **Cibo → Diario** | Il registro di tutto quello che hai mangiato. Filtri per periodo, pasto, categoria, ricerca sul nome. Totali e media al giorno in fondo alla tabella. Export CSV. |
+| **Cibo → Diario** | Il registro di tutto quello che hai mangiato, **un giorno per riga**: tocchi il giorno e si apre con le sue voci e il totale. Filtri per periodo, pasto, categoria, ricerca sul nome. Export CSV. |
 | **Cibo → Piano** | Il piano alimentare della settimana: scegli **Lun Mar Mer Gio Ven Sab Dom** in alto e componi la giornata di quel giorno. Da qui lo carichi nel diario di una data. |
-| **Cibo → Alimenti** | L'anagrafica: i 71 alimenti del tuo piano v3 più quelli che aggiungi tu. Ricerca e filtro per categoria. |
+| **Cibo → Alimenti** | L'anagrafica dei 71 alimenti più quelli che aggiungi tu, **raggruppati per categoria**: tocchi la categoria e si apre. Ricerca e filtro. |
 | **Allenamento → Sessioni** | Il registro degli allenamenti svolti: serie, volume in kg, cardio. Filtri per periodo e gruppo muscolare. Export CSV. |
 | **Allenamento → Schede** | I tuoi programmi. Una scheda ha i **giorni 1, 2, 3, 4…**: li scegli coi numeri in alto e ognuno ha i suoi esercizi con serie, ripetizioni, carico e recupero. |
 | **Report** | Media calorie e proteine, **aderenza** (quanti giorni sei rimasto entro il 10% del bersaglio), calorie giorno per giorno, ripartizione dei macro, cosa mangi davvero, da dove arrivano le proteine, volume per gruppo, progressione dei carichi, peso e girovita. Si stampa in PDF. |
@@ -196,8 +196,10 @@ Per alcuni alimenti ci sono le **porzioni pronte** ("1 uovo · 55 g", "2 cucchia
 "3 scatolette · 150 g"): vengono dalle note del tuo database.
 
 **Correggere.** Sulla scheda Oggi, tocca **“N voci registrate”** sotto le calorie: si apre
-il Diario già ristretto a quel giorno. Da lì tocca una riga qualsiasi, si riapre il
-tastierino, cambi i grammi o il pasto, oppure elimini.
+il Diario già ristretto a quel giorno. Nel Diario ogni giorno è una riga chiusa con il
+totale e lo scarto dal bersaglio; tocchi il giorno, si apre, e da lì tocchi la voce da
+correggere. Con una ricerca attiva i giorni si aprono tutti da soli, altrimenti quello che
+cerchi potrebbe restare nascosto in un giorno chiuso.
 
 **Turno o riposo.** L'etichetta azzurra accanto alle voci registrate (*turno · 2050*) è
 anche l'interruttore: toccala e passa a *riposo · 1900*. Il bersaglio dell'anello cambia
@@ -226,8 +228,8 @@ chiedere niente. Su iPhone si apre il foglio di condivisione, sul Mac il file si
 
 Quando cambi i file, alza il numero di versione in **due punti** (devono corrispondere):
 
-- `app.js`, riga in alto: `const APP_VERSION = '2026.08.20.7';`
-- `sw.js`, riga in alto: `const VER = 'forma-2026.08.20.7';`
+- `app.js`, riga in alto: `const APP_VERSION = '2026.08.20.8';`
+- `sw.js`, riga in alto: `const VER = 'forma-2026.08.20.8';`
 
 Se non alzi quello di `sw.js`, i telefoni continuano a usare i file vecchi presi dalla
 cache. Poi ricarichi i file su GitHub. La versione in uso si legge in Impostazioni.

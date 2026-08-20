@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.20.7';
+const APP_VERSION = '2026.08.20.8';
 
 const KEY = 'forma.v1';
 
@@ -921,11 +921,16 @@ function vistaPiano() {
   return h;
 }
 
+/* Quali giorni e quali categorie sono aperti. Sta in memoria e non nel
+   localStorage: è il punto in cui ti trovi adesso, non una preferenza. */
+const aperti = { giorni: new Set(), cat: new Set(), inizializzato: false };
+
 function vistaDiario() {
   const f = filtri('cibo');
   const righe = righeFiltrate();
   const tot = somma(righe);
-  const gg = new Set(righe.map(r => r.d)).size || 1;
+  const perGiorno = raggruppaPerGiorno(righe);
+  const gg = perGiorno.length || 1;
 
   let h = scatolaFiltri('cibo',
     campoPeriodo('cibo') +
@@ -944,41 +949,83 @@ function vistaDiario() {
   </div>`;
 
   h += rigaRisultati(righe.length, righe.length === 1 ? 'voce' : 'voci',
-    `<b>${gg}</b> ${gg === 1 ? 'giorno' : 'giorni'} · <b>${r0(tot.k)}</b> kcal totali`, 'cibo');
+    `<b>${perGiorno.length}</b> ${perGiorno.length === 1 ? 'giorno' : 'giorni'} · <b>${r0(tot.k)}</b> kcal totali`, 'cibo');
 
   if (!righe.length) {
     return h + vuoto('🍽️', 'Nessuna voce nel periodo',
       'Cambia i filtri, oppure registra un pasto dalla scheda <b>Oggi</b>.');
   }
 
+  /* Alla prima apertura si spalanca solo il giorno più recente: gli altri li
+     apri tu. Prima erano tutte le righe di tutti i giorni una dietro l'altra,
+     con la data ripetuta su ognuna. */
+  if (!aperti.inizializzato) {
+    aperti.inizializzato = true;
+    if (perGiorno.length) aperti.giorni.add(perGiorno[0].d);
+  }
+  /* Con una ricerca in corso non ha senso tenere chiuso: quello che cerchi
+     potrebbe essere in un giorno che non apriresti mai. */
+  const tuttiAperti = !!f.q.trim();
+
+  for (const g of perGiorno) {
+    const apri = tuttiAperti || aperti.giorni.has(g.d);
+    const kt = kcalTarget(g.d);
+    const scarto = r0(g.tot.k - kt);
+    const stato = Math.abs(scarto) <= kt * 0.10 ? 'ok' : (scarto > 0 ? 'no' : 'neutro');
+    h += `<div class="acc ${apri ? 'aperto' : ''}">
+      <button class="acc-h fitta" data-giorno="${g.d}">
+        <span class="acc-d">${esc(dataCorta(g.d))}<small>${esc(nomeGiorno(g.d))}</small></span>
+        <span class="acc-n">${g.righe.length} ${g.righe.length === 1 ? 'voce' : 'voci'}</span>
+        <span class="acc-k">${r0(g.tot.k)}<i> kcal</i></span>
+        <span class="badge ${stato}">${scarto > 0 ? '+' : ''}${scarto}</span>
+        <span class="acc-c"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+      </button>
+      ${apri ? tabellaGiorno(g, f) : ''}
+    </div>`;
+  }
+  return h;
+}
+
+/* Le righe filtrate, divise per giorno e già ordinate. Il verso del giorno
+   segue l'ordinamento scelto sulla colonna Data. */
+function raggruppaPerGiorno(righe) {
+  const mappa = {};
+  for (const r of righe) (mappa[r.d] = mappa[r.d] || []).push(r);
+  const f = filtri('cibo');
+  const giu = f.ord === 'data-' || !f.ord.startsWith('data');
+  return Object.keys(mappa).sort((a, b) => giu ? (a < b ? 1 : -1) : (a < b ? -1 : 1))
+    .map(d => ({ d, righe: mappa[d], tot: somma(mappa[d]) }));
+}
+
+function tabellaGiorno(g, f) {
   const ord = (c, l, cls) =>
     `<th class="${cls || ''}" data-ord="cibo" data-campo="${c}">${l}${f.ord.startsWith(c) ? `<i>${f.ord.endsWith('-') ? '↓' : '↑'}</i>` : ''}</th>`;
 
-  h += `<div class="tablewrap"><table class="dt">
+  let h = `<div class="acc-b"><div class="tablewrap"><table class="dt">
     <thead><tr>
-      ${ord('data', 'Data')}${ord('nome', 'Alimento', 'nome')}<th class="opt">Pasto</th>
+      ${ord('nome', 'Alimento', 'nome')}<th class="opt">Pasto</th>
       <th class="n">g</th>${ord('kcal', 'Kcal', 'n')}${ord('prot', 'Prot', 'n')}
       <th class="n opt">Carb</th><th class="n opt">Gras</th>
     </tr></thead><tbody>`;
-  for (const r of righe) {
+  for (const r of g.righe) {
     const m = macro(r);
     const p = PASTI.find(p => p.id === r.slot);
     h += `<tr data-riga="${r.id}">
-      <td>${esc(dataCorta(r.d))}<span class="sub">${esc(nomeGiorno(r.d))}</span></td>
-      <td class="nome">${esc(r.n)}</td>
+      <td class="nome">${esc(r.n)}<span class="sub opt-inv">${esc(p ? p.l : r.slot)}</span></td>
       <td class="opt"><span class="badge neutro">${esc(p ? p.l : r.slot)}</span></td>
       <td class="n">${r1(r.q)}</td><td class="n">${r0(m.k)}</td>
       <td class="n">${r0(m.p)}</td><td class="n opt">${r0(m.c)}</td><td class="n opt">${r0(m.g)}</td>
     </tr>`;
   }
-  h += `</tbody><tfoot><tr>
-      <td colspan="3">Totale</td><td class="n">${r0(tot.k)}</td>
-      <td class="n">${r0(tot.p)}</td><td class="n opt">${r0(tot.c)}</td><td class="n opt">${r0(tot.g)}</td>
-    </tr>
-    <tr><td colspan="3">Media al giorno</td><td class="n">${r0(tot.k / gg)}</td>
-      <td class="n">${r0(tot.p / gg)}</td><td class="n opt">${r0(tot.c / gg)}</td><td class="n opt">${r0(tot.g / gg)}</td>
-    </tr></tfoot></table></div>`;
-  return h;
+  return h + `</tbody><tfoot><tr>
+      <td class="nome">Totale del giorno</td>
+      <td class="opt"></td>
+      <td class="n">${r1(g.righe.reduce((a, r) => a + r.q, 0))}</td>
+      <td class="n">${r0(g.tot.k)}</td>
+      <td class="n">${r0(g.tot.p)}</td>
+      <td class="n opt">${r0(g.tot.c)}</td>
+      <td class="n opt">${r0(g.tot.g)}</td>
+    </tr></tfoot></table></div></div>`;
 }
 
 /* Lo scostamento dal target, con il segno e il colore giusti: il verde non è
@@ -1024,22 +1071,47 @@ function vistaAlimenti() {
 
   if (!lista.length) return h + vuoto('🔍', 'Nessun alimento', 'Cambia i filtri o aggiungine uno con <b>+</b>.');
 
+  /* Settantuno righe di seguito non si scorrono: si aprono per categoria.
+     Quando c'è una ricerca in corso invece si spalancano tutte, perché quello
+     che cerchi potrebbe stare in una categoria che non apriresti mai. */
+  const tuttiAperti = !!f.q.trim() || f.soloMiei;
+
+  const perCat = {};
+  for (const a of lista) (perCat[a.cat] = perCat[a.cat] || []).push(a);
+  const ordine = CATEGORIE.filter(c => perCat[c]).concat(Object.keys(perCat).filter(c => !CATEGORIE.includes(c)));
+
+  for (const c of ordine) {
+    const l = perCat[c];
+    const apri = tuttiAperti || aperti.cat.has(c);
+    h += `<div class="acc ${apri ? 'aperto' : ''}">
+      <button class="acc-h" data-catapri="${esc(c)}">
+        <span class="acc-i">${CAT_ICON[c] || '🍽️'}</span>
+        <span class="acc-d">${esc(c)}</span>
+        <span class="acc-n">${l.length} ${l.length === 1 ? 'alimento' : 'alimenti'}</span>
+        <span class="acc-c"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+      </button>
+      ${apri ? tabellaAlimenti(l, f) : ''}
+    </div>`;
+  }
+  return h;
+}
+
+function tabellaAlimenti(lista, f) {
   const ord = (c, l) =>
     `<th class="n" data-ord="alim" data-campo="${c}">${l}${f.ord.startsWith(c) ? `<i>${f.ord.endsWith('-') ? '↓' : '↑'}</i>` : ''}</th>`;
 
-  h += `<div class="tablewrap"><table class="dt"><thead><tr>
+  let h = `<div class="acc-b"><div class="tablewrap"><table class="dt"><thead><tr>
       <th class="nome" data-ord="alim" data-campo="nome">Alimento${f.ord.startsWith('nome') ? `<i>${f.ord.endsWith('-') ? '↓' : '↑'}</i>` : ''}</th>
-      <th class="opt">Categoria</th>${ord('kcal', 'Kcal')}${ord('prot', 'Prot')}
+      ${ord('kcal', 'Kcal')}${ord('prot', 'Prot')}
       <th class="n opt">Carb</th><th class="n opt">Gras</th>
     </tr></thead><tbody>`;
   for (const a of lista) {
     h += `<tr data-alim="${esc(a.n)}">
-      <td class="nome">${esc(a.n)}${a.nt ? `<span class="sub">${esc(a.nt)}</span>` : ''}</td>
-      <td class="opt"><span class="badge ${a.mio ? 'coral' : 'neutro'}">${a.mio ? 'mio' : esc(a.cat)}</span></td>
+      <td class="nome">${esc(a.n)}${a.mio ? ' <span class="badge coral">mio</span>' : ''}${a.nt ? `<span class="sub">${esc(a.nt)}</span>` : ''}</td>
       <td class="n">${a.k}</td><td class="n">${a.p}</td><td class="n opt">${a.c}</td><td class="n opt">${a.g}</td>
     </tr>`;
   }
-  return h + `</tbody></table></div>`;
+  return h + `</tbody></table></div></div>`;
 }
 
 /* ============================================================
@@ -2180,6 +2252,16 @@ document.addEventListener('click', e => {
   }
 
   /* ---------- piano della settimana ---------- */
+  if (d.giorno) {
+    if (aperti.giorni.has(d.giorno)) aperti.giorni.delete(d.giorno);
+    else aperti.giorni.add(d.giorno);
+    render(); return;
+  }
+  if (d.catapri) {
+    if (aperti.cat.has(d.catapri)) aperti.cat.delete(d.catapri);
+    else aperti.cat.add(d.catapri);
+    render(); return;
+  }
   if (d.gs) { SUB.gs = d.gs; render(); return; }
   if (d.vaidata) { view.d = d.vaidata; render(); return; }
   if (d.applica) { applicaPiano(d.applica, d.data || oggiISO()); return; }
