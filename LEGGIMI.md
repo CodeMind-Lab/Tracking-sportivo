@@ -247,8 +247,8 @@ chiedere niente. Su iPhone si apre il foglio di condivisione, sul Mac il file si
 
 Quando cambi i file, alza il numero di versione in **due punti** (devono corrispondere):
 
-- `app.js`, riga in alto: `const APP_VERSION = '2026.08.20.8';`
-- `sw.js`, riga in alto: `const VER = 'forma-2026.08.20.8';`
+- `app.js`, riga in alto: `const APP_VERSION = '2026.08.20.10';`
+- `sw.js`, riga in alto: `const VER = 'forma-2026.08.20.10';`
 
 Se non alzi quello di `sw.js`, i telefoni continuano a usare i file vecchi presi dalla
 cache. Poi ricarichi i file su GitHub. La versione in uso si legge in Impostazioni.
