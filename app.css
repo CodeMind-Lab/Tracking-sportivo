@@ -75,7 +75,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke
   padding-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   color:var(--navy);display:flex;align-items:center;
 }
-#topTitle .brand{height:21px;width:auto;display:block}
+#topTitle .brand{height:24px;width:auto;display:block}
 .icon-btn{
   width:38px;height:38px;display:grid;place-items:center;border-radius:10px;
   color:var(--navy);flex:none;
@@ -284,6 +284,72 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .macro.c .bar i{background:var(--sky)}
 .macro.g .bar i{background:#B9C4DC}
 .macro .bar i.over{background:#FFD166}
+
+/* ---------- il piano del giorno ---------- */
+.plan-hero{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  margin-top:12px;padding:13px;box-shadow:var(--shadow-sm);
+  /* La striscia azzurra a sinistra è la stessa convenzione delle card del
+     manuale: dice "questo è un modello", non un dato registrato. */
+  border-left:3px solid var(--sky);
+}
+.plan-hero.vuoto{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  border-style:dashed;border-left-style:solid;box-shadow:none;background:var(--bg-elev);
+}
+.ph-top{display:flex;align-items:center;gap:11px}
+.ph-badge{
+  width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
+  background:rgba(108,211,240,.22);color:#0B5E7C;
+  font-size:11px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
+}
+.ph-t{flex:1;min-width:0;display:block}
+.ph-t b{display:block;font-size:15px;font-weight:750;color:var(--navy);letter-spacing:-.015em}
+.ph-t span{
+  display:block;font-size:11.5px;color:var(--txt-faint);font-variant-numeric:tabular-nums;
+  margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Nel riquadro vuoto la frase è un invito, non un dato: deve poter andare a
+   capo invece di finire in tre puntini. */
+.plan-hero.vuoto .ph-t span{white-space:normal;line-height:1.45}
+.ph-edit{flex:none;font-size:12px;font-weight:700;color:var(--teal);padding:4px 2px}
+.ph-chev{flex:none;color:var(--teal);transition:transform .18s}
+.ph-chev svg{width:17px;height:17px;display:block}
+.ph-chev.su{transform:rotate(180deg)}
+.ph-top{cursor:pointer}
+.ph-go{flex:none;color:var(--txt-faint)}
+.ph-go svg{width:18px;height:18px}
+
+.ph-meals{margin-top:11px;border-top:1px solid var(--line);padding-top:4px}
+.pm{padding:7px 0;border-top:1px solid var(--line)}
+.pm:first-child{border-top:0}
+.pmh{
+  display:flex;justify-content:space-between;gap:8px;
+  font-size:12.5px;font-weight:700;color:var(--navy);
+}
+/* L'emoji va staccata dal nome con un margine, non con uno spazio: dentro un
+   contenitore flex lo spazio fra due nodi di testo viene mangiato. */
+.pmn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pmi{font-style:normal;margin-right:6px}
+.pmh b{color:var(--teal);font-variant-numeric:tabular-nums;flex:none}
+.pml{
+  display:block;margin-top:2px;font-size:11.5px;line-height:1.5;color:var(--txt-dim);
+}
+.pml i{font-style:normal;color:var(--txt-faint);font-variant-numeric:tabular-nums}
+
+.ph-cta{
+  display:block;width:100%;margin-top:12px;padding:11px;border-radius:11px;
+  background:var(--coral);color:#fff;font-size:14px;font-weight:750;text-align:center;
+  box-shadow:0 3px 12px rgba(255,102,76,.28);
+}
+.ph-cta.sec{background:#fff;color:var(--navy);border:1px solid var(--line);box-shadow:none}
+.ph-cta:active{opacity:.85}
+.ph-conf{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-top:11px;padding-top:11px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--txt-dim);
+}
+.ph-conf b{color:var(--navy);font-weight:750;font-variant-numeric:tabular-nums}
 
 /* ---------- contatori rapidi ---------- */
 .quick{display:flex;gap:10px;margin-top:12px}
@@ -495,6 +561,18 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   -webkit-overflow-scrolling:touch;
 }
 #sheetPanel::before{content:"";display:block;width:38px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 12px}
+/* Una via d'uscita sempre visibile. Il trattino sopra suggerisce lo scorrimento
+   verso il basso, ma non è un pulsante e da solo non basta a far capire come si
+   esce da un pannello che non hai più voglia di compilare. */
+#sheetClose{
+  position:absolute;top:12px;right:12px;z-index:2;
+  width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+  background:var(--bg-elev2);color:var(--txt-dim);
+}
+#sheetClose svg{width:16px;height:16px;stroke-width:2.6}
+#sheetClose:active{background:var(--line)}
+/* Spazio perché il titolo non finisca sotto al pulsante */
+#sheetContent .sheet-title{padding-right:38px}
 @keyframes slide{from{transform:translateY(100%)}}
 @keyframes fade{from{opacity:0}}
 .sheet-title{font-size:17px;font-weight:750;margin:0 0 14px;letter-spacing:-.015em;color:var(--navy)}
@@ -670,13 +748,14 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
     background:var(--navy);color:#fff;padding:22px 16px 16px;
   }
   .side-logo{text-align:center;margin-bottom:26px}
-  .side-logo .mark{display:flex;justify-content:center;gap:5px;margin-bottom:11px}
-  .side-logo .mark i{width:16px;height:16px;border-radius:50% 50% 45% 45%;display:block}
-  .side-logo .mark .b1{background:#fff}
-  .side-logo .mark .b2{background:var(--sky)}
-  .side-logo .mark .b3{background:var(--coral)}
-  .side-logo .wm{font-size:18px;font-weight:800;letter-spacing:-.02em}
-  .side-logo .wm span{color:var(--coral)}
+  .side-logo .mark{display:none}
+  .side-logo .wm{display:none}
+  /* Il logo su fondo navy: il marchio ha già il proprio blu scuro nei contorni,
+     che sul navy sparirebbe. Un riquadro bianco lo tiene leggibile. */
+  .side-logo img{
+    display:block;width:100%;max-width:186px;height:auto;margin:0 auto 10px;
+    background:#fff;border-radius:12px;padding:11px 13px;
+  }
   .side-logo .sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px;font-weight:600}
   .side-menu{display:flex;flex-direction:column;gap:5px}
   .side-menu button{

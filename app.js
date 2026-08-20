@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.20.3';
+const APP_VERSION = '2026.08.20.4';
 
 const KEY = 'forma.v1';
 
@@ -121,7 +121,7 @@ const oggiISO = () => {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 };
 const spostaData = (iso, n) => {
-  const d = new Date(iso + 'T12:00:00');
+  const d = new Date((iso || oggiISO()) + 'T12:00:00');
   d.setDate(d.getDate() + n);
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 };
@@ -240,7 +240,7 @@ const gsDiData = iso => GIORNI_SETT[(new Date(iso + 'T12:00:00').getDay() + 6) %
 
 /* Il lunedì della settimana in cui cade una data. */
 function lunediDi(iso) {
-  const d = new Date(iso + 'T12:00:00');
+  const d = new Date((iso || oggiISO()) + 'T12:00:00');
   d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
@@ -301,6 +301,10 @@ const TITOLI = {
 const SUB = { cibo: 'diario', allena: 'sessioni' };
 
 function vai(v, push) {
+  /* Ogni stato porta con sé la data, anche chi non la usa. Senza, un
+     vai({name:'oggi'}) scritto da qualche parte senza pensarci arriverebbe a
+     new Date('undefined') e farebbe cadere tutta la schermata — ed è successo. */
+  if (!v.d) v.d = oggiISO();
   view = v;
   if (push !== false) history.pushState(v, '', '');
   window.scrollTo(0, 0);
@@ -311,7 +315,15 @@ function render() {
   const app = $('#app');
   const t = view.name;
 
-  $('#topTitle').textContent = TITOLI[t] || 'Forma';
+  // vale anche per gli stati vecchi che tornano indietro dalla cronologia
+  if (!view.d) view.d = oggiISO();
+
+  /* Sulla dashboard il titolo è il marchio. Nelle altre schede resta la parola:
+     il logo ripetuto ovunque smetterebbe di dire qualcosa e toglierebbe spazio
+     al nome della schermata in cui ti trovi. */
+  $('#topTitle').innerHTML = t === 'oggi'
+    ? `<img class="brand" src="icons/logo-lockup.png" alt="CodeMind.Lab" width="719" height="90">`
+    : esc(TITOLI[t] || 'Forma');
   $('#backBtn').hidden = !['scheda', 'sessione'].includes(t);
   $('#settingsBtn').hidden = t === 'settings';
 
@@ -419,6 +431,8 @@ function vistaOggi() {
     </div>
   </div>`;
 
+  h += riquadroPiano(d, righe, tot);
+
   /* Acqua e passi: due leve che il piano tratta come parte del programma,
      non come contorno. Stanno qui perché si toccano ogni giorno. */
   const bicchieri = Math.round(t.acqua / 250);
@@ -460,22 +474,6 @@ function vistaOggi() {
     </button>`;
   }
 
-  /* Se questo giorno della settimana ha un piano e il diario è ancora vuoto,
-     caricarlo è l'unica cosa che vuoi fare qui: sta sopra i pasti. */
-  const gsOggi = gsDiData(d);
-  const po = piano(gsOggi);
-  if ((po.righe || []).length) {
-    const tp = somma(po.righe);
-    h += `<div class="section-head"><h2>Piano del giorno</h2>
-      <button class="act" data-act="vai-piano">Modifica</button></div>
-      <div class="card-row">
-        <span class="cbadge">${GIORNI_SETT.find(x => x.id === gsOggi).b}</span>
-        <span class="cb"><h3>${esc(po.nome || GIORNI_SETT.find(x => x.id === gsOggi).l)}</h3>
-          <span class="meta">${po.righe.length} voci · ${r0(tp.k)} kcal · ${r0(tp.p)} g proteine</span></span>
-        <button class="cta" data-applica="${gsOggi}" data-data="${d}">${righe.length ? 'Ricarica' : 'Carica'}</button>
-      </div>`;
-  }
-
   h += `<div class="section-head"><h2>Pasti</h2>
     <span class="count">${r0(tot.k)} kcal · ${r0(tot.p)} g prot</span></div>`;
 
@@ -498,6 +496,71 @@ function vistaOggi() {
     h += `<button class="btn sec sm" data-act="salva-ricetta">Salva questa giornata come combinazione</button>`;
   }
   return h;
+}
+
+/* Il piano del giorno scelto, in evidenza: è la domanda con cui apri l'app —
+   "cosa devo mangiare oggi" — e finché non è caricato nel diario è anche l'unica
+   azione che ha senso fare qui. Sta subito sotto le calorie, prima di tutto il
+   resto. */
+function riquadroPiano(d, righe, tot) {
+  const gs = gsDiData(d);
+  const g = GIORNI_SETT.find(x => x.id === gs);
+  const p = piano(gs);
+
+  if (!(p.righe || []).length) {
+    return `<button class="plan-hero vuoto" data-act="vai-piano">
+      <span class="ph-badge">${g.b}</span>
+      <span class="ph-t"><b>Nessun piano per ${esc(g.l.toLowerCase())}</b>
+        <span>Componilo una volta e lo ricarichi ogni ${esc(g.l.toLowerCase())} in un tocco</span></span>
+      <span class="ph-go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+    </button>`;
+  }
+
+  const tp = somma(p.righe);
+  /* Quanto ti sei discostato dal piano. È il confronto che conta: la media
+     settimanale non dice se oggi hai seguito il programma o improvvisato. */
+  const scarto = righe.length ? r0(tot.k - tp.k) : null;
+
+  /* L'elenco dei pasti si può ripiegare, ma parte aperto: la prima cosa che
+     vuoi sapere aprendo l'app è cosa mangi, non che esiste un piano. */
+  const aperto = DB.settings.pianoAperto !== false;
+
+  let h = `<div class="plan-hero">
+    <div class="ph-top" data-act="piega-piano">
+      <span class="ph-badge">${g.b}</span>
+      <span class="ph-t"><b>${esc(p.nome || g.l)}</b>
+        <span>${r0(tp.k)} kcal · ${r0(tp.p)} g prot</span></span>
+      <button class="ph-edit" data-act="vai-piano">Modifica</button>
+      <span class="ph-chev ${aperto ? 'su' : ''}">
+        <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+    </div>`;
+
+  if (aperto) {
+    h += `<div class="ph-meals">`;
+    for (const pa of PASTI) {
+      const rp = p.righe.filter(r => r.slot === pa.id);
+      if (!rp.length) continue;
+      const tm = somma(rp);
+      h += `<div class="pm">
+        <span class="pmh"><span class="pmn"><i class="pmi">${pa.ic}</i>${esc(pa.l)}</span><b>${r0(tm.k)} kcal</b></span>
+        <span class="pml">${rp.map(r => esc(r.n) + ' <i>' + r1(r.q) + ' g</i>').join(' · ')}</span>
+      </div>`;
+    }
+    h += `</div>`;
+  }
+
+  if (scarto === null) {
+    h += `<button class="ph-cta" data-applica="${gs}" data-data="${d}">
+      Carica nel diario · ${r0(tp.k)} kcal</button>`;
+  } else {
+    const stato = Math.abs(scarto) <= tp.k * 0.03 ? 'ok' : (scarto > 0 ? 'no' : 'neutro');
+    h += `<div class="ph-conf">
+        <span>Registrato <b>${r0(tot.k)}</b> contro <b>${r0(tp.k)}</b> del piano</span>
+        <span class="badge ${stato}">${Math.abs(scarto) <= tp.k * 0.03 ? 'in linea' : (scarto > 0 ? '+' : '−') + Math.abs(scarto) + ' kcal'}</span>
+      </div>
+      <button class="ph-cta sec" data-applica="${gs}" data-data="${d}">Ricarica il piano</button>`;
+  }
+  return h + `</div>`;
 }
 
 function rigaCibo(r) {
@@ -1933,6 +1996,11 @@ function renderConFuoco() {
 let cercaT = null;
 
 document.addEventListener('click', e => {
+  /* Il fondo scuro dietro al pannello va gestito per primo e da solo: è un
+     <div>, quindi non verrebbe mai raccolto dal closest() qui sotto, ed era il
+     motivo per cui da un pannello aperto non si poteva più uscire. */
+  if (e.target.id === 'sheetBackdrop' || e.target.closest('#sheetClose')) { chiudiSheet(); return; }
+
   const b = e.target.closest('button, [data-apri], [data-riga], [data-sess], [data-alim], [data-misura], [data-eser], [data-scheda], th[data-ord]');
   if (!b) return;
   const d = b.dataset;
@@ -1949,7 +2017,7 @@ document.addEventListener('click', e => {
   if (b.id === 'restStop') { fermaRecupero(); return; }
 
   /* ---------- pannello dal basso ---------- */
-  if (b.id === 'sheetBackdrop' || d.chiudi) { chiudiSheet(); return; }
+  if (d.chiudi) { chiudiSheet(); return; }
 
   /* ---------- filtri ---------- */
   if (d.f) {
@@ -2227,6 +2295,10 @@ function azione(a, b) {
     tocca(s); render(); return;
   }
 
+  if (a === 'piega-piano') {
+    DB.settings.pianoAperto = DB.settings.pianoAperto === false;
+    save(); render(); return;
+  }
   if (a === 'vai-piano') { SUB.cibo = 'piano'; SUB.gs = gsDiData(view.d || oggiISO()); vai({ name: 'cibo' }); return; }
 
   if (a === 'copia-piano') {
@@ -2654,7 +2726,18 @@ document.addEventListener('change', e => {
    15. Avvio
    ============================================================ */
 
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#sheet').hidden) chiudiSheet();
+});
+
 window.addEventListener('popstate', e => {
+  /* Con un pannello aperto, il gesto "indietro" deve chiudere quello, non
+     cambiare schermata: è quello che si aspetta chi lo usa. */
+  if (!$('#sheet').hidden) {
+    chiudiSheet();
+    history.pushState(view, '', '');
+    return;
+  }
   view = e.state || { name: 'oggi', d: oggiISO() };
   render();
 });

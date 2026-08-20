@@ -46,9 +46,15 @@ Dai un nome alla giornata (`Giornata 1 · riso e tonno`), aggiungi gli alimenti 
 pasto, e la barra ti dice quanto sei lontano dal bersaglio di calorie.
 
 Il piano è un **modello**: non conta nei report e non è il diario. Diventa reale quando
-lo carichi in una data — dalla scheda **Oggi**, riquadro *Piano del giorno* → **Carica**,
-oppure dal Piano stesso. Da quel momento le voci si modificano come tutte le altre: se
-oggi hai mangiato 200 g di riso invece di 60, correggi solo quella riga.
+lo carichi in una data — dalla scheda **Oggi** il piano del giorno scelto è il riquadro
+subito sotto le calorie, con tutti i pasti e le grammature; **Carica nel diario** e ci sei.
+Da quel momento le voci si modificano come tutte le altre: se oggi hai mangiato 200 g di
+riso invece di 60, correggi solo quella riga.
+
+Una volta caricato, quel riquadro diventa il **confronto**: *Registrato 2353 contro 2073
+del piano · +280 kcal*. È la cosa che la media settimanale non ti dice — se oggi hai
+seguito il programma o hai improvvisato. Toccando l'intestazione il riquadro si ripiega,
+se preferisci vedere subito i pasti registrati.
 
 Sulla scheda **Oggi** c'è anche la striscia dei sette giorni della settimana corrente:
 un tocco e ci sei. Il pallino sotto ogni giorno dice **corallo** = ho già registrato,
@@ -215,8 +221,8 @@ chiedere niente. Su iPhone si apre il foglio di condivisione, sul Mac il file si
 
 Quando cambi i file, alza il numero di versione in **due punti** (devono corrispondere):
 
-- `app.js`, riga in alto: `const APP_VERSION = '2026.08.20.3';`
-- `sw.js`, riga in alto: `const VER = 'forma-2026.08.20.3';`
+- `app.js`, riga in alto: `const APP_VERSION = '2026.08.20.4';`
+- `sw.js`, riga in alto: `const VER = 'forma-2026.08.20.4';`
 
 Se non alzi quello di `sw.js`, i telefoni continuano a usare i file vecchi presi dalla
 cache. Poi ricarichi i file su GitHub. La versione in uso si legge in Impostazioni.

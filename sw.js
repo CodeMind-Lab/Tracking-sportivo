@@ -2,7 +2,7 @@
    Tutti i dati stanno in localStorage, quindi qui basta conservare i file. */
 
 /* Alzare questo numero a ogni pubblicazione: le cache vecchie vengono buttate. */
-const VER = 'forma-2026.08.20.3';
+const VER = 'forma-2026.08.20.4';
 const SHELL = VER + '-shell';
 
 const FILES = [
@@ -17,7 +17,9 @@ const FILES = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable.png',
-  './icons/apple-touch-icon.png'
+  './icons/apple-touch-icon.png',
+  './icons/logo-lockup.png',
+  './icons/logo-full.png'
 ];
 
 self.addEventListener('install', e => {

@@ -21,8 +21,7 @@
      questa colonna sparisce e restano le schede in basso. -->
 <aside id="side">
   <div class="side-logo">
-    <div class="mark"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div>
-    <div class="wm">CodeMind<span>.Lab</span></div>
+    <img src="icons/logo-full.png" alt="CodeMind.Lab" width="420" height="172">
     <div class="sub">Forma · alimentazione e allenamento</div>
   </div>
   <nav class="side-menu">
@@ -69,7 +68,12 @@
 
 <div id="sheet" hidden>
   <div id="sheetBackdrop"></div>
-  <div id="sheetPanel"><div id="sheetContent"></div></div>
+  <div id="sheetPanel">
+    <button id="sheetClose" aria-label="Chiudi">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div id="sheetContent"></div>
+  </div>
 </div>
 
 <div id="toast" hidden></div>
