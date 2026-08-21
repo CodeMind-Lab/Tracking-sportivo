@@ -21,11 +21,11 @@ una volta sola e si ritrovano sull'altro dispositivo.
 |---|---|
 | **Oggi** | La giornata: anello delle calorie con acqua e macro, il piano del giorno, passi, allenamento, e in fondo **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
 | **Cibo → Diario** | Il registro di tutto quello che hai mangiato, **un giorno per riga**: tocchi il giorno e si apre con le sue voci e il totale. Filtri per periodo, pasto, categoria, ricerca sul nome. Export CSV. |
-| **Cibo → Piano** | Il piano alimentare della settimana: scegli **Lun Mar Mer Gio Ven Sab Dom** in alto e componi la giornata di quel giorno. Da qui lo carichi nel diario di una data. |
+| **Cibo → Piano** | Il piano alimentare della settimana: scegli **Lun Mar Mer Gio Ven Sab Dom** in alto e componi la giornata di quel giorno. Da qui lo carichi nel diario di una data, generi la **lista della spesa** e gestisci le **combinazioni** salvate. |
 | **Cibo → Alimenti** | L'anagrafica dei 71 alimenti più quelli che aggiungi tu, **raggruppati per categoria**: tocchi la categoria e si apre. Ricerca e filtro. |
 | **Allenamento → Sessioni** | Il registro degli allenamenti svolti: serie, volume in kg, cardio. Filtri per periodo e gruppo muscolare. Export CSV. |
 | **Allenamento → Schede** | I tuoi programmi. Una scheda ha i **giorni 1, 2, 3, 4…**: li scegli coi numeri in alto e ognuno ha i suoi esercizi con serie, ripetizioni, carico e recupero. |
-| **Report** | Media calorie e proteine, **aderenza** (quanti giorni sei rimasto entro il 10% del bersaglio), calorie giorno per giorno, ripartizione dei macro, cosa mangi davvero, da dove arrivano le proteine, volume per gruppo, progressione dei carichi, peso e girovita. Si stampa in PDF. |
+| **Report** | Media calorie e proteine, **aderenza** (quanti giorni sei rimasto entro il 10% del bersaglio), calorie giorno per giorno, ripartizione dei macro, cosa mangi davvero, acqua/passi/olio, volume per gruppo, progressione dei carichi, e il **peso con la media mobile** e il verdetto a tre settimane. Si stampa in PDF. |
 | **Impostazioni** | Bersagli, obiettivi, sincronizzazione, backup. |
 
 ### Cosa è già dentro e cosa metti tu
@@ -240,6 +240,28 @@ bilanciere.
 l'**aderenza**: due giorni sbagliati in direzioni opposte danno una media perfetta e una
 settimana disastrosa.
 
+**Il peso.** Il grafico mostra ogni pesata in azzurro chiaro e la **media a 7 giorni** in
+corallo: è quella che devi guardare, perché il peso grezzo oscilla di un chilo per il sale
+o l'intestino. Sotto c'è il verdetto che il piano ti chiede — la media delle ultime tre
+settimane contro quella delle tre precedenti — con la regola da applicare se sei fermo:
+togliere 150 kcal dai carboidrati, mai dalle proteine.
+
+**La lista della spesa.** Cibo → Piano → *Lista della spesa*. Somma le quantità dei giorni
+che scegli (tutti e sette in partenza), le raggruppa per categoria e le converte in kg dove
+serve. Spunti quello che metti nel carrello, e la spunta resta finché non la togli. Export
+CSV e stampa.
+
+**Sostituire un alimento.** Tocca una voce del diario o del piano, poi *Sostituisci con un
+altro alimento*: l'app tiene ferme le calorie e ti dice quanti grammi servono di ogni
+alternativa, ordinate per quanto restano vicine sulle proteine. Il segno verde vuol dire
+che le proteine non cambiano.
+
+**L'olio.** Non si registra a parte: l'app somma da sola i grammi di ogni riga che contiene
+"olio" e li confronta col massimo giornaliero. Lo trovi sulla scheda Oggi accanto ai passi.
+
+**Le combinazioni.** In Cibo → Piano, in fondo: le rinomini, le elimini, o le rimetti nel
+diario di oggi in un tocco.
+
 **Stampare un report.** Report → **Stampa**. Su Mac scegli *Salva come PDF*; su iPhone,
 dal foglio di condivisione. La stampa toglie da sola navigazione, filtri e pulsanti.
 
@@ -253,8 +275,8 @@ chiedere niente. Su iPhone si apre il foglio di condivisione, sul Mac il file si
 
 Quando cambi i file, alza il numero di versione in **due punti** (devono corrispondere):
 
-- `app.js`, riga in alto: `const APP_VERSION = '2026.08.21.1';`
-- `sw.js`, riga in alto: `const VER = 'forma-2026.08.21.1';`
+- `app.js`, riga in alto: `const APP_VERSION = '2026.08.21.2';`
+- `sw.js`, riga in alto: `const VER = 'forma-2026.08.21.2';`
 
 Se non alzi quello di `sw.js`, i telefoni continuano a usare i file vecchi presi dalla
 cache. Poi ricarichi i file su GitHub. La versione in uso si legge in Impostazioni.

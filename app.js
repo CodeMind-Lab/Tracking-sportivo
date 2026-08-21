@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.21.1';
+const APP_VERSION = '2026.08.21.2';
 
 const KEY = 'forma.v1';
 
@@ -27,7 +27,7 @@ const KEY = 'forma.v1';
    sync/dirty/graves restano fuori da items: sono la sincronizzazione stessa. */
 const DB = {
   items: [],
-  settings: { ultimoSlot: '', recDefault: 90 },
+  settings: { recDefault: 90 },
   sync: { url: '', anon: '', email: '', access: '', refresh: '', expires: 0, cursor: '', at: 0 },
   dirty: {},
   graves: {}
@@ -184,6 +184,13 @@ const kcalTarget = d => {
 
 const righeDi = d => di('l').filter(i => i.d === d);
 
+/* L'olio consumato in un giorno non si chiede: si somma da quello che hai già
+   registrato. È una delle poche regole numeriche del piano — "massimo 25 g al
+   giorno, cucchiaio dosatore, mai a occhio" — e chiedere di ricontarlo a mano
+   sarebbe farlo due volte. */
+const RX_OLIO = /\bolio\b/i;
+const olioDi = d => righeDi(d).filter(r => RX_OLIO.test(r.n)).reduce((t, r) => t + r.q, 0);
+
 /* Da una riga del diario ai numeri veri: il database ha i valori per 100 g,
    la riga ha i grammi. */
 function macro(riga) {
@@ -303,7 +310,8 @@ let view = { name: 'oggi', d: oggiISO() };
 
 const TITOLI = {
   oggi: 'Oggi', cibo: 'Cibo', allena: 'Allenamento', report: 'Report',
-  settings: 'Impostazioni', scheda: 'Scheda', sessione: 'Allenamento'
+  settings: 'Impostazioni', scheda: 'Scheda', sessione: 'Allenamento',
+  spesa: 'Lista della spesa'
 };
 
 /* Le sottoschede: Cibo e Allenamento hanno ciascuna un registro filtrabile e
@@ -338,7 +346,7 @@ function render() {
   $('#topTitle').innerHTML = t === 'oggi'
     ? `<img class="brand" src="icons/logo-lockup.png" alt="CodeMind.Lab" width="719" height="90">`
     : esc(TITOLI[t] || 'Forma');
-  $('#backBtn').hidden = !['scheda', 'sessione'].includes(t);
+  $('#backBtn').hidden = !['scheda', 'sessione', 'spesa'].includes(t);
   $('#settingsBtn').hidden = t === 'settings';
 
   /* La scheda attiva si accende in entrambe le navigazioni: quella in basso sul
@@ -354,6 +362,7 @@ function render() {
   else if (t === 'settings') app.innerHTML = vistaSettings();
   else if (t === 'scheda') app.innerHTML = vistaScheda();
   else if (t === 'sessione') app.innerHTML = vistaSessione();
+  else if (t === 'spesa') app.innerHTML = vistaSpesa();
 
   const sf = $('#sideFoot');
   if (sf) sf.innerHTML = 'Versione <b>' + APP_VERSION + '</b><br>' +
@@ -469,14 +478,27 @@ function vistaOggi() {
 
   h += riquadroPiano(d, righe, tot);
 
-  /* I passi restano fuori: sono l'unica leva sul dispendio finché la palestra
-     non è a regime, e a differenza dell'acqua si aggiornano una volta sola. */
-  h += `<div class="qcard largo">
-    <div class="qh">👟 Passi</div>
-    <div class="qv">${g.passi ? g.passi.toLocaleString('it-IT') : '—'}<small> / ${t.passi.toLocaleString('it-IT')}</small></div>
-    <div class="water">${Array.from({ length: 10 }, (_, i) =>
-      `<i class="${g.passi >= t.passi * (i + 1) / 10 ? 'on' : ''}"></i>`).join('')}</div>
-    <div class="qb"><button data-act="passi">Aggiorna</button></div>
+  /* Passi e olio: il primo si aggiorna una volta al giorno, il secondo si
+     conta da solo dalle righe del diario. Nessuno dei due ha bisogno di stare
+     nella scheda principale, ma tutti e due vanno visti prima di cena. */
+  const olio = olioDi(d);
+  h += `<div class="quick">
+    <div class="qcard">
+      <div class="qh">👟 Passi</div>
+      <div class="qv">${g.passi ? g.passi.toLocaleString('it-IT') : '—'}<small> / ${t.passi.toLocaleString('it-IT')}</small></div>
+      <div class="water">${Array.from({ length: 10 }, (_, i) =>
+        `<i class="${g.passi >= t.passi * (i + 1) / 10 ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="qb"><button data-act="passi">Aggiorna</button></div>
+    </div>
+    <div class="qcard">
+      <div class="qh">🫒 Olio</div>
+      <div class="qv ${olio > t.olio ? 'oltre' : ''}">${olio ? r1(olio) : '—'}<small> / ${t.olio} g</small></div>
+      <div class="water">${Array.from({ length: 10 }, (_, i) =>
+        `<i class="${olio >= t.olio * (i + 1) / 10 ? (olio > t.olio ? 'oltre' : 'on') : ''}"></i>`).join('')}</div>
+      <div class="qb"><span class="qnota">${olio > t.olio
+        ? r1(olio - t.olio) + ' g oltre il massimo'
+        : olio ? 'ne restano ' + r1(t.olio - olio) + ' g' : 'si conta da solo'}</span></div>
+    </div>
   </div>`;
 
   /* L'allenamento del giorno, se c'è. Sotto le calorie perché la domanda
@@ -660,6 +682,7 @@ function rigaSessione(w) {
     v + (e.sets || []).filter(s => s.ok).reduce((x, s) => x + num(s.r) * num(s.w), 0), 0);
   const min = (w.eser || []).reduce((x, e) => x + num(e.min), 0);
   const dettagli = [];
+  if (w.dur) dettagli.push(w.dur + ' min');
   if (nSerie) dettagli.push(nSerie + ' serie');
   if (volume) dettagli.push(r0(volume).toLocaleString('it-IT') + ' kg di volume');
   if (min) dettagli.push(min + ' min di cardio');
@@ -935,7 +958,113 @@ function vistaPiano() {
   <p class="set-note">Il piano è il tuo modello: resta lì e non conta nei report.
     Diventa reale solo quando lo carichi nel diario di una data, e da quel momento
     lo modifichi come qualsiasi altra voce.</p>`;
+
+  /* La lista della spesa nasce da qui: le sette giornate sanno già cosa serve. */
+  const settimana = GIORNI_SETT.filter(x => pianoPieno(x.id)).length;
+  if (settimana) {
+    h += `<button class="card-row" data-act="vai-spesa" style="margin-top:14px">
+      <span class="cbadge coral">🛒</span>
+      <span class="cb"><h3>Lista della spesa</h3>
+        <span class="meta">calcolata dai ${settimana} ${settimana === 1 ? 'giorno' : 'giorni'} che hai compilato</span></span>
+      <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+    </button>`;
+  }
+
+  /* Le combinazioni sono l'altro tipo di modello: nascono da una giornata
+     riuscita e si rimettono dentro in un tocco. Prima si potevano solo creare,
+     e restavano lì per sempre. */
+  const ric = di('r');
+  h += `<div class="section-head"><h2>Combinazioni</h2>
+    <span class="count">${ric.length}</span></div>`;
+  if (!ric.length) {
+    h += `<p class="set-note" style="margin-top:0">Nessuna. Quando una giornata del diario
+      ti viene bene, in fondo alla scheda <b>Oggi</b> c'è “salva questa giornata come
+      combinazione”: la ritrovi qui e quando aggiungi un alimento.</p>`;
+  } else {
+    for (const r of ric) {
+      const t = somma(r.righe || []);
+      h += `<button class="card-row" data-ricapri="${r.id}">
+        <span class="cbadge">📦</span>
+        <span class="cb"><h3>${esc(r.n)}</h3>
+          <span class="meta">${(r.righe || []).length} ${(r.righe || []).length === 1 ? 'voce' : 'voci'} · ${r0(t.k)} kcal · ${r0(t.p)} g proteine</span></span>
+        <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+      </button>`;
+    }
+  }
   return h;
+}
+
+/* ---------- la lista della spesa ---------- */
+
+function vistaSpesa() {
+  DB.settings.spesaGiorni = DB.settings.spesaGiorni || GIORNI_SETT.map(g => g.id);
+  DB.settings.spesaPresi = DB.settings.spesaPresi || {};
+  const scelti = DB.settings.spesaGiorni;
+  const presi = DB.settings.spesaPresi;
+
+  /* Somma per alimento su tutti i giorni scelti. Se il lunedì e il giovedì
+     vogliono entrambi 60 g di riso, a fare la spesa servono 120 g. */
+  const per = {};
+  for (const gid of scelti) {
+    for (const r of (piano(gid).righe || [])) {
+      const k = r.n;
+      if (!per[k]) per[k] = { n: r.n, q: 0, giorni: new Set() };
+      per[k].q += r.q;
+      per[k].giorni.add(gid);
+    }
+  }
+  const voci = Object.values(per);
+  const cat = catalogo();
+  const catDi = {};
+  for (const a of cat) catDi[a.n.toLowerCase()] = a.cat;
+
+  const perCat = {};
+  for (const v of voci) (perCat[catDi[v.n.toLowerCase()] || 'Altro'] = perCat[catDi[v.n.toLowerCase()] || 'Altro'] || []).push(v);
+  const ordine = CATEGORIE.filter(c => perCat[c]);
+  const daPrendere = voci.filter(v => !presi[v.n]).length;
+
+  let h = `<div class="filters">
+    <div class="fhead"><span class="ft">Giorni da coprire</span>
+      <button class="freset" data-act="spesa-tutti" ${scelti.length === 7 ? 'disabled' : ''}>Tutti</button></div>
+    <div class="fgrid"><div class="fgroup full"><div class="fchips">
+      ${GIORNI_SETT.map(g => `<button data-spesag="${g.id}"
+        class="${scelti.includes(g.id) ? 'on' : ''}" ${pianoPieno(g.id) ? '' : 'disabled'}>${g.b}</button>`).join('')}
+    </div></div></div>
+  </div>`;
+
+  h += `<div class="fsummary">
+    <span><b>${daPrendere}</b> da comprare su <b>${voci.length}</b></span>
+    <span class="exp"><button data-export="spesa">CSV</button><button data-act="stampa">Stampa</button></span>
+  </div>`;
+
+  if (!voci.length) {
+    return h + vuoto('🛒', 'Niente da comprare',
+      'Scegli almeno un giorno che abbia un piano, oppure compila il piano della settimana.');
+  }
+
+  for (const c of ordine) {
+    h += `<div class="panel" style="margin-top:10px"><div class="label">${CAT_ICON[c] || ''} ${esc(c)}</div>`;
+    for (const v of perCat[c].sort((a, b) => b.q - a.q)) {
+      const ok = !!presi[v.n];
+      h += `<button class="sp-r ${ok ? 'preso' : ''}" data-preso="${esc(v.n)}">
+        <span class="sp-c"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>
+        <span class="sp-b"><span class="sp-n">${esc(v.n)}</span>
+          <span class="sp-g">${v.giorni.size} ${v.giorni.size === 1 ? 'giorno' : 'giorni'}</span></span>
+        <span class="sp-q">${quantitaSpesa(v.q)}</span>
+      </button>`;
+    }
+    h += `</div>`;
+  }
+
+  h += `<button class="btn sec" data-act="spesa-azzera">Togli tutte le spunte</button>
+    <p class="set-note">Le quantità sono a crudo e senza scarti: per la verdura e la frutta
+      conta un 20% in più, per le confezioni arrotonda alla grandezza che trovi.</p>`;
+  return h;
+}
+
+/* Sotto il chilo si ragiona in grammi, sopra in chili: "1.4 kg" si legge, "1400 g" si conta. */
+function quantitaSpesa(g) {
+  return g >= 1000 ? r1(g / 1000) + ' kg' : r0(g) + ' g';
 }
 
 /* Quali giorni e quali categorie sono aperti. Sta in memoria e non nel
@@ -1164,7 +1293,7 @@ function statSessione(w) {
     }
     min += num(e.min); km += num(e.km);
   }
-  return { serie, volume, ripetizioni, min, km, esercizi: eser.length };
+  return { serie, volume, ripetizioni, min, km, esercizi: eser.length, dur: num(w.dur, 0) };
 }
 
 function sessioniFiltrate() {
@@ -1200,8 +1329,9 @@ function vistaSessioni() {
   const l = sessioniFiltrate();
   const tot = l.reduce((a, w) => {
     const s = statSessione(w);
-    return { serie: a.serie + s.serie, volume: a.volume + s.volume, min: a.min + s.min, km: a.km + s.km };
-  }, { serie: 0, volume: 0, min: 0, km: 0 });
+    return { serie: a.serie + s.serie, volume: a.volume + s.volume,
+             min: a.min + s.min, km: a.km + s.km, dur: a.dur + s.dur };
+  }, { serie: 0, volume: 0, min: 0, km: 0, dur: 0 });
   const i = intervallo(f);
   const settimane = Math.max(1, Math.round((new Date(i.a) - new Date(i.da)) / 6048e5) || 1);
 
@@ -1232,7 +1362,7 @@ function vistaSessioni() {
 
   h += `<div class="tablewrap"><table class="dt"><thead><tr>
       ${ord('data', 'Data')}<th class="nome">Allenamento</th><th class="opt">Gruppi</th>
-      <th class="n opt">Es.</th>${ord('serie', 'Serie', 'n')}${ord('volume', 'Volume', 'n')}
+      <th class="n opt">Durata</th>${ord('serie', 'Serie', 'n')}${ord('volume', 'Volume', 'n')}
       <th class="n opt">Cardio</th><th class="opt">Stato</th>
     </tr></thead><tbody>`;
   for (const w of l) {
@@ -1242,14 +1372,15 @@ function vistaSessioni() {
       <td>${esc(dataCorta(w.d))}<span class="sub">${esc(nomeGiorno(w.d))}</span></td>
       <td class="nome">${esc(w.gn || 'Allenamento')}${w.sn ? `<span class="sub">${esc(w.sn)}</span>` : ''}</td>
       <td class="opt">${gr.slice(0, 2).map(g => `<span class="badge sky">${esc(g.replace(/ \(.*/, ''))}</span>`).join(' ')}${gr.length > 2 ? ' +' + (gr.length - 2) : ''}</td>
-      <td class="n opt">${s.esercizi}</td><td class="n">${s.serie}</td>
+      <td class="n opt">${s.dur ? s.dur + "'" : '—'}</td><td class="n">${s.serie}</td>
       <td class="n">${s.volume ? r0(s.volume).toLocaleString('it-IT') : '—'}</td>
       <td class="n opt">${s.min ? s.min + "'" : '—'}${s.km ? ' · ' + r1(s.km) + ' km' : ''}</td>
       <td class="opt"><span class="badge ${w.fine ? 'ok' : 'coral'}">${w.fine ? 'chiusa' : 'in corso'}</span></td>
     </tr>`;
   }
   return h + `</tbody><tfoot><tr>
-      <td colspan="2">Totale</td><td class="opt"></td><td class="n opt"></td><td class="n">${tot.serie}</td>
+      <td colspan="2">Totale</td><td class="opt"></td>
+      <td class="n opt">${tot.dur ? tot.dur + "'" : '—'}</td><td class="n">${tot.serie}</td>
       <td class="n">${r0(tot.volume).toLocaleString('it-IT')}</td>
       <td class="n opt">${tot.min ? r0(tot.min) + "'" : '—'}</td><td class="opt"></td>
     </tr></tfoot></table></div>`;
@@ -1371,9 +1502,18 @@ function vistaSessione() {
     <div class="macros" style="margin-top:12px;padding-top:12px">
       <div class="macro"><div class="mh"><span class="mn">Serie</span><span class="mv">${s.serie}</span></div></div>
       <div class="macro"><div class="mh"><span class="mn">Volume</span><span class="mv">${r0(s.volume).toLocaleString('it-IT')}<i> kg</i></span></div></div>
-      <div class="macro"><div class="mh"><span class="mn">Ripetizioni</span><span class="mv">${s.ripetizioni}</span></div></div>
+      <div class="macro"><div class="mh"><span class="mn">Durata</span><span class="mv">${w.dur ? w.dur : '—'}<i> min</i></span></div></div>
     </div>
   </div>`;
+
+  if (w.fine) {
+    h += `<div class="panel"><div class="field" style="padding:2px 0">
+      <label>Durata dell'allenamento</label>
+      <input type="number" inputmode="numeric" data-wdur value="${w.dur || ''}"><span class="unit">min</span>
+    </div>
+    <p class="set-note">La conta l'app da quando parti a quando chiudi. Se avevi
+      dimenticato di chiudere, correggila qui.</p></div>`;
+  }
 
   (w.eser || []).forEach((e, ei) => {
     const card = isCardio(e);
@@ -1458,16 +1598,71 @@ function grafico(punti, opt) {
   const area = linea + ` L${X(punti.length - 1).toFixed(1)} ${(H - mb).toFixed(1)} L${X(0).toFixed(1)} ${(H - mb).toFixed(1)} Z`;
   const tacche = [max - pad * 0.6, (max + min) / 2, min + pad * 0.6];
 
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+  /* La media mobile, se c'è, diventa la linea che conta: il peso grezzo
+     oscilla di un chilo per il sale o l'intestino, e guardare i puntini uno
+     per uno porta a decisioni sbagliate. */
+  const mm = opt.media && opt.media.length === punti.length
+    ? opt.media.map((y, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(y).toFixed(1)).join(' ')
+    : null;
+
+  return `<svg class="chart ${mm ? 'con-media' : ''}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
     ${tacche.map(v => `<line class="grid" x1="${ml}" x2="${W - mr}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}"/>
       <text class="lbl" x="2" y="${(Y(v) + 3).toFixed(1)}">${r1(v)}</text>`).join('')}
     ${opt.goal != null ? `<line class="goal" x1="${ml}" x2="${W - mr}" y1="${Y(opt.goal).toFixed(1)}" y2="${Y(opt.goal).toFixed(1)}"/>` : ''}
-    <path class="area" d="${area}"/>
+    ${mm ? '' : `<path class="area" d="${area}"/>`}
     <path class="lin" d="${linea}"/>
-    ${punti.map((p, i) => `<circle class="dot ${i === punti.length - 1 ? 'last' : ''}" cx="${X(i).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="3.2"/>`).join('')}
+    ${mm ? `<path class="media" d="${mm}"/>` : ''}
+    ${punti.map((p, i) => `<circle class="dot ${i === punti.length - 1 ? 'last' : ''}" cx="${X(i).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="${mm ? 2.4 : 3.2}"/>`).join('')}
     <text class="lbl" x="${ml}" y="${H - 4}">${esc(punti[0].l)}</text>
     <text class="lbl" x="${W - mr}" y="${H - 4}" text-anchor="end">${esc(punti[punti.length - 1].l)}</text>
   </svg>`;
+}
+
+/* Media mobile su una finestra di GIORNI, non di rilevazioni: funziona sia se
+   ti pesi ogni giorno sia se lo fai una volta a settimana, mentre "media delle
+   ultime 7 misure" con la pesata settimanale coprirebbe due mesi. */
+function mediaMobile(punti, giorni) {
+  return punti.map((p, i) => {
+    const limite = new Date(p.d + 'T12:00:00').getTime() - giorni * 864e5;
+    let somma = 0, n = 0;
+    for (let j = i; j >= 0; j--) {
+      if (new Date(punti[j].d + 'T12:00:00').getTime() < limite) break;
+      somma += punti[j].y; n++;
+    }
+    return n ? somma / n : p.y;
+  });
+}
+
+/* La domanda del piano: "il peso medio è sceso nelle ultime tre settimane?".
+   Confronta la media delle ultime tre settimane con quella delle tre prima —
+   il singolo numero dell'ultima pesata non risponde. */
+function andamentoPeso(ms) {
+  const con = ms.filter(m => m.peso);
+  if (con.length < 2) return null;
+  const oggi = new Date(ms[ms.length - 1].d + 'T12:00:00').getTime();
+  const fascia = (da, a) => {
+    const v = con.filter(m => {
+      const t = new Date(m.d + 'T12:00:00').getTime();
+      return t > oggi - a * 864e5 && t <= oggi - da * 864e5;
+    }).map(m => num(m.peso));
+    return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null;
+  };
+  const recente = fascia(0, 21), prima = fascia(21, 42);
+  if (recente == null || prima == null) return null;
+  return { recente, prima, delta: recente - prima };
+}
+
+/* Una riga "media + quanti giorni a bersaglio". La barra non va oltre il 100%:
+   bere il doppio dell'acqua non è due volte meglio. */
+function rigaAbitudine(ic, nome, valore, quota, ok, su, cosa) {
+  return `<div class="abit">
+    <span class="ab-i">${ic}</span>
+    <span class="ab-b">
+      <span class="ab-t"><span>${esc(nome)}</span><b>${esc(valore)}</b></span>
+      <span class="rt"><i style="width:${Math.min(100, Math.max(3, quota * 100))}%"></i></span>
+      <span class="ab-n">${ok} ${ok === 1 ? 'giorno' : 'giorni'} su ${su} ${esc(cosa)}</span>
+    </span>
+  </div>`;
 }
 
 function classifica(voci, colore, unita) {
@@ -1631,6 +1826,28 @@ function vistaReport() {
         .sort((a, b) => b.v - a.v), '', 'kcal')}</div>
   </div>`;
 
+  /* ---------- le abitudini che non sono calorie ---------- */
+  const gg = di('g').filter(x => x.d >= i.da && x.d <= i.a);
+  const conAcqua = gg.filter(x => x.acqua > 0);
+  const conPassi = gg.filter(x => x.passi > 0);
+  const giorniOlio = giorni.map(d => olioDi(d)).filter(v => v > 0);
+
+  if (conAcqua.length || conPassi.length || giorniOlio.length) {
+    const mAcqua = conAcqua.length ? conAcqua.reduce((a, x) => a + x.acqua, 0) / conAcqua.length : 0;
+    const mPassi = conPassi.length ? conPassi.reduce((a, x) => a + x.passi, 0) / conPassi.length : 0;
+    const mOlio = giorniOlio.length ? giorniOlio.reduce((a, v) => a + v, 0) / giorniOlio.length : 0;
+    const okAcqua = conAcqua.filter(x => x.acqua >= t.acqua).length;
+    const okPassi = conPassi.filter(x => x.passi >= t.passi).length;
+    const okOlio = giorniOlio.filter(v => v <= t.olio).length;
+
+    h += `<div class="panel"><div class="rep-h"><h3>Acqua, passi e olio</h3>
+        <span class="hint">media dei giorni in cui hai registrato</span></div>
+      ${conAcqua.length ? rigaAbitudine('💧', 'Acqua', r1(mAcqua / 1000) + ' L', mAcqua / t.acqua, okAcqua, conAcqua.length, 'sopra il bersaglio') : ''}
+      ${conPassi.length ? rigaAbitudine('👟', 'Passi', r0(mPassi).toLocaleString('it-IT'), mPassi / t.passi, okPassi, conPassi.length, 'sopra il bersaglio') : ''}
+      ${giorniOlio.length ? rigaAbitudine('🫒', 'Olio EVO', r1(mOlio) + ' g', mOlio / t.olio, okOlio, giorniOlio.length, 'entro il massimo') : ''}
+    </div>`;
+  }
+
   /* ---------- allenamento ---------- */
   h += `<div class="section-head"><h2>Allenamento</h2>
     <span class="count">${sess.length} ${sess.length === 1 ? 'sessione' : 'sessioni'}</span></div>`;
@@ -1707,12 +1924,41 @@ function vistaReport() {
     <button class="act" data-act="nuova-misura">＋ Registra misura</button></div>`;
 
   if (tutteMs.length > 1) {
-    h += `<div class="cols2">
-      <div class="panel"><div class="rep-h"><h3>Peso</h3><span class="hint">obiettivo ${cfg().profilo.pesoObiettivo} kg</span></div>
-        ${grafico(tutteMs.filter(m => m.peso).map(m => ({ y: num(m.peso), l: dataCorta(m.d) })), { goal: cfg().profilo.pesoObiettivo })}</div>
-      <div class="panel"><div class="rep-h"><h3>Girovita</h3><span class="hint">obiettivo ${cfg().profilo.giroObiettivo} cm</span></div>
-        ${grafico(tutteMs.filter(m => m.giro).map(m => ({ y: num(m.giro), l: dataCorta(m.d) })), { goal: cfg().profilo.giroObiettivo })}</div>
-    </div>`;
+    const pesi = tutteMs.filter(m => m.peso).map(m => ({ y: num(m.peso), l: dataCorta(m.d), d: m.d }));
+    const giri = tutteMs.filter(m => m.giro).map(m => ({ y: num(m.giro), l: dataCorta(m.d), d: m.d }));
+    const and = andamentoPeso(tutteMs);
+
+    h += `<div class="panel"><div class="rep-h"><h3>Peso</h3>
+        <span class="hint">obiettivo ${cfg().profilo.pesoObiettivo} kg</span></div>
+      ${grafico(pesi, { goal: cfg().profilo.pesoObiettivo, media: mediaMobile(pesi, 7) })}
+      <div class="legend">
+        <span><i style="background:var(--teal);opacity:.45"></i>ogni pesata</span>
+        <span><i style="background:var(--coral)"></i>media a 7 giorni</span>
+        <span><i style="background:var(--coral);height:2px;border-radius:0"></i>obiettivo</span>
+      </div>`;
+
+    /* Il verdetto che il piano chiede: tre settimane contro le tre precedenti. */
+    if (and) {
+      const fermo = Math.abs(and.delta) < 0.3;
+      h += `<div class="verdetto ${and.delta < -0.3 ? 'bene' : fermo ? 'fermo' : 'male'}">
+        <b>${and.delta > 0 ? '+' : ''}${r1(and.delta)} kg</b>
+        <span>${and.delta < -0.3
+          ? 'nelle ultime tre settimane rispetto alle tre prima. Il piano sta funzionando: non toccare niente.'
+          : fermo
+            ? 'nelle ultime tre settimane. Il piano dice: se il peso medio non scende per tre settimane, togli 150 kcal dai <b>carboidrati</b> — mai dalle proteine.'
+            : 'nelle ultime tre settimane. Prima di cambiare i bersagli, controlla l’aderenza qui sopra: spesso il problema è quella, non il piano.'}</span>
+      </div>`;
+    } else {
+      h += `<p class="set-note">Con almeno sei settimane di pesate qui compare il confronto
+        fra le ultime tre e le tre precedenti, che è il numero su cui il piano ti chiede di decidere.</p>`;
+    }
+    h += `</div>`;
+
+    if (giri.length > 1) {
+      h += `<div class="panel"><div class="rep-h"><h3>Girovita</h3>
+          <span class="hint">obiettivo ${cfg().profilo.giroObiettivo} cm</span></div>
+        ${grafico(giri, { goal: cfg().profilo.giroObiettivo, media: mediaMobile(giri, 7) })}</div>`;
+    }
   }
 
   if (tutteMs.length) {
@@ -1772,6 +2018,7 @@ function vistaSettings() {
     ${campo('gras', 'Grassi', 'g', 'target')}
     ${campo('acqua', 'Acqua', 'ml', 'target')}
     ${campo('passi', 'Passi', '', 'target')}
+    ${campo('olio', 'Olio EVO al massimo', 'g', 'target')}
     <p class="set-note">Questi numeri sono solo un punto di partenza: metti i tuoi, presi dal
       piano che stai seguendo. Se il peso medio non scende per tre settimane, la correzione
       si fa togliendo calorie dai carboidrati — mai dalle proteine, che in deficit servono a
@@ -1902,6 +2149,7 @@ function sheetQuantita() {
       <button data-k="c" class="op">C</button>
     </div>
     <button class="btn" data-act="conferma-cibo">${(sheetCtx.rigaId || sheetCtx.pIdx != null) ? 'Salva' : 'Aggiungi'} ${q ? r0(a.k * f) + ' kcal' : ''}</button>
+    ${q > 0 ? `<button class="btn sec" data-act="sostituisci">Sostituisci con un altro alimento</button>` : ''}
     ${(sheetCtx.rigaId || sheetCtx.pIdx != null) ? `<button class="btn danger" data-act="elimina-riga">Elimina la voce</button>` : ''}`;
 }
 
@@ -2193,6 +2441,92 @@ function sheetProdotto(p) {
     <button class="btn sec" data-act="correggi-prodotto">Correggi i valori</button>`;
 }
 
+function sheetCombinazione(id) {
+  const r = DB.items.find(i => i.id === id);
+  if (!r) return '';
+  const t = somma(r.righe || []);
+  const perSlot = {};
+  for (const x of (r.righe || [])) (perSlot[x.slot] = perSlot[x.slot] || []).push(x);
+
+  return `<h2 class="sheet-title">Combinazione</h2>
+    <input class="txtin" id="ricNuovoNome" value="${esc(r.n)}" placeholder="Nome">
+    <p class="set-note" style="margin:9px 0 12px">${(r.righe || []).length} ${(r.righe || []).length === 1 ? 'voce' : 'voci'} ·
+      <b>${r0(t.k)}</b> kcal · ${r0(t.p)} P · ${r0(t.c)} C · ${r0(t.g)} G</p>
+    ${PASTI.filter(p => perSlot[p.id]).map(p => `<div class="pm">
+      <span class="pmh"><span class="pmn"><i class="pmi">${p.ic}</i>${esc(p.l)}</span>
+        <b>${r0(somma(perSlot[p.id]).k)} kcal</b></span>
+      <span class="pml">${perSlot[p.id].map(x => esc(x.n) + ' <i>' + r1(x.q) + ' g</i>').join(' · ')}</span>
+    </div>`).join('')}
+    <button class="btn" data-act="usa-combinazione">Aggiungi al diario di oggi</button>
+    <button class="btn sec" data-act="salva-combinazione">Salva il nome</button>
+    <button class="btn danger" data-act="elimina-combinazione">Elimina</button>`;
+}
+
+/* Sostituzioni a parità di calorie.
+ *
+ * Con tre macronutrienti e un solo numero da regolare — i grammi — non si può
+ * far tornare tutto. Si tengono uguali le calorie, che è il vincolo del piano,
+ * e si ordinano i candidati per quanto restano vicini sui macro. Le proteine
+ * pesano il doppio: sono la cosa che il piano dice di non toccare mai.
+ */
+function sostituti(a, q, tuttaLaLista) {
+  const miei = a.k;
+  if (!miei) return [];
+  const rif = { p: a.p * q / 100, c: a.c * q / 100, g: a.g * q / 100 };
+
+  return catalogo()
+    .filter(b => b.n !== a.n && b.k >= 5)
+    .filter(b => tuttaLaLista || b.cat === a.cat)
+    .map(b => {
+      const qb = q * miei / b.k;
+      const d = Math.abs(b.p * qb / 100 - rif.p) * 2
+              + Math.abs(b.c * qb / 100 - rif.c)
+              + Math.abs(b.g * qb / 100 - rif.g);
+      return { b, qb, d };
+    })
+    /* Fuori chi richiederebbe una quantità irreale: 400 kcal di zucchine sono
+       tre chili e mezzo, tecnicamente equivalenti e praticamente inutili. */
+    .filter(x => x.qb <= q * 4 && x.qb >= q / 4)
+    .sort((x, y) => x.d - y.d)
+    .slice(0, 12);
+}
+
+function sheetSostituzioni() {
+  const a = sheetCtx.alim, q = num(sheetCtx.q);
+  const tutta = !!sheetCtx.sostTutti;
+  const l = sostituti(a, q, tutta);
+  const rif = { k: a.k * q / 100, p: a.p * q / 100, c: a.c * q / 100, g: a.g * q / 100 };
+
+  let h = `<h2 class="sheet-title">Al posto di ${esc(a.n)}</h2>
+    <p class="set-note" style="margin:0 0 11px">${r1(q)} g · <b>${r0(rif.k)}</b> kcal ·
+      ${r1(rif.p)} P · ${r1(rif.c)} C · ${r1(rif.g)} G.
+      Le calorie restano queste, cambiano i grammi.</p>
+    <div class="fchips" style="margin-bottom:10px">
+      <button data-sostcat="0" class="${tutta ? '' : 'on'}">Stessa categoria</button>
+      <button data-sostcat="1" class="${tutta ? 'on' : ''}">Tutti gli alimenti</button>
+    </div>`;
+
+  if (!l.length) {
+    return h + `<p class="set-note">Nessun sostituto sensato${tutta ? '' : ' in questa categoria'}:
+      prova ad allargare a tutti gli alimenti.</p>`;
+  }
+
+  h += l.map(x => {
+    const dp = x.b.p * x.qb / 100 - rif.p;
+    const vicino = Math.abs(dp) < rif.p * 0.15 || Math.abs(dp) < 2;
+    return `<button class="res" data-sost="${esc(x.b.n)}|${r1(x.qb)}">
+      <span class="ic">${CAT_ICON[x.b.cat] || '🍽️'}</span>
+      <span class="body"><h3>${esc(x.b.n)}</h3>
+        <span class="meta"><b>${r1(x.qb)} g</b> · ${r1(x.b.p * x.qb / 100)} P ·
+          ${r1(x.b.c * x.qb / 100)} C · ${r1(x.b.g * x.qb / 100)} G</span></span>
+      <span class="badge ${vicino ? 'ok' : 'neutro'}">${dp > 0 ? '+' : ''}${r1(dp)} P</span>
+    </button>`;
+  }).join('');
+
+  return h + `<p class="set-note">Il segno verde vuol dire che le proteine restano quelle:
+    è la cosa che il piano chiede di non perdere.</p>`;
+}
+
 function sheetCodiceManuale(avviso) {
   return apriSheet(`<h2 class="sheet-title">Codice a barre</h2>
     ${avviso ? `<p class="set-note" style="margin:0 0 10px">${esc(avviso)}</p>` : ''}
@@ -2257,19 +2591,36 @@ function esporta(cosa) {
     scarica('forma-alimenti-' + oggi + '.csv', csv(out));
 
   } else if (cosa === 'sessioni') {
-    const out = [['Data', 'Allenamento', 'Scheda', 'Esercizio', 'Gruppo', 'Serie', 'Ripetizioni', 'Peso kg', 'Minuti', 'Km']];
+    const out = [['Data', 'Allenamento', 'Scheda', 'Durata min', 'Esercizio', 'Gruppo', 'Serie', 'Ripetizioni', 'Peso kg', 'Minuti', 'Km']];
     for (const w of sessioniFiltrate()) {
       for (const e of (w.eser || [])) {
         const fatte = (e.sets || []).filter(s => s.ok);
         if (fatte.length) {
-          fatte.forEach((s, i) => out.push([w.d, w.gn || '', w.sn || '', e.n,
+          fatte.forEach((s, i) => out.push([w.d, w.gn || '', w.sn || '', w.dur || '', e.n,
             e.gruppo || gruppoDi(e.n), i + 1, s.r, s.w, '', '']));
         } else {
-          out.push([w.d, w.gn || '', w.sn || '', e.n, e.gruppo || gruppoDi(e.n), '', '', '', e.min || '', e.km || '']);
+          out.push([w.d, w.gn || '', w.sn || '', w.dur || '', e.n, e.gruppo || gruppoDi(e.n), '', '', '', e.min || '', e.km || '']);
         }
       }
     }
     scarica('forma-allenamenti-' + oggi + '.csv', csv(out));
+
+  } else if (cosa === 'spesa') {
+    const scelti = DB.settings.spesaGiorni || [];
+    const per = {};
+    for (const gid of scelti) {
+      for (const r of (piano(gid).righe || [])) {
+        per[r.n] = (per[r.n] || 0) + r.q;
+      }
+    }
+    const cat = catalogo(), catDi = {};
+    for (const a of cat) catDi[a.n.toLowerCase()] = a.cat;
+    const out = [['Categoria', 'Alimento', 'Quantita g', 'In pratica', 'Preso']];
+    Object.keys(per).sort().forEach(n => out.push([
+      catDi[n.toLowerCase()] || 'Altro', n, r0(per[n]), quantitaSpesa(per[n]),
+      (DB.settings.spesaPresi || {})[n] ? 'si' : ''
+    ]));
+    scarica('forma-spesa-' + oggi + '.csv', csv(out));
 
   } else if (cosa === 'report') {
     const f = filtri('report'), i = intervallo(f);
@@ -2280,13 +2631,14 @@ function esporta(cosa) {
       const g = perGiorno[r.d] = perGiorno[r.d] || { k: 0, p: 0, c: 0, g: 0 };
       g.k += m.k; g.p += m.p; g.c += m.c; g.g += m.g;
     }
-    const out = [['Data', 'Tipo giornata', 'Kcal', 'Bersaglio', 'Scarto', 'Proteine', 'Carboidrati', 'Grassi', 'Acqua ml', 'Passi', 'Allenamenti', 'Volume kg']];
+    const out = [['Data', 'Tipo giornata', 'Kcal', 'Bersaglio', 'Scarto', 'Proteine', 'Carboidrati', 'Grassi', 'Olio g', 'Acqua ml', 'Passi', 'Allenamenti', 'Durata min', 'Volume kg']];
     for (const d of Object.keys(perGiorno).sort()) {
       const g = perGiorno[d], kt = kcalTarget(d), gg = giorno(d);
       const s = di('w').filter(w => w.d === d);
       const vol = s.reduce((v, w) => v + statSessione(w).volume, 0);
+      const dur = s.reduce((v, w) => v + num(w.dur), 0);
       out.push([d, gg.tipo === 'off' ? 'riposo' : 'turno', r0(g.k), kt, r0(g.k - kt),
-        r1(g.p), r1(g.c), r1(g.g), gg.acqua || 0, gg.passi || 0, s.length, r0(vol)]);
+        r1(g.p), r1(g.c), r1(g.g), r1(olioDi(d)), gg.acqua || 0, gg.passi || 0, s.length, dur, r0(vol)]);
     }
     scarica('forma-report-' + oggi + '.csv', csv(out));
   }
@@ -2493,6 +2845,29 @@ document.addEventListener('click', e => {
     sheetCtx = { alim: a, q: String(r1(r.q)), slot: r.slot, piano: gs, pIdx: +idx };
     $('#sheetContent').innerHTML = sheetQuantita();
     $('#sheet').hidden = false;
+    return;
+  }
+  if (d.spesag) {
+    const l = DB.settings.spesaGiorni;
+    const i = l.indexOf(d.spesag);
+    if (i < 0) l.push(d.spesag); else l.splice(i, 1);
+    save(); render(); return;
+  }
+  if (d.preso) {
+    const p = DB.settings.spesaPresi;
+    if (p[d.preso]) delete p[d.preso]; else p[d.preso] = 1;
+    save(); haptic(); render(); return;
+  }
+  if (d.ricapri) { apriSheet(sheetCombinazione(d.ricapri), { ricId: d.ricapri }); return; }
+  if (d.sostcat) { sheetCtx.sostTutti = d.sostcat === '1'; $('#sheetContent').innerHTML = sheetSostituzioni(); return; }
+  if (d.sost) {
+    const [nome, q] = d.sost.split('|');
+    const nuovo = catalogo().find(x => x.n === nome);
+    if (!nuovo) return;
+    sheetCtx.alim = nuovo;
+    sheetCtx.q = String(r0(num(q)));
+    $('#sheetContent').innerHTML = sheetQuantita();
+    haptic();
     return;
   }
   if (d.copiada) {
@@ -2733,6 +3108,34 @@ function azione(a, b) {
     apriSheet(sheetNuovoAlimento('', p), { ean: p.ean, slot: sheetCtx.slot });
     return;
   }
+  if (a === 'sostituisci') {
+    sheetCtx.sostTutti = false;
+    $('#sheetContent').innerHTML = sheetSostituzioni();
+    return;
+  }
+
+  if (a === 'vai-spesa') { vai({ name: 'spesa' }); return; }
+  if (a === 'spesa-tutti') { DB.settings.spesaGiorni = GIORNI_SETT.map(g => g.id); save(); render(); return; }
+  if (a === 'spesa-azzera') { DB.settings.spesaPresi = {}; save(); render(); return; }
+
+  if (a === 'salva-combinazione') {
+    const r = DB.items.find(i => i.id === sheetCtx.ricId);
+    const nome = $('#ricNuovoNome').value.trim();
+    if (!nome) { toast('Serve un nome'); return; }
+    r.n = nome; tocca(r); chiudiSheet(); render(); return;
+  }
+  if (a === 'elimina-combinazione') {
+    if (!confirm('Eliminare questa combinazione? Il diario già registrato non cambia.')) return;
+    elimina(sheetCtx.ricId); chiudiSheet(); render(); return;
+  }
+  if (a === 'usa-combinazione') {
+    const r = DB.items.find(i => i.id === sheetCtx.ricId);
+    for (const x of (r.righe || [])) {
+      aggiungi({ t: 'l', d: oggiISO(), slot: x.slot || slotOra(), n: x.n, q: x.q, k: x.k, p: x.p, c: x.c, g: x.g });
+    }
+    chiudiSheet(); haptic(); toast(r.n + ' aggiunta al diario di oggi'); render(); return;
+  }
+
   if (a === 'importa-piano') { scegliFile('piano'); return; }
   if (a === 'importa-scheda') { scegliFile('scheda'); return; }
   if (a === 'conferma-piano') { confermaPiano(); return; }
@@ -2743,7 +3146,16 @@ function azione(a, b) {
   }
   if (a === 'add-eser-sess') { apriSheet(sheetEsercizio(), { dove: 'sessione' }); return; }
   if (a === 'chiudi-sess') {
-    const w = W(); w.fine = true; tocca(w); fermaRecupero(); toast('Allenamento chiuso'); render(); return;
+    const w = W();
+    w.fine = true;
+    /* La durata la sa già l'orologio. Ma se hai dimenticato di chiudere la
+       sessione, l'orologio direbbe nove ore: sopra le cinque il numero non è
+       una durata, è una dimenticanza, e meglio nessun dato che uno falso. */
+    if (w.inizio && !w.dur) {
+      const min = Math.round((Date.now() - w.inizio) / 60000);
+      if (min > 0 && min <= 300) w.dur = min;
+    }
+    tocca(w); fermaRecupero(); toast('Allenamento chiuso'); render(); return;
   }
   if (a === 'riapri-sess') { const w = W(); w.fine = false; tocca(w); render(); return; }
   if (a === 'del-sess') {
@@ -3129,6 +3541,10 @@ document.addEventListener('input', e => {
   if (d.wnote !== undefined) {
     const w = DB.items.find(i => i.id === view.id);
     w.note = el.value; tocca(w); return;
+  }
+  if (d.wdur !== undefined) {
+    const w = DB.items.find(i => i.id === view.id);
+    w.dur = Math.max(0, r0(num(el.value))); tocca(w); return;
   }
 });
 

@@ -922,6 +922,67 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   .acc-h.fitta .acc-n{display:none}
 }
 
+/* ---------- la lista della spesa ---------- */
+.sp-r{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  padding:10px 2px;border-top:1px solid var(--line);
+}
+.sp-r:first-of-type{border-top:0}
+.sp-c{
+  width:24px;height:24px;flex:none;border-radius:7px;border:1.8px solid #C0CEDC;
+  display:grid;place-items:center;background:#fff;
+}
+.sp-c svg{width:14px;height:14px;stroke:#fff;stroke-width:3.2;opacity:0}
+.sp-r.preso .sp-c{background:var(--ok);border-color:var(--ok)}
+.sp-r.preso .sp-c svg{opacity:1}
+.sp-b{flex:1;min-width:0}
+.sp-n{display:block;font-size:14px;font-weight:650;color:var(--navy);line-height:1.3}
+.sp-g{display:block;font-size:11px;color:var(--txt-faint);margin-top:1px}
+.sp-q{flex:none;font-size:14px;font-weight:800;color:var(--teal);font-variant-numeric:tabular-nums}
+/* Barrato quando è nel carrello: si vede da lontano cosa manca ancora. */
+.sp-r.preso .sp-n{color:var(--txt-faint);text-decoration:line-through}
+.sp-r.preso .sp-q{color:var(--txt-faint)}
+
+/* ---------- abitudini nel report ---------- */
+.abit{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid var(--line)}
+.abit:first-of-type{border-top:0}
+.ab-i{font-size:18px;flex:none;line-height:1}
+.ab-b{flex:1;min-width:0}
+.ab-t{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-bottom:5px}
+.ab-t span{color:var(--txt-dim)}
+.ab-t b{color:var(--navy);font-weight:800;font-variant-numeric:tabular-nums}
+.ab-n{display:block;font-size:11px;color:var(--txt-faint);margin-top:4px}
+
+/* ---------- il verdetto sul peso ---------- */
+.verdetto{
+  display:flex;gap:12px;align-items:flex-start;margin-top:12px;
+  padding:12px;border-radius:12px;background:var(--bg-elev);
+  border-left:3px solid var(--txt-faint);
+}
+.verdetto b{
+  flex:none;font-size:18px;font-weight:800;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1.2;
+}
+.verdetto span{flex:1;min-width:0;font-size:12px;line-height:1.6;color:var(--txt-dim)}
+.verdetto span b{font-size:12px;color:var(--navy)}
+.verdetto.bene{border-left-color:var(--teal)}
+.verdetto.bene > b{color:var(--teal)}
+.verdetto.fermo{border-left-color:var(--coral)}
+.verdetto.fermo > b{color:var(--coral)}
+.verdetto.male{border-left-color:var(--danger)}
+.verdetto.male > b{color:var(--danger)}
+
+/* la media mobile è la linea che conta: quella grezza si fa da parte */
+.chart .media{fill:none;stroke:var(--coral);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
+.chart.con-media .lin{stroke-width:1.2;opacity:.4}
+.chart.con-media .dot{stroke-width:1.6;opacity:.55}
+.chart.con-media .dot.last{opacity:1}
+
+/* il contatore dell'olio quando si sfora */
+.qcard .qv.oltre{color:var(--coral)}
+.qcard .water i.oltre{background:var(--coral)}
+.qcard .qnota{font-size:11px;color:var(--txt-faint);line-height:1.4}
+
 /* ---------- report ---------- */
 .rep-h{
   display:flex;align-items:baseline;justify-content:space-between;gap:10px;
