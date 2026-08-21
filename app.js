@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.20.10';
+const APP_VERSION = '2026.08.21.1';
 
 const KEY = 'forma.v1';
 
@@ -365,12 +365,15 @@ function render() {
    ============================================================ */
 
 function barraGiorno(d) {
-  const avanti = d < oggiISO() ? '' : 'disabled';
+  /* Nessun blocco in avanti. Bloccarlo a oggi sembrava sensato — non puoi aver
+     mangiato domani — ma questo è anche un programma settimanale: dalla
+     domenica non si passava al lunedì dopo, e non si poteva preparare in
+     anticipo la giornata di un turno. */
   return `<div class="daynav">
     <button class="arw" data-day="-1" aria-label="Giorno precedente">
       <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-    <div class="lbl" data-act="oggi-torna">${esc(nomeGiorno(d))}<small>${esc(dataCorta(d))}</small></div>
-    <button class="arw" data-day="1" ${avanti} aria-label="Giorno successivo">
+    <button class="lbl" data-act="calendario">${esc(nomeGiorno(d))}<small>${esc(dataLunga(d))}</small></button>
+    <button class="arw" data-day="1" aria-label="Giorno successivo">
       <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
   </div>`;
 }
@@ -1941,6 +1944,59 @@ function sheetNuovoAlimento(nome, a) {
 /* prompt() non è affidabile dentro un'app installata — su alcune versioni di iOS
    viene semplicemente ignorato — e comunque stona con il resto dell'interfaccia,
    che chiede tutto dal basso. */
+/* Il calendario del mese. Le frecce spostano di un giorno, la striscia della
+   settimana di sette: per andare al mese scorso o alla settimana prossima
+   servirebbero venti tocchi. Qui ci si arriva in uno. */
+function sheetCalendario(sel) {
+  const mese = sheetCtx.mese || sel.slice(0, 7);
+  const [anno, mm] = mese.split('-').map(Number);
+  const primo = new Date(anno, mm - 1, 1);
+  const giorniNelMese = new Date(anno, mm, 0).getDate();
+  const vuoti = (primo.getDay() + 6) % 7;          // lunedì come primo giorno
+  const oggi = oggiISO();
+
+  const nomeMese = primo.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })
+    .replace(/^./, c => c.toUpperCase());
+
+  let celle = '';
+  for (let i = 0; i < vuoti; i++) celle += `<span class="cal-v"></span>`;
+  for (let g = 1; g <= giorniNelMese; g++) {
+    const data = mese + '-' + String(g).padStart(2, '0');
+    const righe = righeDi(data).length;
+    const allenato = di('w').some(w => w.d === data);
+    const haPiano = pianoPieno(gsDiData(data));
+    const cls = [
+      data === sel ? 'sel' : '',
+      data === oggi ? 'oggi' : '',
+      data > oggi ? 'futuro' : ''
+    ].filter(Boolean).join(' ');
+    celle += `<button class="cal-g ${cls}" data-vaidata="${data}">
+      <b>${g}</b>
+      <span class="cal-p">
+        <i class="${righe ? 'cibo' : (haPiano ? 'piano' : '')}"></i>
+        <i class="${allenato ? 'pesi' : ''}"></i>
+      </span>
+    </button>`;
+  }
+
+  return `<h2 class="sheet-title">Vai a una data</h2>
+    <div class="cal-top">
+      <button class="arw" data-mese="-1" aria-label="Mese precedente">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <span class="cal-m">${esc(nomeMese)}</span>
+      <button class="arw" data-mese="1" aria-label="Mese successivo">
+        <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+    <div class="cal-h">${GIORNI_SETT.map(g => `<span>${g.b}</span>`).join('')}</div>
+    <div class="cal-griglia">${celle}</div>
+    <div class="legend" style="justify-content:center">
+      <span><i style="background:var(--coral)"></i>registrato</span>
+      <span><i style="background:var(--sky)"></i>solo piano</span>
+      <span><i style="background:var(--teal)"></i>allenamento</span>
+    </div>
+    <button class="btn sec" data-vaidata="${oggi}">Torna a oggi</button>`;
+}
+
 function sheetPassi(d) {
   const g = giorno(d);
   const t = cfg().target.passi;
@@ -2409,7 +2465,18 @@ document.addEventListener('click', e => {
     render(); return;
   }
   if (d.gs) { SUB.gs = d.gs; render(); return; }
-  if (d.vaidata) { view.d = d.vaidata; render(); return; }
+  if (d.vaidata) {
+    view.d = d.vaidata;
+    if (!$('#sheet').hidden) chiudiSheet();
+    render(); return;
+  }
+  if (d.mese) {
+    const [a, m] = (sheetCtx.mese || view.d.slice(0, 7)).split('-').map(Number);
+    const nuovo = new Date(a, m - 1 + num(d.mese), 1);
+    sheetCtx.mese = nuovo.getFullYear() + '-' + String(nuovo.getMonth() + 1).padStart(2, '0');
+    $('#sheetContent').innerHTML = sheetCalendario(view.d);
+    return;
+  }
   if (d.applica) { applicaPiano(d.applica, d.data || oggiISO()); return; }
   if (d.padd) {
     const [gs, slot] = d.padd.split('|');
@@ -2492,7 +2559,7 @@ document.addEventListener('click', e => {
 function azione(a, b) {
   const W = () => DB.items.find(i => i.id === view.id);
 
-  if (a === 'oggi-torna') { view.d = oggiISO(); render(); return; }
+  if (a === 'calendario') { apriSheet(sheetCalendario(view.d), { mese: view.d.slice(0, 7) }); return; }
 
   if (a === 'cambia-tipo') {
     const g = giorno(view.d, true);

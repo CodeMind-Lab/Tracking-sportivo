@@ -19,7 +19,7 @@ una volta sola e si ritrovano sull'altro dispositivo.
 
 | Scheda | A cosa serve |
 |---|---|
-| **Oggi** | La giornata: anello delle calorie con acqua e macro, il piano del giorno, passi, allenamento, e in fondo **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Con le frecce o con la striscia Lun‑Dom ti sposti su qualsiasi data. |
+| **Oggi** | La giornata: anello delle calorie con acqua e macro, il piano del giorno, passi, allenamento, e in fondo **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
 | **Cibo → Diario** | Il registro di tutto quello che hai mangiato, **un giorno per riga**: tocchi il giorno e si apre con le sue voci e il totale. Filtri per periodo, pasto, categoria, ricerca sul nome. Export CSV. |
 | **Cibo → Piano** | Il piano alimentare della settimana: scegli **Lun Mar Mer Gio Ven Sab Dom** in alto e componi la giornata di quel giorno. Da qui lo carichi nel diario di una data. |
 | **Cibo → Alimenti** | L'anagrafica dei 71 alimenti più quelli che aggiungi tu, **raggruppati per categoria**: tocchi la categoria e si apre. Ricerca e filtro. |
@@ -187,6 +187,12 @@ In quel caso usa **Impostazioni → Backup → Esporta tutto**: è l'unica copia
 
 ## Come si usa, in pratica
 
+**Spostarsi fra i giorni.** Le frecce vanno avanti e indietro di un giorno, anche nel
+futuro: serve per preparare in anticipo la giornata di un turno. La striscia Lun‑Dom salta
+dentro la settimana. Toccando la data si apre il **calendario del mese**, dove ogni giorno
+porta i suoi pallini — corallo se hai registrato, azzurro se c'è solo il piano, teal se hai
+allenato — e da lì vai ovunque in un tocco.
+
 **Caricare la giornata.** Se il giorno della settimana ha un piano, sulla scheda Oggi
 compare *Piano del giorno* → **Carica**: tutte le voci entrano nel diario in un tocco.
 Poi correggi solo quello che hai mangiato davvero diverso.
@@ -247,8 +253,8 @@ chiedere niente. Su iPhone si apre il foglio di condivisione, sul Mac il file si
 
 Quando cambi i file, alza il numero di versione in **due punti** (devono corrispondere):
 
-- `app.js`, riga in alto: `const APP_VERSION = '2026.08.20.10';`
-- `sw.js`, riga in alto: `const VER = 'forma-2026.08.20.10';`
+- `app.js`, riga in alto: `const APP_VERSION = '2026.08.21.1';`
+- `sw.js`, riga in alto: `const VER = 'forma-2026.08.21.1';`
 
 Se non alzi quello di `sw.js`, i telefoni continuano a usare i file vecchi presi dalla
 cache. Poi ricarichi i file su GitHub. La versione in uso si legge in Impostazioni.

@@ -232,8 +232,51 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .daynav button.arw{width:36px;height:34px;display:grid;place-items:center;color:var(--teal);border-radius:9px}
 .daynav button.arw:active{background:#fff}
 .daynav button.arw[disabled]{color:var(--txt-faint);opacity:.4}
-.daynav .lbl{flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--navy);letter-spacing:-.01em}
-.daynav .lbl small{display:block;font-size:10.5px;font-weight:600;color:var(--txt-faint);letter-spacing:.04em;text-transform:uppercase}
+
+/* ---------- calendario del mese ---------- */
+.cal-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.cal-top .arw{
+  width:36px;height:34px;display:grid;place-items:center;color:var(--teal);
+  border-radius:9px;background:var(--bg-elev2);flex:none;
+}
+.cal-top .arw:active{background:var(--teal);color:#fff}
+.cal-m{flex:1;text-align:center;font-size:15px;font-weight:750;color:var(--navy)}
+.cal-h{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;
+}
+.cal-h span{
+  text-align:center;font-size:9.5px;font-weight:800;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--txt-faint);
+}
+.cal-griglia{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-v{display:block}
+.cal-g{
+  aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;
+  font-variant-numeric:tabular-nums;background:var(--bg-elev);
+}
+.cal-g b{font-size:14px;font-weight:650;color:var(--navy);line-height:1}
+.cal-g.futuro b{color:var(--txt-faint);font-weight:600}
+/* Oggi si riconosce dal bordo, il giorno scelto dal pieno: due segni diversi
+   perché spesso sono lo stesso giorno e uno solo non basterebbe a dirlo. */
+.cal-g.oggi{box-shadow:inset 0 0 0 2px var(--teal)}
+.cal-g.sel{background:var(--navy)}
+.cal-g.sel b{color:#fff}
+.cal-g:active{background:var(--bg-elev2)}
+.cal-p{display:flex;gap:3px;height:5px}
+.cal-p i{width:5px;height:5px;border-radius:50%;background:transparent;display:block}
+.cal-p i.cibo{background:var(--coral)}
+.cal-p i.piano{background:var(--sky)}
+.cal-p i.pesi{background:var(--teal)}
+.cal-g.sel .cal-p i.cibo,.cal-g.sel .cal-p i.piano,.cal-g.sel .cal-p i.pesi{background:#fff}
+
+/* La data in cima ora è un pulsante: deve sembrarlo. */
+.daynav .lbl{
+  flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--navy);
+  letter-spacing:-.01em;padding:4px 0;border-radius:9px;
+}
+.daynav .lbl small{display:block;font-size:10.5px;font-weight:600;color:var(--txt-faint);letter-spacing:.02em}
+.daynav .lbl:active{background:#fff}
 
 /* ---------- striscia dei giorni ---------- */
 .weekstrip{display:flex;gap:5px;margin-bottom:12px}
