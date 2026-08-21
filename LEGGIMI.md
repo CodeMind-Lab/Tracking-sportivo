@@ -253,6 +253,12 @@ Quando cambi i file, alza il numero di versione in **due punti** (devono corrisp
 Se non alzi quello di `sw.js`, i telefoni continuano a usare i file vecchi presi dalla
 cache. Poi ricarichi i file su GitHub. La versione in uso si legge in Impostazioni.
 
+## Rifare il database degli alimenti
+
+Nella cartella `strumenti/` ci sono gli script che hanno costruito `data.js`
+dalle tabelle CREA, con le istruzioni per rilanciarli. Non servono all'app: sono
+lì per il giorno in cui volessi aggiornare i valori.
+
 ## Dove stanno i dati
 
 Nel `localStorage` del browser, sotto la chiave `forma.v1`. Tutto in una struttura sola:
