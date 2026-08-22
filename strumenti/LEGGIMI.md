@@ -49,3 +49,32 @@ Per ogni alimento le calorie dovrebbero tornare con la somma dei macro a
 4/4/9 kcal per grammo. Le uniche voci che sballano sono le bevande alcoliche,
 dove le calorie vengono dall'alcol (7 kcal/g) e non da proteine, carboidrati
 o grassi: lì lo scarto è giusto.
+
+
+---
+
+# Estrarre un piano da un PDF
+
+`pdftxt2.py` tira fuori il testo da un PDF senza librerie esterne (segue i
+flussi di contenuto delle pagine e le mappe dei caratteri dei font).
+`estrai_piano.py` prende quel testo e ne fa un CSV importabile dall'app.
+
+```bash
+python3 pdftxt2.py "piano.pdf" > piano.txt
+python3 estrai_piano.py            # scrive piano-renato.csv
+```
+
+Funziona sui piani scritti nella forma **`<alimento> <misura casalinga> pari a
+<N> g`**, divisi per pasto con intestazioni tipo *Colazione Quantità*.
+
+Due cose da regolare a mano dentro `estrai_piano.py`:
+
+- **`MAPPA`** — da come il nutrizionista chiama un alimento a come si chiama nel
+  database. Dove il piano è generico (*Pesce*, *Legumi*) va scelta una voce
+  precisa, ed è una scelta, non un dato: va detta a chi userà il piano.
+- **`NOMI`** — quale pagina del PDF diventa quale giornata.
+
+Le righe alternative (*"Pasta 50 g **o** Riso Basmati 50 g"*) vengono
+riconosciute e lasciate fuori: sono una sostituzione, non un secondo alimento,
+e sommarle raddoppierebbe le calorie del pasto. Lo script le elenca a schermo
+perché tu sappia cosa ha scartato.

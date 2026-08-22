@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.21.3';
+const APP_VERSION = '2026.08.22.1';
 
 const KEY = 'forma.v1';
 
@@ -3549,11 +3549,15 @@ function confermaPiano() {
       righe.push({ slot: r.slot, n: a.n, q: r.q, k: a.k, p: a.p, c: a.c, g: a.g });
     }
     const nome = lette[i].nome;
+    /* Se il nome dice già se è un giorno di turno o di riposo, la giornata lo
+       impara da sé: "Giorno 2 on" è un giorno di turno. */
+    const tipo = /\boff\b|riposo/i.test(nome) ? 'off' : /\bon\b|turno/i.test(nome) ? 'on' : '';
     /* Reimportando lo stesso file non si accumulano doppioni: se una giornata
-       con quel nome c'è già, si aggiorna. */
+       con quel nome c'è già, si aggiorna — contenuto compreso, che è quello
+       che serve quando reimporti un piano corretto. */
     let gt = di('gt').find(x => x.n === nome);
-    if (gt) { gt.righe = righe; tocca(gt); }
-    else gt = aggiungi({ t: 'gt', n: nome, tipo: '', righe });
+    if (gt) { gt.righe = righe; if (tipo) gt.tipo = tipo; tocca(gt); }
+    else gt = aggiungi({ t: 'gt', n: nome, tipo, righe });
     creata[i] = gt;
     return gt;
   };

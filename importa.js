@@ -159,6 +159,11 @@ const Importa = (() => {
     if (/pranzo/.test(p)) return 'pranzo';
     if (/cena/.test(p)) return 'cena';
     if (/spuntino|merenda|snack/.test(p)) {
+      /* Quando il nome del pasto dice già quando è — "Spuntino mattina" — non
+         serve indovinarlo dall'ora, che nei CSV non c'è quasi mai. */
+      if (/mattin/.test(p)) return 'spuntino1';
+      if (/pomerigg|post.?allen/.test(p)) return 'spuntino2';
+      if (/sera|notte/.test(p)) return 'spuntino3';
       if (h == null) return 'spuntino2';
       if (h < 5) return 'spuntino3';       // lo spuntino delle 3 di notte
       if (h < 12) return 'spuntino1';
