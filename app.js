@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.21.2';
+const APP_VERSION = '2026.08.21.3';
 
 const KEY = 'forma.v1';
 
@@ -263,20 +263,49 @@ function lunediDi(iso) {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
-/* Il piano di un giorno della settimana. Come per il giorno, la riga nasce solo
-   quando ci scrivi davvero qualcosa. */
-function piano(gs, crea) {
-  let p = DB.items.find(i => i.t === 'p' && i.gs === gs);
-  if (!p && crea) p = aggiungi({ id: 'piano-' + gs, t: 'p', gs, nome: '', righe: [] });
-  return p || { t: 'p', gs, nome: '', righe: [], _finto: true };
-}
-const pianoPieno = gs => (piano(gs).righe || []).length > 0;
+/* Le giornate tipo (t:'gt') sono il vero piano: "Giorno 1 off", "Giorno 2 on".
+   Esistono da sole e non appartengono a nessun giorno della settimana — la
+   stessa giornata può stare sul lunedì e sul giovedì, che è come funziona una
+   rotazione vera. I sette giorni della settimana si limitano a puntarci
+   (t:'p'), e quel puntatore è tutto quello che contengono. */
+const giornate = () => di('gt').sort((a, b) => (a.n || '').localeCompare(b.n || '', 'it', { numeric: true }));
 
-/* Copia il piano di un giorno della settimana dentro il diario di una data.
-   Le righe diventano voci vere e da lì si modificano come tutte le altre. */
+function pianoRec(gs, crea) {
+  let p = DB.items.find(i => i.t === 'p' && i.gs === gs);
+  if (!p && crea) p = aggiungi({ id: 'piano-' + gs, t: 'p', gs, gt: '' });
+  return p || { t: 'p', gs, gt: '', _finto: true };
+}
+const giornataDi = gs => {
+  const p = pianoRec(gs);
+  return p.gt ? (DB.items.find(i => i.id === p.gt && i.t === 'gt') || null) : null;
+};
+const righePiano = gs => { const g = giornataDi(gs); return g ? (g.righe || []) : []; };
+const pianoPieno = gs => righePiano(gs).length > 0;
+const giornataById = id => DB.items.find(i => i.id === id && i.t === 'gt') || null;
+
+/* Prima le giornate stavano dentro il giorno della settimana. Chi ha già
+   compilato qualcosa non deve perderlo: al primo avvio della versione nuova
+   ogni vecchio piano diventa una giornata tipo, e il giorno la punta. */
+function migraPiano() {
+  const vecchi = DB.items.filter(i => i.t === 'p' && Array.isArray(i.righe) && i.righe.length);
+  if (!vecchi.length) return;
+  for (const p of vecchi) {
+    const nome = p.nome || ('Giornata ' + (GIORNI_SETT.find(x => x.id === p.gs) || {}).l);
+    /* Se la stessa giornata è già stata migrata su un altro dispositivo e ci
+       è arrivata con la sincronizzazione, si riusa invece di duplicarla. */
+    let g = di('gt').find(x => x.n === nome && (x.righe || []).length === p.righe.length);
+    if (!g) g = aggiungi({ t: 'gt', n: nome, tipo: '', righe: p.righe });
+    p.gt = g.id;
+    delete p.righe; delete p.nome;
+    tocca(p);
+  }
+}
+
+/* Copia la giornata assegnata a un giorno della settimana dentro il diario di
+   una data. Le righe diventano voci vere e da lì si modificano come le altre. */
 function applicaPiano(gs, data) {
-  const p = piano(gs);
-  if (!(p.righe || []).length) { toast('Questo giorno non ha ancora un piano'); return; }
+  const g = giornataDi(gs);
+  if (!g || !(g.righe || []).length) { toast('Questo giorno non ha ancora una giornata assegnata'); return; }
 
   const gia = righeDi(data);
   if (gia.length) {
@@ -284,11 +313,19 @@ function applicaPiano(gs, data) {
       ' voci. Le sostituisco con il piano?')) return;
     for (const r of gia) elimina(r.id);
   }
-  for (const r of p.righe) {
+  for (const r of g.righe) {
     aggiungi({ t: 'l', d: data, slot: r.slot, n: r.n, q: r.q, k: r.k, p: r.p, c: r.c, g: r.g });
   }
+  /* Se la giornata sa di essere di turno o di riposo, lo dice anche al giorno:
+     il bersaglio delle calorie cambia di conseguenza, e ricordarselo a mano
+     ogni volta sarebbe un modo sicuro di sbagliarlo. */
+  if (g.tipo === 'on' || g.tipo === 'off') {
+    const gg = giorno(data, true);
+    const nuovo = g.tipo === 'off' ? 'off' : 'turno';
+    if (gg.tipo !== nuovo) { gg.tipo = nuovo; tocca(gg); }
+  }
   haptic();
-  toast(p.righe.length + ' voci caricate' + (p.nome ? ' · ' + p.nome : ''));
+  toast(g.righe.length + ' voci caricate · ' + g.n);
   render();
 }
 
@@ -311,7 +348,7 @@ let view = { name: 'oggi', d: oggiISO() };
 const TITOLI = {
   oggi: 'Oggi', cibo: 'Cibo', allena: 'Allenamento', report: 'Report',
   settings: 'Impostazioni', scheda: 'Scheda', sessione: 'Allenamento',
-  spesa: 'Lista della spesa'
+  spesa: 'Lista della spesa', giornata: 'Giornata tipo'
 };
 
 /* Le sottoschede: Cibo e Allenamento hanno ciascuna un registro filtrabile e
@@ -346,7 +383,7 @@ function render() {
   $('#topTitle').innerHTML = t === 'oggi'
     ? `<img class="brand" src="icons/logo-lockup.png" alt="CodeMind.Lab" width="719" height="90">`
     : esc(TITOLI[t] || 'Forma');
-  $('#backBtn').hidden = !['scheda', 'sessione', 'spesa'].includes(t);
+  $('#backBtn').hidden = !['scheda', 'sessione', 'spesa', 'giornata'].includes(t);
   $('#settingsBtn').hidden = t === 'settings';
 
   /* La scheda attiva si accende in entrambe le navigazioni: quella in basso sul
@@ -363,6 +400,7 @@ function render() {
   else if (t === 'scheda') app.innerHTML = vistaScheda();
   else if (t === 'sessione') app.innerHTML = vistaSessione();
   else if (t === 'spesa') app.innerHTML = vistaSpesa();
+  else if (t === 'giornata') app.innerHTML = vistaGiornata();
 
   const sf = $('#sideFoot');
   if (sf) sf.innerHTML = 'Versione <b>' + APP_VERSION + '</b><br>' +
@@ -618,17 +656,18 @@ function riquadroSettimana(d) {
 function riquadroPiano(d, righe, tot) {
   const gs = gsDiData(d);
   const g = GIORNI_SETT.find(x => x.id === gs);
-  const p = piano(gs);
+  const gt = giornataDi(gs);
 
-  if (!(p.righe || []).length) {
+  if (!gt || !(gt.righe || []).length) {
     return `<button class="plan-hero vuoto" data-act="vai-piano">
       <span class="ph-badge">${g.b}</span>
-      <span class="ph-t"><b>Nessun piano per ${esc(g.l.toLowerCase())}</b>
-        <span>Componilo una volta e lo ricarichi ogni ${esc(g.l.toLowerCase())} in un tocco</span></span>
+      <span class="ph-t"><b>Nessuna giornata per ${esc(g.l.toLowerCase())}</b>
+        <span>Assegnane una in Cibo → Piano e la ricarichi ogni ${esc(g.l.toLowerCase())} in un tocco</span></span>
       <span class="ph-go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
     </button>`;
   }
 
+  const p = gt;
   const tp = somma(p.righe);
   /* Quanto ti sei discostato dal piano. È il confronto che conta: la media
      settimanale non dice se oggi hai seguito il programma o improvvisato. */
@@ -641,7 +680,7 @@ function riquadroPiano(d, righe, tot) {
   let h = `<div class="plan-hero">
     <div class="ph-top" data-act="piega-piano">
       <span class="ph-badge">${g.b}</span>
-      <span class="ph-t"><b>${esc(p.nome || g.l)}</b>
+      <span class="ph-t"><b>${esc(gt.n)}</b><small class="ph-gg">${esc(g.l)}</small>
         <span>${r0(tp.k)} kcal · ${r0(tp.p)} g prot</span></span>
       <button class="ph-edit" data-act="vai-piano">Modifica</button>
       <span class="ph-chev ${aperto ? 'su' : ''}">
@@ -897,82 +936,78 @@ function vistaCibo() {
 
 /* ---------- il piano della settimana ---------- */
 
-/* La striscia dei sette giorni. Il pallino sotto dice quali giorni hanno già un
-   piano: senza, dovresti toccarli uno per uno per scoprirlo. */
-function strisciaSettimana(sel, attr) {
-  return `<div class="weekstrip">${GIORNI_SETT.map(g => `
-    <button data-${attr}="${g.id}" class="${g.id === sel ? 'on' : ''}">
-      ${g.b}<i class="${pianoPieno(g.id) ? 'piano' : ''}"></i>
-    </button>`).join('')}</div>`;
-}
-
 function vistaPiano() {
-  const gs = SUB.gs || gsDiData(oggiISO());
-  SUB.gs = gs;
-  const g = GIORNI_SETT.find(x => x.id === gs);
-  const p = piano(gs);
-  const t = cfg().target;
-  const tot = somma(p.righe || []);
+  const gts = giornate();
 
-  let h = strisciaSettimana(gs, 'gs');
+  let h = `<div class="section-head" style="margin-top:0"><h2>La settimana</h2>
+    <span class="count">${GIORNI_SETT.filter(g => pianoPieno(g.id)).length} su 7 assegnati</span></div>`;
 
-  h += `<div class="panel" style="margin-top:12px">
-    <div class="label">${esc(g.l)}</div>
-    <input class="txtin" data-pnome="${gs}" value="${esc(p.nome || '')}"
-      placeholder="Nome della giornata — es. MATTINA 1 · riso e tonno">
-    <div class="stat-row" style="margin-top:12px"><span>Calorie</span>
-      <span>${r0(tot.k)} / ${t.kcal} kcal</span></div>
-    <div class="stat-row"><span>Proteine · carboidrati · grassi</span>
-      <span>${r0(tot.p)} · ${r0(tot.c)} · ${r0(tot.g)} g</span></div>
-    <div class="split">
-      <i style="width:${Math.min(100, tot.k / t.kcal * 100)}%;background:${tot.k > t.kcal * 1.05 ? 'var(--coral)' : 'var(--teal)'}"></i></div>
-  </div>`;
-
-  for (const pa of PASTI) {
-    const rp = (p.righe || []).filter(r => r.slot === pa.id);
-    const tp = somma(rp);
-    h += `<div class="meal ${rp.length ? '' : 'vuoto'}">
-      <div class="mtop">
-        <span class="mic">${pa.ic}</span>
-        <span class="mname">${esc(pa.l)}</span>
-        ${rp.length ? `<span class="mkcal">${r0(tp.k)} kcal</span>` : ''}
-        <button class="madd" data-padd="${gs}|${pa.id}" aria-label="Aggiungi a ${esc(pa.l)}">
-          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-      </div>
-      ${rp.length ? `<div class="rows">${rp.map(r => {
-        const m = macro(r);
-        return `<button class="frow" data-priga="${gs}|${(p.righe || []).indexOf(r)}">
-          <span class="fb"><span class="fn">${esc(r.n)}</span>
-            <span class="fm">${r1(r.q)} g · ${r0(m.p)}P ${r0(m.c)}C ${r0(m.g)}G</span></span>
-          <span class="fk">${r0(m.k)}</span></button>`;
-      }).join('')}</div>` : ''}
-    </div>`;
+  if (!gts.length) {
+    h += vuoto('📋', 'Nessuna giornata tipo',
+      'Il piano è fatto di <b>giornate</b> — “Giorno 1 off”, “Giorno 2 on” — che poi assegni ' +
+      'ai giorni della settimana. La stessa giornata può stare su più giorni.');
+    h += `<button class="btn" data-act="crea-schema">Crea le giornate del mio piano</button>
+      <button class="btn sec" data-act="nuova-giornata">Aggiungine una sola</button>
+      <button class="btn sec" data-act="importa-piano">Importa il piano da un file</button>`;
+    return h;
   }
 
-  h += `<div class="btn-row">
-    <button class="btn" data-applica="${gs}">Carica nel diario di oggi</button>
-  </div>
-  <button class="btn sec" data-act="copia-piano">Copia da un altro giorno</button>
-  <button class="btn sec" data-act="importa-piano">Importa il piano da un file</button>
-  ${(p.righe || []).length ? `<button class="btn danger" data-act="svuota-piano">Svuota ${esc(g.l)}</button>` : ''}
-  <p class="set-note">Il piano è il tuo modello: resta lì e non conta nei report.
-    Diventa reale solo quando lo carichi nel diario di una data, e da quel momento
-    lo modifichi come qualsiasi altra voce.</p>`;
+  /* Il menu a tendina per ogni giorno: è il punto di tutta questa schermata.
+     La rotazione si imposta qui in sette tocchi, e cambiarla non tocca il
+     contenuto delle giornate. */
+  h += `<div class="panel" style="margin-top:0">`;
+  for (const g of GIORNI_SETT) {
+    const gt = giornataDi(g.id);
+    const tot = gt ? somma(gt.righe || []) : null;
+    h += `<div class="ass">
+      <span class="ass-g">${esc(g.l)}</span>
+      <select class="ass-s" data-assegna="${g.id}">
+        <option value="">— nessuna —</option>
+        ${gts.map(x => `<option value="${x.id}" ${gt && gt.id === x.id ? 'selected' : ''}>${esc(x.n)}</option>`).join('')}
+      </select>
+      <span class="ass-k">${tot ? r0(tot.k) + ' kcal' : '—'}</span>
+    </div>`;
+  }
+  h += `</div>`;
 
-  /* La lista della spesa nasce da qui: le sette giornate sanno già cosa serve. */
-  const settimana = GIORNI_SETT.filter(x => pianoPieno(x.id)).length;
-  if (settimana) {
+  const senza = GIORNI_SETT.filter(g => !giornataDi(g.id));
+  if (senza.length) {
+    h += `<p class="set-note">${senza.length === 7 ? 'Nessun giorno' : senza.length + (senza.length === 1 ? ' giorno' : ' giorni')}
+      ${senza.length === 1 ? 'è ancora senza giornata' : 'sono ancora senza giornata'}:
+      ${esc(senza.map(g => g.l).join(', '))}.</p>`;
+  }
+
+  h += `<div class="section-head"><h2>Le giornate</h2>
+    <button class="act" data-act="nuova-giornata">＋ Nuova</button></div>`;
+
+  for (const gt of gts) {
+    const t = somma(gt.righe || []);
+    const usata = GIORNI_SETT.filter(g => { const x = giornataDi(g.id); return x && x.id === gt.id; });
+    h += `<button class="card-row" data-giornata="${gt.id}">
+      <span class="cbadge ${gt.tipo === 'on' ? 'coral' : ''}">${gt.tipo === 'on' ? 'ON' : gt.tipo === 'off' ? 'OFF' : '📋'}</span>
+      <span class="cb"><h3>${esc(gt.n)}</h3>
+        <span class="meta">${(gt.righe || []).length
+          ? (gt.righe.length + (gt.righe.length === 1 ? ' voce · ' : ' voci · ') + r0(t.k) + ' kcal · ' + r0(t.p) + ' g proteine')
+          : 'ancora vuota'}${usata.length ? ' · ' + usata.map(x => x.b).join(' ') : ''}</span></span>
+      <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+    </button>`;
+  }
+
+  h += `<button class="btn sec" data-act="importa-piano">Importa il piano da un file</button>`;
+
+  /* La lista della spesa nasce da qui: le sette assegnazioni sanno già cosa serve. */
+  const assegnati = GIORNI_SETT.filter(g => pianoPieno(g.id)).length;
+  if (assegnati) {
     h += `<button class="card-row" data-act="vai-spesa" style="margin-top:14px">
       <span class="cbadge coral">🛒</span>
       <span class="cb"><h3>Lista della spesa</h3>
-        <span class="meta">calcolata dai ${settimana} ${settimana === 1 ? 'giorno' : 'giorni'} che hai compilato</span></span>
+        <span class="meta">calcolata dai ${assegnati} ${assegnati === 1 ? 'giorno assegnato' : 'giorni assegnati'}</span></span>
       <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
     </button>`;
   }
 
   /* Le combinazioni sono l'altro tipo di modello: nascono da una giornata
-     riuscita e si rimettono dentro in un tocco. Prima si potevano solo creare,
-     e restavano lì per sempre. */
+     riuscita del diario e si rimettono dentro in un tocco. */
   const ric = di('r');
   h += `<div class="section-head"><h2>Combinazioni</h2>
     <span class="count">${ric.length}</span></div>`;
@@ -994,6 +1029,64 @@ function vistaPiano() {
   return h;
 }
 
+/* ---------- l'editor di una giornata tipo ---------- */
+
+function vistaGiornata() {
+  const gt = giornataById(view.id);
+  if (!gt) return vuoto('📋', 'Giornata non trovata', 'È stata cancellata su un altro dispositivo.');
+  const t = cfg().target;
+  const tot = somma(gt.righe || []);
+  const bersaglio = gt.tipo === 'off' ? t.kcalOff : t.kcal;
+
+  let h = `<div class="panel" style="margin-top:0">
+    <input class="txtin" data-gtnome="${gt.id}" value="${esc(gt.n)}" placeholder="Nome della giornata">
+    <div class="seg" data-seg="gttipo" style="margin-top:10px">
+      <button data-gttipo="on" class="${gt.tipo === 'on' ? 'on' : ''}">Giorno di turno</button>
+      <button data-gttipo="off" class="${gt.tipo === 'off' ? 'on' : ''}">Giorno di riposo</button>
+      <button data-gttipo="" class="${!gt.tipo ? 'on' : ''}">Non specificato</button>
+    </div>
+    <div class="stat-row" style="margin-top:12px"><span>Calorie</span>
+      <span>${r0(tot.k)} / ${bersaglio} kcal</span></div>
+    <div class="stat-row"><span>Proteine · carboidrati · grassi</span>
+      <span>${r0(tot.p)} · ${r0(tot.c)} · ${r0(tot.g)} g</span></div>
+    <div class="split">
+      <i style="width:${Math.min(100, tot.k / bersaglio * 100)}%;background:${tot.k > bersaglio * 1.05 ? 'var(--coral)' : 'var(--teal)'}"></i></div>
+    ${gt.tipo ? `<p class="set-note">Caricandola nel diario, il giorno diventa
+      ${gt.tipo === 'off' ? 'di riposo' : 'di turno'} e il bersaglio si sposta a ${bersaglio} kcal.</p>` : ''}
+  </div>`;
+
+  for (const pa of PASTI) {
+    const rp = (gt.righe || []).filter(r => r.slot === pa.id);
+    const tp = somma(rp);
+    h += `<div class="meal ${rp.length ? '' : 'vuoto'}">
+      <div class="mtop">
+        <span class="mic">${pa.ic}</span>
+        <span class="mname">${esc(pa.l)}</span>
+        ${rp.length ? `<span class="mkcal">${r0(tp.k)} kcal</span>` : ''}
+        <button class="madd" data-padd="${gt.id}|${pa.id}" aria-label="Aggiungi a ${esc(pa.l)}">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+      ${rp.length ? `<div class="rows">${rp.map(r => {
+        const m = macro(r);
+        return `<button class="frow" data-priga="${gt.id}|${(gt.righe || []).indexOf(r)}">
+          <span class="fb"><span class="fn">${esc(r.n)}</span>
+            <span class="fm">${r1(r.q)} g · ${r0(m.p)}P ${r0(m.c)}C ${r0(m.g)}G</span></span>
+          <span class="fk">${r0(m.k)}</span></button>`;
+      }).join('')}</div>` : ''}
+    </div>`;
+  }
+
+  const su = GIORNI_SETT.filter(g => { const x = giornataDi(g.id); return x && x.id === gt.id; });
+  h += `<p class="set-note">${su.length
+    ? 'Assegnata a: <b>' + esc(su.map(g => g.l).join(', ')) + '</b>.'
+    : 'Non ancora assegnata a nessun giorno della settimana.'}</p>`;
+
+  h += `<button class="btn sec" data-act="copia-giornata">Copia da un'altra giornata</button>
+    <button class="btn sec" data-act="duplica-giornata">Duplica questa giornata</button>
+    <button class="btn danger" data-act="elimina-giornata">Elimina la giornata</button>`;
+  return h;
+}
+
 /* ---------- la lista della spesa ---------- */
 
 function vistaSpesa() {
@@ -1006,7 +1099,7 @@ function vistaSpesa() {
      vogliono entrambi 60 g di riso, a fare la spesa servono 120 g. */
   const per = {};
   for (const gid of scelti) {
-    for (const r of (piano(gid).righe || [])) {
+    for (const r of righePiano(gid)) {
       const k = r.n;
       if (!per[k]) per[k] = { n: r.n, q: 0, giorni: new Set() };
       per[k].q += r.q;
@@ -2441,6 +2534,23 @@ function sheetProdotto(p) {
     <button class="btn sec" data-act="correggi-prodotto">Correggi i valori</button>`;
 }
 
+/* Quante giornate di riposo e quante di turno. Sono i due numeri che
+   descrivono un piano a turni, e da lì escono i nomi: "Giorno 1 off",
+   "Giorno 2 on". Rinominarle poi costa un tocco per ognuna. */
+function sheetSchema() {
+  return `<h2 class="sheet-title">Crea le giornate</h2>
+    <p class="set-note" style="margin:0 0 12px">Quante giornate tipo diverse ha il tuo piano?
+      Le crea vuote, con i nomi già a posto, e le assegna ai sette giorni della settimana.
+      Il contenuto lo metti tu, una giornata alla volta.</p>
+    <div class="field"><label>Giornate di riposo</label>
+      <input type="number" inputmode="numeric" id="schemaOff" value="4"><span class="unit">off</span></div>
+    <div class="field"><label>Giornate di turno</label>
+      <input type="number" inputmode="numeric" id="schemaOn" value="3"><span class="unit">on</span></div>
+    <p class="set-note">Con 4 e 3 escono: Giorno 1 off, Giorno 2 off, Giorno 3 off,
+      Giorno 4 off, Giorno 1 on, Giorno 2 on, Giorno 3 on.</p>
+    <button class="btn" data-act="crea-schema-ok">Crea</button>`;
+}
+
 function sheetCombinazione(id) {
   const r = DB.items.find(i => i.id === id);
   if (!r) return '';
@@ -2609,7 +2719,7 @@ function esporta(cosa) {
     const scelti = DB.settings.spesaGiorni || [];
     const per = {};
     for (const gid of scelti) {
-      for (const r of (piano(gid).righe || [])) {
+      for (const r of righePiano(gid)) {
         per[r.n] = (per[r.n] || 0) + r.q;
       }
     }
@@ -2816,7 +2926,11 @@ document.addEventListener('click', e => {
     else aperti.cat.add(d.catapri);
     render(); return;
   }
-  if (d.gs) { SUB.gs = d.gs; render(); return; }
+  if (d.giornata) { vai({ name: 'giornata', id: d.giornata }); return; }
+  if (d.gttipo !== undefined) {
+    const gt = giornataById(view.id);
+    gt.tipo = d.gttipo; tocca(gt); render(); return;
+  }
   if (d.vaidata) {
     view.d = d.vaidata;
     if (!$('#sheet').hidden) chiudiSheet();
@@ -2831,18 +2945,18 @@ document.addEventListener('click', e => {
   }
   if (d.applica) { applicaPiano(d.applica, d.data || oggiISO()); return; }
   if (d.padd) {
-    const [gs, slot] = d.padd.split('|');
-    apriSheet(sheetCerca(slot, ''), { slot, piano: gs });
+    const [gtId, slot] = d.padd.split('|');
+    apriSheet(sheetCerca(slot, ''), { slot, giornata: gtId });
     return;
   }
   if (d.priga) {
-    const [gs, idx] = d.priga.split('|');
-    const p = piano(gs);
-    const r = (p.righe || [])[+idx];
+    const [gtId, idx] = d.priga.split('|');
+    const gt = giornataById(gtId);
+    const r = gt && (gt.righe || [])[+idx];
     if (!r) return;
     const a = catalogo().find(x => x.n.toLowerCase() === r.n.toLowerCase()) ||
       { n: r.n, k: r.k, p: r.p, c: r.c, g: r.g, cat: 'Altro' };
-    sheetCtx = { alim: a, q: String(r1(r.q)), slot: r.slot, piano: gs, pIdx: +idx };
+    sheetCtx = { alim: a, q: String(r1(r.q)), slot: r.slot, giornata: gtId, pIdx: +idx };
     $('#sheetContent').innerHTML = sheetQuantita();
     $('#sheet').hidden = false;
     return;
@@ -2871,11 +2985,11 @@ document.addEventListener('click', e => {
     return;
   }
   if (d.copiada) {
-    const da = piano(d.copiada);
-    const p = piano(SUB.gs, true);
-    p.righe = (da.righe || []).map(r => Object.assign({}, r));
-    if (!p.nome) p.nome = da.nome || '';
-    tocca(p); chiudiSheet(); toast('Copiato'); render();
+    const da = giornataById(d.copiada);
+    const gt = giornataById(view.id);
+    if (!da || !gt) return;
+    gt.righe = (da.righe || []).map(r => Object.assign({}, r));
+    tocca(gt); chiudiSheet(); toast('Copiata da ' + da.n); render();
     return;
   }
 
@@ -2975,11 +3089,11 @@ function azione(a, b) {
     const al = sheetCtx.alim;
     const riga = { slot, n: al.n, q, k: al.k, p: al.p, c: al.c, g: al.g };
 
-    if (sheetCtx.piano) {
-      const p = piano(sheetCtx.piano, true);
-      p.righe = p.righe || [];
-      if (sheetCtx.pIdx != null) p.righe[sheetCtx.pIdx] = riga; else p.righe.push(riga);
-      tocca(p);
+    if (sheetCtx.giornata) {
+      const gt = giornataById(sheetCtx.giornata);
+      gt.righe = gt.righe || [];
+      if (sheetCtx.pIdx != null) gt.righe[sheetCtx.pIdx] = riga; else gt.righe.push(riga);
+      tocca(gt);
     } else if (sheetCtx.rigaId) {
       const r = DB.items.find(i => i.id === sheetCtx.rigaId);
       r.q = q; r.slot = slot; tocca(r);
@@ -2989,9 +3103,9 @@ function azione(a, b) {
     chiudiSheet(); haptic(); render(); return;
   }
   if (a === 'elimina-riga') {
-    if (sheetCtx.piano) {
-      const p = piano(sheetCtx.piano, true);
-      p.righe.splice(sheetCtx.pIdx, 1); tocca(p);
+    if (sheetCtx.giornata) {
+      const gt = giornataById(sheetCtx.giornata);
+      gt.righe.splice(sheetCtx.pIdx, 1); tocca(gt);
     } else {
       elimina(sheetCtx.rigaId);
     }
@@ -3062,31 +3176,78 @@ function azione(a, b) {
     DB.settings.pianoAperto = DB.settings.pianoAperto === false;
     save(); render(); return;
   }
-  if (a === 'vai-piano') { SUB.cibo = 'piano'; SUB.gs = gsDiData(view.d || oggiISO()); vai({ name: 'cibo' }); return; }
+  if (a === 'vai-piano') { SUB.cibo = 'piano'; vai({ name: 'cibo' }); return; }
 
-  if (a === 'copia-piano') {
-    const qui = SUB.gs;
-    const altri = GIORNI_SETT.filter(g => g.id !== qui && pianoPieno(g.id));
-    if (!altri.length) { toast('Nessun altro giorno ha un piano da copiare'); return; }
-    apriSheet(`<h2 class="sheet-title">Copia il piano da…</h2>
-      ${altri.map(g => {
-        const p = piano(g.id), t = somma(p.righe || []);
-        return `<button class="sheet-row" data-copiada="${g.id}">
-          <span class="ic">📋</span>
-          <span>${esc(g.l)}${p.nome ? ' · ' + esc(p.nome) : ''}
-            <span class="hint">${p.righe.length} voci · ${r0(t.k)} kcal</span></span></button>`;
+  if (a === 'copia-giornata') {
+    const gt = giornataById(view.id);
+    const altre = giornate().filter(x => x.id !== view.id && (x.righe || []).length);
+    if (!altre.length) { toast('Non c\'è nessun\'altra giornata da cui copiare'); return; }
+    apriSheet(`<h2 class="sheet-title">Copia da…</h2>
+      ${altre.map(x => {
+        const t = somma(x.righe || []);
+        return `<button class="sheet-row" data-copiada="${x.id}">
+          <span class="ic">${x.tipo === 'on' ? '\u{1F4BC}' : x.tipo === 'off' ? '\u{1F3E0}' : '\u{1F4CB}'}</span>
+          <span>${esc(x.n)}<span class="hint">${x.righe.length} ${x.righe.length === 1 ? 'voce' : 'voci'} · ${r0(t.k)} kcal</span></span></button>`;
       }).join('')}
-      <p class="set-note">Sostituisce quello che c'è ora in
-        ${esc(GIORNI_SETT.find(g => g.id === qui).l)}.</p>`, {});
+      <p class="set-note">Sostituisce quello che c'è ora in <b>${esc(gt.n)}</b>.
+        Se invece vuoi tenerle tutte e due, usa “Duplica”.</p>`, {});
     return;
   }
 
-  if (a === 'svuota-piano') {
-    const g = GIORNI_SETT.find(x => x.id === SUB.gs);
-    if (!confirm('Svuoto il piano di ' + g.l + '? Il diario già registrato non cambia.')) return;
-    const p = piano(SUB.gs, true);
-    p.righe = []; p.nome = '';
-    tocca(p); render(); return;
+  if (a === 'duplica-giornata') {
+    const gt = giornataById(view.id);
+    const copia = aggiungi({
+      t: 'gt', n: gt.n + ' (copia)', tipo: gt.tipo || '',
+      righe: (gt.righe || []).map(r => Object.assign({}, r))
+    });
+    vai({ name: 'giornata', id: copia.id });
+    toast('Duplicata');
+    return;
+  }
+
+  if (a === 'elimina-giornata') {
+    const gt = giornataById(view.id);
+    const su = GIORNI_SETT.filter(g => { const x = giornataDi(g.id); return x && x.id === gt.id; });
+    if (!confirm('Eliminare “' + gt.n + '”?' +
+      (su.length ? ' È assegnata a ' + su.map(g => g.l).join(', ') + ', che resteranno senza giornata.' : '') +
+      ' Il diario già registrato non cambia.')) return;
+    /* I giorni che la puntavano vanno liberati, altrimenti resterebbero
+       agganciati a una riga che non esiste più. */
+    for (const g of su) { const p = pianoRec(g.id, true); p.gt = ''; tocca(p); }
+    elimina(gt.id);
+    history.back();
+    return;
+  }
+
+  if (a === 'nuova-giornata') {
+    const n = giornate().length + 1;
+    const gt = aggiungi({ t: 'gt', n: 'Giornata ' + n, tipo: '', righe: [] });
+    vai({ name: 'giornata', id: gt.id });
+    return;
+  }
+
+  if (a === 'crea-schema') { apriSheet(sheetSchema(), {}); return; }
+
+  if (a === 'crea-schema-ok') {
+    const off = Math.max(0, Math.min(14, r0(num($('#schemaOff').value))));
+    const on = Math.max(0, Math.min(14, r0(num($('#schemaOn').value))));
+    if (!off && !on) { toast('Metti almeno una giornata'); return; }
+    const create = [];
+    for (let i = 1; i <= off; i++) create.push(aggiungi({ t: 'gt', n: 'Giorno ' + i + ' off', tipo: 'off', righe: [] }));
+    for (let i = 1; i <= on; i++) create.push(aggiungi({ t: 'gt', n: 'Giorno ' + i + ' on', tipo: 'on', righe: [] }));
+    /* Assegnate subito ai sette giorni nell'ordine in cui sono state create:
+       la rotazione la sistemi coi menu a tendina, ma partire da sette caselle
+       vuote sarebbe partire da zero due volte. */
+    GIORNI_SETT.forEach((g, i) => {
+      if (!create.length) return;
+      const p = pianoRec(g.id, true);
+      p.gt = create[i % create.length].id;
+      tocca(p);
+    });
+    chiudiSheet();
+    toast(create.length + ' giornate create e assegnate');
+    render();
+    return;
   }
 
   if (a === 'scansiona') { avviaScansione(); return; }
@@ -3343,17 +3504,17 @@ function trovaAlimento(nome, ix) {
 
 /* ---------- piano: quale giornata in quale giorno ---------- */
 
-function sheetMappaPiano(giornate) {
+function sheetMappaPiano(lette) {
   /* Se una giornata si chiama come un giorno della settimana finisce lì da
      sola; altrimenti si distribuiscono in ordine, che è comunque un punto di
      partenza migliore di sette caselle vuote. */
   const scelte = {};
   GIORNI_SETT.forEach((g, i) => {
-    const perNome = giornate.findIndex(x => nomeRidotto(x.nome).startsWith(nomeRidotto(g.l).slice(0, 5)));
-    scelte[g.id] = perNome >= 0 ? perNome : (giornate.length ? i % giornate.length : -1);
+    const perNome = lette.findIndex(x => nomeRidotto(x.nome).startsWith(nomeRidotto(g.l).slice(0, 5)));
+    scelte[g.id] = perNome >= 0 ? perNome : (lette.length ? i % lette.length : -1);
   });
 
-  return `<h2 class="sheet-title">Trovate ${giornate.length} giornate</h2>
+  return `<h2 class="sheet-title">Trovate ${lette.length} giornate</h2>
     <p class="set-note" style="margin:0 0 12px">Assegna ogni giornata al giorno della
       settimana in cui la mangi. Puoi mettere la stessa giornata su più giorni, e
       lasciare "—" dove non vuoi un piano.</p>
@@ -3361,7 +3522,7 @@ function sheetMappaPiano(giornate) {
       <label>${esc(g.l)}</label>
       <select id="map-${g.id}">
         <option value="-1">—</option>
-        ${giornate.map((x, i) => {
+        ${lette.map((x, i) => {
           const t = x.righe.reduce((a, r) => a + r.q, 0);
           return `<option value="${i}" ${scelte[g.id] === i ? 'selected' : ''}>${esc(x.nome)} (${x.righe.length} voci)</option>`;
         }).join('')}
@@ -3370,26 +3531,42 @@ function sheetMappaPiano(giornate) {
 }
 
 function confermaPiano() {
-  const giornate = sheetCtx.giornate || [];
+  /* La variabile locale NON si chiama giornate: c'è già una funzione con quel
+     nome, e nasconderla qui dentro sarebbe un errore in attesa di succedere. */
+  const lette = sheetCtx.giornate || [];
   const ix = indiceAlimenti();
   const mancanti = new Set();
-  let quanti = 0;
 
-  for (const g of GIORNI_SETT) {
-    const sel = $('#map-' + g.id);
-    const i = sel ? +sel.value : -1;
-    if (i < 0 || !giornate[i]) continue;
+  /* Ogni giornata del file diventa una giornata tipo, una volta sola anche se
+     l'hai assegnata a più giorni della settimana. */
+  const creata = {};
+  const creaGiornata = i => {
+    if (creata[i]) return creata[i];
     const righe = [];
-    for (const r of giornate[i].righe) {
+    for (const r of lette[i].righe) {
       const a = trovaAlimento(r.n, ix);
       if (!a) { mancanti.add(r.n); continue; }
       righe.push({ slot: r.slot, n: a.n, q: r.q, k: a.k, p: a.p, c: a.c, g: a.g });
     }
-    const p = piano(g.id, true);
-    p.righe = righe;
-    p.nome = giornate[i].nome;
+    const nome = lette[i].nome;
+    /* Reimportando lo stesso file non si accumulano doppioni: se una giornata
+       con quel nome c'è già, si aggiorna. */
+    let gt = di('gt').find(x => x.n === nome);
+    if (gt) { gt.righe = righe; tocca(gt); }
+    else gt = aggiungi({ t: 'gt', n: nome, tipo: '', righe });
+    creata[i] = gt;
+    return gt;
+  };
+
+  let assegnati = 0;
+  for (const g of GIORNI_SETT) {
+    const sel = $('#map-' + g.id);
+    const i = sel ? +sel.value : -1;
+    if (i < 0 || !lette[i]) continue;
+    const p = pianoRec(g.id, true);
+    p.gt = creaGiornata(i).id;
     tocca(p);
-    quanti++;
+    assegnati++;
   }
 
   chiudiSheet();
@@ -3399,7 +3576,7 @@ function confermaPiano() {
   if (mancanti.size) {
     setTimeout(() => apriSheet(sheetMancanti(Array.from(mancanti))), 250);
   } else {
-    toast('Piano importato su ' + quanti + ' giorni');
+    toast(Object.keys(creata).length + ' giornate importate · ' + assegnati + ' giorni assegnati');
   }
 }
 
@@ -3527,9 +3704,10 @@ document.addEventListener('input', e => {
     s.giorni[gi].eser[ei][campo] = (campo === 'rip' || campo === 'note') ? el.value : num(el.value);
     tocca(s); return;
   }
-  if (d.pnome) {
-    const p = piano(d.pnome, true);
-    p.nome = el.value; tocca(p); return;
+  if (d.gtnome) {
+    const gt = giornataById(d.gtnome);
+    if (gt) { gt.n = el.value; tocca(gt); }
+    return;
   }
   if (d.ws) {
     const parti = d.ws.split('.');
@@ -3550,9 +3728,17 @@ document.addEventListener('input', e => {
 
 /* Il menu a tendina del pasto non è un "input" su tutti i browser. */
 document.addEventListener('change', e => {
-  if (e.target.dataset.f && e.target.dataset.set) {
-    filtri(e.target.dataset.f)[e.target.dataset.set] = e.target.value;
+  const d = e.target.dataset;
+  if (d.f && d.set) {
+    filtri(d.f)[d.set] = e.target.value;
     save(); render();
+    return;
+  }
+  /* Il menu a tendina di ogni giorno della settimana. */
+  if (d.assegna) {
+    const p = pianoRec(d.assegna, true);
+    p.gt = e.target.value;
+    tocca(p); haptic(); render();
   }
 });
 
@@ -3590,6 +3776,7 @@ window.addEventListener('popstate', e => {
 });
 
 load();
+migraPiano();
 history.replaceState(view, '', '');
 render();
 

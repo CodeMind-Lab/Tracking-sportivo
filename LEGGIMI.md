@@ -21,7 +21,7 @@ una volta sola e si ritrovano sull'altro dispositivo.
 |---|---|
 | **Oggi** | La giornata: anello delle calorie con acqua e macro, il piano del giorno, passi, allenamento, e in fondo **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
 | **Cibo → Diario** | Il registro di tutto quello che hai mangiato, **un giorno per riga**: tocchi il giorno e si apre con le sue voci e il totale. Filtri per periodo, pasto, categoria, ricerca sul nome. Export CSV. |
-| **Cibo → Piano** | Il piano alimentare della settimana: scegli **Lun Mar Mer Gio Ven Sab Dom** in alto e componi la giornata di quel giorno. Da qui lo carichi nel diario di una data, generi la **lista della spesa** e gestisci le **combinazioni** salvate. |
+| **Cibo → Piano** | Le tue **giornate tipo** (“Giorno 1 off”, “Giorno 2 on”) e un **menu a tendina per ogni giorno della settimana** che dice quale giornata mangi quel giorno. Da qui esce anche la **lista della spesa**, e ci stanno le **combinazioni** salvate. |
 | **Cibo → Alimenti** | L'anagrafica dei 71 alimenti più quelli che aggiungi tu, **raggruppati per categoria**: tocchi la categoria e si apre. Ricerca e filtro. |
 | **Allenamento → Sessioni** | Il registro degli allenamenti svolti: serie, volume in kg, cardio. Filtri per periodo e gruppo muscolare. Export CSV. |
 | **Allenamento → Schede** | I tuoi programmi. Una scheda ha i **giorni 1, 2, 3, 4…**: li scegli coi numeri in alto e ognuno ha i suoi esercizi con serie, ripetizioni, carico e recupero. |
@@ -45,9 +45,21 @@ Li **componi tu**: il piano della settimana e le schede di allenamento — a man
 
 ## Il piano della settimana
 
-**Cibo → Piano.** In alto i sette giorni: tocchi **Gio** e vedi cosa mangi il giovedì.
-Dai un nome alla giornata (`Giornata 1 · riso e tonno`), aggiungi gli alimenti pasto per
-pasto, e la barra ti dice quanto sei lontano dal bersaglio di calorie.
+Il piano è fatto di **giornate tipo**: “Giorno 1 off”, “Giorno 2 on”, ognuna coi suoi
+pasti. Sono oggetti a sé — non appartengono a nessun giorno del calendario — e la stessa
+giornata può stare su più giorni della settimana. È così che funziona una rotazione vera.
+
+**Cibo → Piano.** In cima ci sono i sette giorni della settimana, ognuno con un **menu a
+tendina**: scegli quale giornata mangi quel giorno. Cambiare la rotazione è questione di
+sette tocchi, e non tocca il contenuto delle giornate.
+
+Sotto c'è l'elenco delle giornate: tocchi una e la compili pasto per pasto. Ognuna può
+essere segnata **di turno** o **di riposo** — così quando la carichi nel diario, il giorno
+si sposta da solo sul bersaglio di calorie giusto.
+
+La prima volta, il pulsante **Crea le giornate del mio piano** ti chiede quante ne hai di
+riposo e quante di turno e le crea già con i nomi a posto (4 e 3 danno *Giorno 1 off …
+Giorno 4 off* e *Giorno 1 on … Giorno 3 on*), assegnandole ai sette giorni.
 
 Il piano è un **modello**: non conta nei report e non è il diario. Diventa reale quando
 lo carichi in una data — dalla scheda **Oggi** il piano del giorno scelto è il riquadro
@@ -64,8 +76,8 @@ Sulla scheda **Oggi** c'è anche la striscia dei sette giorni della settimana co
 un tocco e ci sei. Il pallino sotto ogni giorno dice **corallo** = ho già registrato,
 **azzurro** = c'è solo il piano.
 
-Il pulsante **Copia da un altro giorno** serve per la rotazione del tuo piano
-(MATTINA 1 → 2 → 3): componi una volta e ricopi.
+Dentro una giornata, **Copia da un'altra giornata** ne sovrascrive il contenuto,
+**Duplica** ne fa una copia a parte da cui partire.
 
 ### Caricare il piano da un file
 
@@ -73,8 +85,9 @@ Il pulsante **Copia da un altro giorno** serve per la rotazione del tuo piano
 
 - **`.xlsx`** con un foglio per giornata e le colonne **Pasto · Ora · Alimento · Quantità**.
   È la forma dei piani alimentari fatti in Excel con un foglio per giornata tipo:
-  caricandolo trova tutte le giornate e ti chiede solo in quale giorno della settimana
-  metterle. La stessa giornata può stare su più giorni.
+  caricandolo diventano altrettante giornate tipo, e ti chiede solo in quale giorno della
+  settimana metterle. La stessa giornata può stare su più giorni. Reimportando lo stesso
+  file le giornate si aggiornano invece di duplicarsi.
 - **`.csv`** con quattro colonne separate da punto e virgola:
 
   ```
@@ -275,8 +288,8 @@ chiedere niente. Su iPhone si apre il foglio di condivisione, sul Mac il file si
 
 Quando cambi i file, alza il numero di versione in **due punti** (devono corrispondere):
 
-- `app.js`, riga in alto: `const APP_VERSION = '2026.08.21.2';`
-- `sw.js`, riga in alto: `const VER = 'forma-2026.08.21.2';`
+- `app.js`, riga in alto: `const APP_VERSION = '2026.08.21.3';`
+- `sw.js`, riga in alto: `const VER = 'forma-2026.08.21.3';`
 
 Se non alzi quello di `sw.js`, i telefoni continuano a usare i file vecchi presi dalla
 cache. Poi ricarichi i file su GitHub. La versione in uso si legge in Impostazioni.
@@ -290,8 +303,8 @@ lì per il giorno in cui volessi aggiornare i valori.
 ## Dove stanno i dati
 
 Nel `localStorage` del browser, sotto la chiave `forma.v1`. Tutto in una struttura sola:
-una riga per cosa, con un tipo (`l` voce del diario, `p` piano di un giorno della
-settimana, `w` sessione, `m` misura, `s` scheda, `a` alimento tuo, `g` giorno,
+una riga per cosa, con un tipo (`l` voce del diario, `gt` giornata tipo, `p` a quale
+giornata punta un giorno della settimana, `w` sessione, `m` misura, `s` scheda, `a` alimento tuo, `g` giorno,
 `cfg` bersagli). È la stessa forma che viaggia su Supabase,
 quindi aggiungere un campo in futuro non richiede toccare il database.
 
