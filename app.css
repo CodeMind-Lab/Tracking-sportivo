@@ -651,6 +651,17 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   font-size:12px;font-weight:700;color:var(--teal);
 }
 
+/* La nota del preparatore, dentro la sessione. */
+.nota-es{
+  margin:0 0 9px;padding:8px 10px;border-radius:9px;
+  background:var(--accent-soft);border-left:2px solid var(--coral);
+  font-size:12.5px;line-height:1.5;color:var(--txt-dim);
+}
+.sez-es{
+  margin:16px 0 -4px;font-size:10px;font-weight:800;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--teal);
+}
+
 /* ---------- barra del recupero ---------- */
 #rest{
   position:fixed;left:12px;right:12px;z-index:50;

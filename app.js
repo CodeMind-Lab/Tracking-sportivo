@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.22.1';
+const APP_VERSION = '2026.08.22.2';
 
 const KEY = 'forma.v1';
 
@@ -301,6 +301,36 @@ function migraPiano() {
   }
 }
 
+/* L'allenamento della settimana funziona come il piano alimentare: il giorno
+   della settimana punta a una giornata di una scheda ("Rientro · Circuito A"),
+   e la stessa giornata può stare su più giorni. */
+function pianoAllRec(gs, crea) {
+  let p = DB.items.find(i => i.t === 'pa' && i.gs === gs);
+  if (!p && crea) p = aggiungi({ id: 'allena-' + gs, t: 'pa', gs, sid: '', gn: '' });
+  return p || { t: 'pa', gs, sid: '', gn: '', _finto: true };
+}
+
+function allenamentoDi(gs) {
+  const p = pianoAllRec(gs);
+  if (!p.sid || !p.gn) return null;
+  const sc = DB.items.find(i => i.id === p.sid && i.t === 's');
+  if (!sc) return null;
+  const g = (sc.giorni || []).find(x => x.n === p.gn);
+  return g ? { sc, g } : null;
+}
+
+/* Tutte le coppie scheda-giornata, per il menu a tendina. */
+function coppieAllenamento() {
+  const out = [];
+  for (const sc of schede()) {
+    for (const g of (sc.giorni || [])) {
+      out.push({ v: sc.id + '|' + g.n, l: (schede().length > 1 ? sc.n + ' · ' : '') + g.n, n: (g.eser || []).length });
+    }
+  }
+  return out;
+}
+const settimanaAllenamento = () => GIORNI_SETT.some(g => allenamentoDi(g.id));
+
 /* Copia la giornata assegnata a un giorno della settimana dentro il diario di
    una data. Le righe diventano voci vere e da lì si modificano come le altre. */
 function applicaPiano(gs, data) {
@@ -542,9 +572,31 @@ function vistaOggi() {
   /* L'allenamento del giorno, se c'è. Sotto le calorie perché la domanda
      "ho già allenato oggi?" viene dopo "quanto ho mangiato?". */
   const sess = di('w').filter(w => w.d === d);
-  h += `<div class="section-head"><h2>Allenamento</h2></div>`;
+  const prev = allenamentoDi(gsDiData(d));
+  h += `<div class="section-head"><h2>Allenamento</h2>
+    ${settimanaAllenamento() ? '<button class="act" data-act="allena-settimana">Settimana</button>' : ''}</div>`;
+
   if (sess.length) {
     h += sess.map(w => rigaSessione(w)).join('');
+  } else if (prev) {
+    /* Quello che tocca oggi, con il pulsante per partire: la scheda giusta la
+       sa già il piano della settimana, non deve ricordarsela tu. */
+    const nEser = (prev.g.eser || []).length;
+    h += `<div class="card-row">
+      <span class="cbadge coral">${GIORNI_SETT.find(x => x.id === gsDiData(d)).b}</span>
+      <span class="cb"><h3>${esc(prev.g.n)}</h3>
+        <span class="meta">${esc(prev.sc.n)} · ${nEser} ${nEser === 1 ? 'esercizio' : 'esercizi'}</span></span>
+      <button class="cta" data-avvia="${prev.sc.id}|${esc(prev.g.n)}">Inizia</button>
+    </div>`;
+  } else if (settimanaAllenamento()) {
+    /* Il piano c'è ma oggi non prevede niente: dirlo vale più di una casella
+       vuota, perché "riposo" è una scelta del programma, non una dimenticanza. */
+    h += `<button class="card-row" data-act="allena-settimana">
+      <span class="cbadge">😴</span>
+      <span class="cb"><h3>Giorno di riposo</h3>
+        <span class="meta">Il programma non prevede allenamento oggi</span></span>
+      <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+    </button>`;
   } else {
     h += `<button class="card-row" data-act="allena-vai">
       <span class="cbadge coral">＋</span>
@@ -1482,12 +1534,39 @@ function vistaSessioni() {
 function vistaSchede() {
   const l = schede();
   let h = '';
+
+  /* Gli stessi sette menu a tendina del piano alimentare: qui dicono quale
+     giornata di quale scheda tocca in quale giorno. */
+  const coppie = coppieAllenamento();
+  if (coppie.length) {
+    h += `<div class="section-head" style="margin-top:0"><h2>La settimana</h2>
+      <span class="count">${GIORNI_SETT.filter(g => allenamentoDi(g.id)).length} ${GIORNI_SETT.filter(g => allenamentoDi(g.id)).length === 1 ? 'seduta' : 'sedute'}</span></div>
+      <div class="panel" style="margin-top:0">`;
+    for (const g of GIORNI_SETT) {
+      const a = allenamentoDi(g.id);
+      const p = pianoAllRec(g.id);
+      h += `<div class="ass">
+        <span class="ass-g">${esc(g.l)}</span>
+        <select class="ass-s" data-assall="${g.id}">
+          <option value="">— riposo —</option>
+          ${coppie.map(c => `<option value="${esc(c.v)}" ${p.sid + '|' + p.gn === c.v ? 'selected' : ''}>${esc(c.l)}</option>`).join('')}
+        </select>
+        <span class="ass-k">${a ? (a.g.eser || []).length + ' es.' : '—'}</span>
+      </div>`;
+    }
+    h += `</div>
+      <p class="set-note">Nei giorni lasciati su “riposo” la scheda Oggi te lo dice,
+        invece di lasciarti davanti a una casella vuota.</p>`;
+  }
+
   if (!l.length) {
-    return vuoto('📋', 'Nessuna scheda',
+    return h + vuoto('📋', 'Nessuna scheda',
       'Una scheda è il tuo programma: i giorni 1, 2, 3… ognuno con i suoi esercizi. ' +
       'Creane una con <b>+</b>, oppure caricane una che hai già in un file.') +
       `<button class="btn sec" data-act="importa-scheda">Importa una scheda da un file</button>`;
   }
+
+  h += `<div class="section-head"><h2>Le schede</h2><span class="count">${l.length}</span></div>`;
   for (const s of l) {
     const ng = (s.giorni || []).length;
     const ne = (s.giorni || []).reduce((n, g) => n + (g.eser || []).length, 0);
@@ -1608,15 +1687,27 @@ function vistaSessione() {
       dimenticato di chiudere, correggila qui.</p></div>`;
   }
 
+  let sezione = null;
   (w.eser || []).forEach((e, ei) => {
     const card = isCardio(e);
     const prec = ultimaVolta(e.n, w.d);
+    /* Le sezioni della scheda si vedono anche qui: sapere che sei nel
+       riscaldamento o nel circuito cambia come affronti la serie. */
+    if (e.gruppo && e.gruppo !== sezione) {
+      sezione = e.gruppo;
+      h += `<p class="sez-es">${esc(sezione)}</p>`;
+    }
     h += `<div class="panel"><div class="eh">
       <span class="en">${esc(e.n)}</span>
       <span class="ed">${esc(e.gruppo || gruppoDi(e.n))}</span>
       <button class="del" data-delwe="${ei}" aria-label="Togli esercizio">
         <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>`;
+    /* La nota del preparatore va letta mentre ti alleni, non quando compili la
+       scheda: "carico leggero, controlla la discesa" serve col bilanciere in
+       mano. Sta sopra il confronto con l'ultima volta perché dice come si fa,
+       non come è andata. */
+    if (e.note) h += `<p class="nota-es">${esc(e.note)}</p>`;
     if (prec) h += `<p class="set-note" style="margin:0 0 9px">Ultima volta il ${esc(dataCorta(prec.d))}: <b>${esc(prec.testo)}</b></p>`;
 
     if (card) {
@@ -3069,6 +3160,7 @@ function azione(a, b) {
   if (a === 'vai-report') { vai({ name: 'report', d: view.d }); return; }
   if (a === 'stampa') { window.print(); return; }
   if (a === 'allena-vai') { apriSheet(sheetAvvioAllenamento(), {}); return; }
+  if (a === 'allena-settimana') { SUB.allena = 'schede'; vai({ name: 'allena' }); return; }
   if (a === 'nuova-misura') { apriSheet(sheetMisura(null), {}); return; }
   if (a === 'nuovo-alimento') {
     apriSheet(sheetNuovoAlimento($('#cercaCibo') ? $('#cercaCibo').value : '', null), {});
@@ -3742,6 +3834,14 @@ document.addEventListener('change', e => {
   if (d.assegna) {
     const p = pianoRec(d.assegna, true);
     p.gt = e.target.value;
+    tocca(p); haptic(); render();
+    return;
+  }
+  /* Il menu a tendina dell'allenamento: valore "idScheda|nomeGiornata". */
+  if (d.assall) {
+    const p = pianoAllRec(d.assall, true);
+    const [sid, gn] = (e.target.value || '|').split('|');
+    p.sid = sid; p.gn = gn;
     tocca(p); haptic(); render();
   }
 });

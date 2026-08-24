@@ -57,6 +57,10 @@ o grassi: lì lo scarto è giusto.
 
 `pdftxt2.py` tira fuori il testo da un PDF senza librerie esterne (segue i
 flussi di contenuto delle pagine e le mappe dei caratteri dei font).
+`pdftxt3.py` fa lo stesso ma legge anche i PDF che comprimono gli oggetti
+dentro `/ObjStm` — quelli prodotti da WeasyPrint e da molti generatori
+moderni, dove cercare `N 0 obj` nel file non trova niente. Se `pdftxt2.py`
+restituisce pagine vuote, prova con `pdftxt3.py`.
 `estrai_piano.py` prende quel testo e ne fa un CSV importabile dall'app.
 
 ```bash

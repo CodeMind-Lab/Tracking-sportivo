@@ -319,7 +319,11 @@ const Importa = (() => {
     return { nome: nome || foglio.nome, eser };
   }
 
-  /* Una scheda in CSV: giorno; esercizio; serie; ripetizioni; recupero */
+  /* Una scheda in CSV:
+       giorno; esercizio; serie; ripetizioni; recupero; note; gruppo
+     Le ultime due colonne sono facoltative, ma le note di un preparatore
+     ("carico leggero, eccentrica controllata") valgono quanto i numeri: se
+     l'importazione le buttasse via, resterebbe solo lo scheletro. */
   function schedaDaCsv(testo) {
     const righe = testo.replace(/^﻿/, '').split(/\r?\n/).filter(r => r.trim());
     if (!righe.length) return [];
@@ -331,12 +335,12 @@ const Importa = (() => {
     for (let i = da; i < righe.length; i++) {
       const c = righe[i].split(sep).map(x => x.trim().replace(/^"|"$/g, ''));
       if (c.length < 2) continue;
-      const [giorno, nome, serie, rip, rec] = c;
+      const [giorno, nome, serie, rip, rec, note, gruppo] = c;
       if (!giorno || !nome) continue;
       const s = parseInt(String(serie || '').replace(/\D/g, ''), 10);
       (giorni[giorno] = giorni[giorno] || []).push({
-        n: nome, gruppo: '', serie: isFinite(s) && s > 0 ? s : 3,
-        rip: rip || '', rec: recupero(rec), note: ''
+        n: nome, gruppo: gruppo || '', serie: isFinite(s) && s > 0 ? s : 3,
+        rip: rip || '', rec: recupero(rec), note: note || ''
       });
     }
     return Object.keys(giorni).map(n => ({ nome: n, eser: giorni[n] }));

@@ -24,7 +24,7 @@ una volta sola e si ritrovano sull'altro dispositivo.
 | **Cibo → Piano** | Le tue **giornate tipo** (“Giorno 1 off”, “Giorno 2 on”) e un **menu a tendina per ogni giorno della settimana** che dice quale giornata mangi quel giorno. Da qui esce anche la **lista della spesa**, e ci stanno le **combinazioni** salvate. |
 | **Cibo → Alimenti** | L'anagrafica dei 71 alimenti più quelli che aggiungi tu, **raggruppati per categoria**: tocchi la categoria e si apre. Ricerca e filtro. |
 | **Allenamento → Sessioni** | Il registro degli allenamenti svolti: serie, volume in kg, cardio. Filtri per periodo e gruppo muscolare. Export CSV. |
-| **Allenamento → Schede** | I tuoi programmi. Una scheda ha i **giorni 1, 2, 3, 4…**: li scegli coi numeri in alto e ognuno ha i suoi esercizi con serie, ripetizioni, carico e recupero. |
+| **Allenamento → Schede** | I tuoi programmi, e un **menu a tendina per ogni giorno della settimana** che dice quale seduta tocca quel giorno. Una scheda ha i **giorni 1, 2, 3, 4…** con i loro esercizi, serie, ripetizioni, carico, recupero e note. |
 | **Report** | Media calorie e proteine, **aderenza** (quanti giorni sei rimasto entro il 10% del bersaglio), calorie giorno per giorno, ripartizione dei macro, cosa mangi davvero, acqua/passi/olio, volume per gruppo, progressione dei carichi, e il **peso con la media mobile** e il verdetto a tre settimane. Si stampa in PDF. |
 | **Impostazioni** | Bersagli, obiettivi, sincronizzazione, backup. |
 
@@ -113,6 +113,16 @@ Le ripetizioni si scrivono come le scrive un preparatore — `8–10`, `12-15`, 
 e restano così. Quando parti con l'allenamento, l'app propone il numero più basso
 dell'intervallo: quello che devi garantire.
 
+### La settimana di allenamento
+
+In **Allenamento → Schede**, in cima, ci sono i sette giorni con un menu a tendina
+ciascuno: scegli quale seduta fai quel giorno, o lasci **riposo**. Funziona come
+l'assegnazione delle giornate alimentari.
+
+Sulla scheda **Oggi** compare quello che tocca — *“Rientro · Circuito A”* con il pulsante
+**Inizia**, che apre la sessione già pronta. Nei giorni lasciati su riposo te lo dice,
+invece di lasciarti davanti a una casella vuota.
+
 ### Caricare una scheda da un file
 
 **Allenamento → Schede → Importa una scheda da un file.** Accetta:
@@ -120,12 +130,15 @@ dell'intervallo: quello che devi garantire.
 - **`.xlsx`** con un foglio per giorno e le colonne **Esercizio · Serie · Rip. · Rec. · Note**.
   Legge anche le sezioni (Riscaldamento, Petto, Bicipiti…), i recuperi scritti come `90"`
   o `1'30"`, e le note tecniche. Le intestazioni dei fogli possono avere emoji.
-- **`.csv`** con cinque colonne:
+- **`.csv`** con cinque colonne, più due facoltative (**note** e **gruppo**):
 
   ```
-  giorno;esercizio;serie;ripetizioni;recupero
-  Giorno 1;Chest Press macchina;4;6-8;90"
+  giorno;esercizio;serie;ripetizioni;recupero;note;gruppo
+  Circuito A;Chest press;3;15;40";Carico leggero, controlla la discesa;Circuito
   ```
+
+  Le note compaiono sotto l'esercizio **mentre ti alleni**, che è dove servono, e il
+  gruppo diventa la sezione della seduta (Riscaldamento, Circuito, Cardio).
 
 Prima di scrivere qualcosa l'app ti mostra cosa ha trovato: quanti giorni e quanti
 esercizi per giorno. Se sei dentro una scheda, l'importazione **sostituisce** i suoi
@@ -304,7 +317,7 @@ lì per il giorno in cui volessi aggiornare i valori.
 
 Nel `localStorage` del browser, sotto la chiave `forma.v1`. Tutto in una struttura sola:
 una riga per cosa, con un tipo (`l` voce del diario, `gt` giornata tipo, `p` a quale
-giornata punta un giorno della settimana, `w` sessione, `m` misura, `s` scheda, `a` alimento tuo, `g` giorno,
+giornata punta un giorno della settimana, `pa` quale seduta tocca in quale giorno, `w` sessione, `m` misura, `s` scheda, `a` alimento tuo, `g` giorno,
 `cfg` bersagli). È la stessa forma che viaggia su Supabase,
 quindi aggiungere un campo in futuro non richiede toccare il database.
 
