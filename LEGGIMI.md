@@ -213,9 +213,9 @@ In quel caso usa **Impostazioni → Backup → Esporta tutto**: è l'unica copia
 
 ## Come si usa, in pratica
 
-**Il turno di lavoro.** In cima alla scheda Oggi, con l'orario e il bersaglio di calorie:
-**Apertura** (07:30–15:30), **Chiusura** (15:30–23:30), **Notte** (23:30–07:30), **OFF**.
-Il colore a sinistra cambia con il turno, così lo riconosci senza leggerlo.
+**Il turno di lavoro.** In cima alla scheda Oggi, con l'orario: **Apertura** (07:30–15:30),
+**Chiusura** (15:30–23:30), **Notte** (23:30–07:30), **OFF**. Il colore a sinistra cambia
+con il turno, così lo riconosci senza leggerlo.
 
 Il turno solito di ogni giorno si imposta una volta in **Cibo → Piano**, nella stessa
 tabella dove scegli le giornate alimentari. Quando una settimana i turni si scambiano,
@@ -311,7 +311,22 @@ chiedere niente. Su iPhone si apre il foglio di condivisione, sul Mac il file si
 
 ## Aggiornare l'app
 
-Quando cambi i file, alza il numero di versione in **due punti** (devono corrispondere):
+### Sul telefono
+
+L'app tiene i file in memoria per funzionare senza rete, e dopo una pubblicazione può
+restare indietro di qualche ora. **Impostazioni → Aggiorna l'app adesso**: riscarica tutto
+subito, ignorando ogni cache. I dati non si toccano — diario, piani e allenamenti restano
+dove sono.
+
+Quando l'app si accorge da sola che c'è una versione nuova, te lo dice con un avviso.
+
+Se ti trovi bloccato su una versione che non ha ancora quel pulsante: chiudi l'app dal
+selettore delle app (scorri verso l'alto e butta via la scheda) e riaprila. Un avvio da
+freddo la fa ricontrollare.
+
+### Quando pubblichi
+
+Alza il numero di versione in **due punti** (devono corrispondere):
 
 - `app.js`, riga in alto: `const APP_VERSION = '2026.08.21.3';`
 - `sw.js`, riga in alto: `const VER = 'forma-2026.08.21.3';`

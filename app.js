@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.22.3';
+const APP_VERSION = '2026.08.22.4';
 
 const KEY = 'forma.v1';
 
@@ -561,7 +561,7 @@ function vistaOggi() {
     <span class="tb-i">${tn ? tn.ic : '\u{1F553}'}</span>
     <span class="tb-t"><b>${tn ? esc(tn.l) : 'Turno non impostato'}</b>
       <span>${tn ? esc(tn.ore) : 'Tocca per dire che turno fai oggi'}</span></span>
-    <span class="tb-k">${kt}<i> kcal</i></span>
+    <span class="tb-c"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
   </button>`;
 
   h += `<div class="kcal-card">
@@ -2296,10 +2296,19 @@ function vistaSettings() {
   </div>`;
 
   h += `<div class="panel"><div class="label">Questa app</div>
-    <div class="stat-row"><span>Versione</span><span>${APP_VERSION}</span></div>
+    <div class="stat-row"><span>Versione in uso</span><span>${APP_VERSION}</span></div>
     <div class="stat-row"><span>Alimenti nel database</span><span>${ALIMENTI.length}</span></div>
     <div class="stat-row"><span>Funziona senza rete</span><span>${'serviceWorker' in navigator ? 'sì' : 'no'}</span></div>
+    <button class="btn" data-act="aggiorna">Aggiorna l'app adesso</button>
+    <p class="set-note">Sul telefono l'app tiene i file in memoria per funzionare senza
+      rete, e dopo una modifica può restare indietro di qualche ora. Questo pulsante
+      riscarica tutto subito. <b>I tuoi dati non si toccano</b>: diario, piani e
+      allenamenti restano dove sono.</p>
+  </div>`;
+
+  h += `<div class="panel"><div class="label">Zona pericolosa</div>
     <button class="btn danger" data-act="azzera">Cancella tutti i dati di questo dispositivo</button>
+    <p class="set-note">Questo sì che cancella tutto. Prima fai un backup.</p>
   </div>`;
 
   h += `<div class="brand-foot"><div class="wm">CodeMind<span>.Lab</span></div>
@@ -2442,13 +2451,12 @@ function sheetTurno(d) {
   const attuale = turnoDi(d);
   const dallaSettimana = turnoRec(gsDiData(d)).turno;
   const info = turnoInfo(dallaSettimana);
-  const t = cfg().target;
 
   return `<h2 class="sheet-title">Turno di ${esc(nomeGiorno(d).toLowerCase())}</h2>
     <p class="set-note" style="margin:0 0 12px">${esc(dataLunga(d))}</p>
     ${TURNI.map(x => `<button class="sheet-row ${x.id === attuale ? 'sel' : ''}" data-turno="${x.id}">
       <span class="ic">${x.ic}</span>
-      <span>${esc(x.l)}<span class="hint">${esc(x.ore)} · ${x.id === 'off' ? t.kcalOff : t.kcal} kcal</span></span>
+      <span>${esc(x.l)}<span class="hint">${esc(x.ore)}</span></span>
       ${x.id === attuale ? '<svg viewBox="0 0 24 24" style="color:var(--teal)"><path d="M5 12l5 5L20 7"/></svg>' : ''}
     </button>`).join('')}
     ${turnoScritto(d)
@@ -2923,6 +2931,59 @@ function esporta(cosa) {
     }
     scarica('forma-report-' + oggi + '.csv', csv(out));
   }
+}
+
+/* ============================================================
+   Aggiornamento dell'app
+   ============================================================
+
+   Il service worker serve i file dalla sua cache, ed è quello che permette di
+   aprire l'app in aereo. Il rovescio è che dopo una pubblicazione il telefono
+   può restare sulla versione vecchia finché non ricontrolla — e iOS lo fa con
+   molto comodo. Questo pulsante salta la coda: riscarica i file ignorando ogni
+   cache, butta quella del service worker e ricarica.
+
+   I dati non si toccano: stanno in localStorage, che non c'entra niente con
+   le cache dei file.
+*/
+
+const FILE_APP = ['./', 'index.html', 'app.css', 'data.js', 'importa.js',
+                  'scanner.js', 'app.js', 'sync.js', 'manifest.webmanifest'];
+
+async function aggiornaApp(bottone) {
+  if (!navigator.onLine) {
+    toast('Sei offline: per aggiornare serve la rete');
+    return;
+  }
+  if (bottone) bottone.textContent = 'Scarico i file nuovi…';
+
+  try {
+    /* Prima si riscaricano i file: se la rete cadesse a metà, la cache del
+       service worker è ancora al suo posto e l'app continua a funzionare.
+       Svuotarla per prima lascerebbe il telefono con niente in mano. */
+    await Promise.all(FILE_APP.map(f => fetch(f, { cache: 'reload' }).catch(() => {})));
+
+    if (window.caches) {
+      for (const k of await caches.keys()) await caches.delete(k);
+    }
+    if (navigator.serviceWorker) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.update().catch(() => {})));
+    }
+  } catch (e) {
+    /* Anche se qualcosa va storto si ricarica lo stesso: peggio di così non
+       può andare, e spesso basta. */
+  }
+  location.reload();
+}
+
+/* Il controllo automatico: a ogni ritorno sull'app si chiede al service worker
+   se c'è una versione nuova. Senza, su iOS può passare più di un giorno. */
+function controllaAggiornamenti() {
+  if (!navigator.serviceWorker) return;
+  navigator.serviceWorker.getRegistrations()
+    .then(rs => rs.forEach(r => r.update().catch(() => {})))
+    .catch(() => {});
 }
 
 /* ============================================================
@@ -3497,6 +3558,8 @@ function azione(a, b) {
     elimina(view.id); history.back(); return;
   }
 
+  if (a === 'aggiorna') { aggiornaApp(b); return; }
+
   if (a === 'backup') {
     scarica('forma-backup-' + oggiISO() + '.json',
       JSON.stringify({ v: 1, app: 'forma', versione: APP_VERSION, items: DB.items, settings: DB.settings }, null, 1),
@@ -3946,7 +4009,11 @@ document.addEventListener('keydown', e => {
 /* Uscendo dall'app la fotocamera va spenta: lasciarla accesa in sottofondo
    consuma batteria e accende la spia senza motivo. */
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && typeof Scanner !== 'undefined') Scanner.chiudi();
+  if (document.hidden) {
+    if (typeof Scanner !== 'undefined') Scanner.chiudi();
+  } else {
+    controllaAggiornamenti();
+  }
 });
 
 window.addEventListener('popstate', e => {
@@ -3973,5 +4040,19 @@ history.replaceState(view, '', '');
 render();
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      /* Quando ne arriva uno nuovo lo si dice, invece di lasciare che il
+         telefono resti su una versione vecchia senza che nessuno lo sappia. */
+      reg.addEventListener('updatefound', () => {
+        const nuovo = reg.installing;
+        if (!nuovo) return;
+        nuovo.addEventListener('statechange', () => {
+          if (nuovo.state === 'installed' && navigator.serviceWorker.controller) {
+            toast('Versione nuova pronta: Impostazioni → Aggiorna l’app');
+          }
+        });
+      });
+    }).catch(() => {});
+  });
 }
