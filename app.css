@@ -358,11 +358,30 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .macro .bar i.over{background:#FFD166}
 
 /* ---------- assegnazione giorno → giornata tipo ---------- */
-.ass{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+/* Due righe: sopra il giorno con le sue calorie, sotto i due menu. Su una
+   riga sola, a 375 px, i due menu diventerebbero due fessure illeggibili. */
+.ass{
+  display:grid;grid-template-columns:1fr auto;gap:6px 10px;
+  padding:10px 0;border-top:1px solid var(--line);align-items:center;
+}
 .ass:first-of-type{border-top:0;padding-top:2px}
-.ass-g{flex:none;width:78px;font-size:13.5px;font-weight:650;color:var(--navy)}
+.ass-g{font-size:13.5px;font-weight:700;color:var(--navy)}
+.ass-t{
+  grid-column:1;min-width:0;
+  background:var(--bg-elev2);border:1px solid var(--line);border-radius:9px;
+  padding:8px 26px 8px 10px;font-size:13px;font-weight:650;color:var(--txt-dim);
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230F90B9' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;background-size:15px;
+}
+/* Il turno si riconosce dal colore anche senza leggere: sono sette righe. */
+.ass-t.apertura{border-color:#FFC24B;color:#8A6200;background-color:rgba(255,194,75,.14)}
+.ass-t.chiusura{border-color:var(--coral);color:#B33A26;background-color:var(--accent-soft)}
+.ass-t.notte{border-color:#8E7CF0;color:#4B3BA8;background-color:rgba(142,124,240,.14)}
+.ass-t.off{border-color:var(--teal);color:#0B5E7C;background-color:rgba(108,211,240,.16)}
+.ass-t:focus{outline:none;box-shadow:0 0 0 3px rgba(15,144,185,.13)}
 .ass-s{
-  flex:1;min-width:0;
+  grid-column:2;min-width:0;
   background:var(--bg-elev2);border:1px solid var(--line);border-radius:9px;
   padding:8px 26px 8px 10px;font-size:13.5px;color:var(--navy);
   appearance:none;-webkit-appearance:none;
@@ -371,7 +390,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 }
 .ass-s:focus{outline:none;border-color:var(--teal);background-color:#fff;box-shadow:0 0 0 3px rgba(15,144,185,.13)}
 .ass-k{
-  flex:none;width:62px;text-align:right;font-size:12px;font-weight:700;
+  text-align:right;font-size:12px;font-weight:700;
   color:var(--txt-faint);font-variant-numeric:tabular-nums;
 }
 /* Il giorno della settimana accanto al nome della giornata, sulla dashboard. */
@@ -380,10 +399,51 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   text-transform:uppercase;letter-spacing:.04em;margin-top:1px;
 }
 
-@media (max-width:380px){
-  .ass-g{width:62px;font-size:12.5px}
-  .ass-k{display:none}
+@media (min-width:560px){
+  /* Con spazio, tutto su una riga sola. */
+  .ass{grid-template-columns:110px 150px 1fr auto}
+  .ass-t{grid-column:2}
+  .ass-s{grid-column:3}
 }
+
+/* ---------- il turno di lavoro ---------- */
+.turno-bar{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  padding:12px 14px;border-radius:var(--radius);margin-bottom:12px;
+  background:var(--navy);color:#fff;box-shadow:var(--shadow-sm);
+  border-left:4px solid var(--sky);
+}
+.turno-bar.apertura{border-left-color:#FFC24B}
+.turno-bar.chiusura{border-left-color:var(--coral)}
+.turno-bar.notte{border-left-color:#8E7CF0}
+.turno-bar.off{background:var(--bg-elev);color:var(--navy);border-left-color:var(--teal)}
+.turno-bar.vuoto{
+  background:var(--bg-elev);color:var(--txt-dim);
+  border:1px dashed var(--line);border-left:4px solid var(--txt-faint);
+}
+.tb-i{font-size:22px;flex:none;line-height:1}
+.tb-t{flex:1;min-width:0}
+.tb-t b{display:block;font-size:16px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.tb-t span{
+  display:block;font-size:11.5px;margin-top:2px;opacity:.62;
+  font-variant-numeric:tabular-nums;
+}
+.tb-k{
+  flex:none;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;
+  letter-spacing:-.02em;
+}
+.tb-k i{font-style:normal;font-size:11px;font-weight:650;opacity:.6;letter-spacing:0}
+.turno-bar:active{opacity:.88}
+
+/* quando il turno del giorno non segue la settimana */
+.kcal-side .ecc{
+  font-size:10.5px;font-weight:700;color:var(--sky);
+  background:rgba(108,211,240,.16);padding:2px 7px;border-radius:99px;
+}
+
+/* la riga selezionata nel pannello di scelta */
+.sheet-row.sel{background:var(--bg-elev);border-radius:10px}
+.sheet-row.sel span:not(.ic){font-weight:700}
 
 /* ---------- il piano del giorno ---------- */
 .plan-hero{
@@ -435,7 +495,12 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .pml{
   display:block;margin-top:2px;font-size:11.5px;line-height:1.5;color:var(--txt-dim);
 }
-.pml i{font-style:normal;color:var(--txt-faint);font-variant-numeric:tabular-nums}
+/* I grammi sono la sola cosa che devi guardare mentre pesi: vanno letti a
+   colpo d'occhio dentro una riga di nomi. Le macro restano dove sono. */
+.pml b{
+  color:var(--navy);font-weight:800;font-variant-numeric:tabular-nums;
+  font-size:12.5px;letter-spacing:-.01em;
+}
 
 .ph-cta{
   display:block;width:100%;margin-top:12px;padding:11px;border-radius:11px;
@@ -471,8 +536,11 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .acqua-row .water i.on{background:var(--sky)}
 
 /* ---------- contatori rapidi ---------- */
-.qcard.largo{margin-top:12px}
-.qcard.largo .qb{max-width:200px}
+/* Passi e olio affiancati: due contatori che si guardano insieme. La regola
+   era sparita in una pulizia del CSS inutilizzato, quando la classe non aveva
+   ancora nessuno che la usasse. */
+.quick{display:flex;gap:10px;margin-top:12px}
+.quick .qcard{flex:1;min-width:0}
 .qcard{
   flex:1;background:#fff;border:1px solid var(--line);border-radius:var(--radius);
   padding:11px 12px;box-shadow:var(--shadow-sm);min-width:0;

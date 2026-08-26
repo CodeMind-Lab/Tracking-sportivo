@@ -19,9 +19,9 @@ una volta sola e si ritrovano sull'altro dispositivo.
 
 | Scheda | A cosa serve |
 |---|---|
-| **Oggi** | La giornata: anello delle calorie con acqua e macro, il piano del giorno, passi, allenamento, e in fondo **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
+| **Oggi** | La giornata: il **turno di lavoro** in cima, anello delle calorie con acqua e macro, il piano del giorno, passi e olio, allenamento, e in fondo **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
 | **Cibo → Diario** | Il registro di tutto quello che hai mangiato, **un giorno per riga**: tocchi il giorno e si apre con le sue voci e il totale. Filtri per periodo, pasto, categoria, ricerca sul nome. Export CSV. |
-| **Cibo → Piano** | Le tue **giornate tipo** (“Giorno 1 off”, “Giorno 2 on”) e un **menu a tendina per ogni giorno della settimana** che dice quale giornata mangi quel giorno. Da qui esce anche la **lista della spesa**, e ci stanno le **combinazioni** salvate. |
+| **Cibo → Piano** | Le tue **giornate tipo** (“Giorno 1 off”, “Giorno 2 on”) e, per ogni giorno della settimana, **due menu a tendina**: il turno di lavoro e la giornata che mangi. Da qui esce anche la **lista della spesa**, e ci stanno le **combinazioni** salvate. |
 | **Cibo → Alimenti** | L'anagrafica dei 71 alimenti più quelli che aggiungi tu, **raggruppati per categoria**: tocchi la categoria e si apre. Ricerca e filtro. |
 | **Allenamento → Sessioni** | Il registro degli allenamenti svolti: serie, volume in kg, cardio. Filtri per periodo e gruppo muscolare. Export CSV. |
 | **Allenamento → Schede** | I tuoi programmi, e un **menu a tendina per ogni giorno della settimana** che dice quale seduta tocca quel giorno. Una scheda ha i **giorni 1, 2, 3, 4…** con i loro esercizi, serie, ripetizioni, carico, recupero e note. |
@@ -213,6 +213,18 @@ In quel caso usa **Impostazioni → Backup → Esporta tutto**: è l'unica copia
 
 ## Come si usa, in pratica
 
+**Il turno di lavoro.** In cima alla scheda Oggi, con l'orario e il bersaglio di calorie:
+**Apertura** (07:30–15:30), **Chiusura** (15:30–23:30), **Notte** (23:30–07:30), **OFF**.
+Il colore a sinistra cambia con il turno, così lo riconosci senza leggerlo.
+
+Il turno solito di ogni giorno si imposta una volta in **Cibo → Piano**, nella stessa
+tabella dove scegli le giornate alimentari. Quando una settimana i turni si scambiano,
+tocchi la barra sulla scheda Oggi e cambi **solo quel giorno**: l'app te lo segnala, e con
+*Segui la settimana* torna al modello.
+
+**Nei giorni OFF il bersaglio di calorie scende** da solo a quello dei giorni di riposo.
+Gli orari sono quelli del piano v3: se sono cambiati, dimmelo e li rendo modificabili.
+
 **Spostarsi fra i giorni.** Le frecce vanno avanti e indietro di un giorno, anche nel
 futuro: serve per preparare in anticipo la giornata di un turno. La striscia Lun‑Dom salta
 dentro la settimana. Toccando la data si apre il **calendario del mese**, dove ogni giorno
@@ -317,7 +329,8 @@ lì per il giorno in cui volessi aggiornare i valori.
 
 Nel `localStorage` del browser, sotto la chiave `forma.v1`. Tutto in una struttura sola:
 una riga per cosa, con un tipo (`l` voce del diario, `gt` giornata tipo, `p` a quale
-giornata punta un giorno della settimana, `pa` quale seduta tocca in quale giorno, `w` sessione, `m` misura, `s` scheda, `a` alimento tuo, `g` giorno,
+giornata punta un giorno della settimana, `pa` quale seduta tocca in quale giorno, `tu` il turno solito di un giorno della
+settimana, `w` sessione, `m` misura, `s` scheda, `a` alimento tuo, `g` giorno,
 `cfg` bersagli). È la stessa forma che viaggia su Supabase,
 quindi aggiungere un campo in futuro non richiede toccare il database.
 

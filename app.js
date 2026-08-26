@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.22.2';
+const APP_VERSION = '2026.08.22.3';
 
 const KEY = 'forma.v1';
 
@@ -177,9 +177,26 @@ function giorno(d, crea) {
   return g || { t: 'g', d, tipo: 'turno', acqua: 0, passi: 0, _finto: true };
 }
 
+/* Il turno della settimana: il modello fisso, quello che di solito fai. */
+function turnoRec(gs, crea) {
+  let p = DB.items.find(i => i.t === 'tu' && i.gs === gs);
+  if (!p && crea) p = aggiungi({ id: 'turno-' + gs, t: 'tu', gs, turno: '' });
+  return p || { t: 'tu', gs, turno: '', _finto: true };
+}
+
+/* Il turno di una data precisa. Vale quello scritto sul giorno, se c'è:
+   i turni si scambiano, e il modello settimanale non deve impedirti di dire
+   che questo giovedì hai fatto la notte. */
+function turnoDi(d) {
+  const g = giorno(d);
+  if (g.turno) return g.turno;
+  return turnoRec(gsDiData(d)).turno || '';
+}
+const turnoScritto = d => !!giorno(d).turno;
+
 const kcalTarget = d => {
   const t = cfg().target;
-  return giorno(d).tipo === 'off' ? t.kcalOff : t.kcal;
+  return turnoDi(d) === 'off' ? t.kcalOff : t.kcal;
 };
 
 const righeDi = d => di('l').filter(i => i.d === d);
@@ -246,6 +263,16 @@ const ultimaMisura = () => { const m = misure(); return m[m.length - 1] || null;
 const sessioni = () => di('w').sort((a, b) => a.d < b.d ? 1 : -1);
 const schede = () => di('s');
 
+/* I turni di lavoro. Gli orari vengono dal piano alimentare v3, dove le
+   giornate tipo sono costruite proprio attorno a questi tre turni. */
+const TURNI = [
+  { id: 'apertura', l: 'Apertura', ic: '\u{1F305}', ore: '07:30 – 15:30' },
+  { id: 'chiusura', l: 'Chiusura', ic: '\u{1F306}', ore: '15:30 – 23:30' },
+  { id: 'notte',    l: 'Notte',    ic: '\u{1F319}', ore: '23:30 – 07:30' },
+  { id: 'off',      l: 'OFF',      ic: '\u{1F3E0}', ore: 'riposo' }
+];
+const turnoInfo = id => TURNI.find(t => t.id === id) || null;
+
 /* I sette giorni. L'ordine è quello del calendario italiano: getDay() mette la
    domenica a 0, e usarlo così farebbe cominciare la settimana di domenica. */
 const GIORNI_SETT = [
@@ -286,6 +313,19 @@ const giornataById = id => DB.items.find(i => i.id === id && i.t === 'gt') || nu
 /* Prima le giornate stavano dentro il giorno della settimana. Chi ha già
    compilato qualcosa non deve perderlo: al primo avvio della versione nuova
    ogni vecchio piano diventa una giornata tipo, e il giorno la punta. */
+/* Prima il giorno sapeva solo se era "turno" o "riposo". Ora sa quale turno:
+   i riposi diventano OFF, gli altri restano senza turno finché non lo dici —
+   "turno" non diceva se era apertura, chiusura o notte, e inventarlo sarebbe
+   peggio che lasciarlo vuoto. */
+function migraTurni() {
+  for (const g of di('g')) {
+    if (g.turno !== undefined) continue;
+    g.turno = g.tipo === 'off' ? 'off' : '';
+    delete g.tipo;
+    tocca(g);
+  }
+}
+
 function migraPiano() {
   const vecchi = DB.items.filter(i => i.t === 'p' && Array.isArray(i.righe) && i.righe.length);
   if (!vecchi.length) return;
@@ -349,10 +389,11 @@ function applicaPiano(gs, data) {
   /* Se la giornata sa di essere di turno o di riposo, lo dice anche al giorno:
      il bersaglio delle calorie cambia di conseguenza, e ricordarselo a mano
      ogni volta sarebbe un modo sicuro di sbagliarlo. */
-  if (g.tipo === 'on' || g.tipo === 'off') {
+  /* Una giornata segnata OFF dice anche che quel giorno non lavori. Una
+     segnata ON non dice quale turno, quindi non tocca niente. */
+  if (g.tipo === 'off' && turnoDi(data) !== 'off') {
     const gg = giorno(data, true);
-    const nuovo = g.tipo === 'off' ? 'off' : 'turno';
-    if (gg.tipo !== nuovo) { gg.tipo = nuovo; tocca(gg); }
+    gg.turno = 'off'; tocca(gg);
   }
   haptic();
   toast(g.righe.length + ' voci caricate · ' + g.n);
@@ -512,6 +553,17 @@ function vistaOggi() {
   const bicchieri = Math.round(t.acqua / 250);
   const bevuti = Math.round(g.acqua / 250);
 
+  /* Il turno di lavoro è la cosa che decide la giornata: quando mangi, quanto
+     mangi, se ti alleni. Sta in cima, largo, e si cambia toccandolo. */
+  const tid = turnoDi(d);
+  const tn = turnoInfo(tid);
+  h += `<button class="turno-bar ${tid || 'vuoto'}" data-act="scegli-turno">
+    <span class="tb-i">${tn ? tn.ic : '\u{1F553}'}</span>
+    <span class="tb-t"><b>${tn ? esc(tn.l) : 'Turno non impostato'}</b>
+      <span>${tn ? esc(tn.ore) : 'Tocca per dire che turno fai oggi'}</span></span>
+    <span class="tb-k">${kt}<i> kcal</i></span>
+  </button>`;
+
   h += `<div class="kcal-card">
     <div class="kcal-top">
       ${anello(tot.k, kt)}
@@ -520,11 +572,8 @@ function vistaOggi() {
         <div class="sub">
           ${righe.length
             ? `<button class="link" data-act="vai-diario">${righe.length}${righe.length === 1 ? ' voce registrata' : ' voci registrate'}</button>`
-            : 'Niente ancora'} ·
-          <button class="tipo-sw ${g.tipo === 'off' ? 'off' : ''}" data-act="cambia-tipo">
-            ${g.tipo === 'off' ? 'riposo' : 'turno'} · ${g.tipo === 'off' ? t.kcalOff : t.kcal}
-            <svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4M21 7H7M7 21l-4-4 4-4M3 17h14"/></svg>
-          </button>
+            : 'Niente ancora'}
+          ${turnoScritto(d) ? '<span class="ecc">turno cambiato a mano</span>' : ''}
         </div>
       </div>
     </div>
@@ -747,7 +796,7 @@ function riquadroPiano(d, righe, tot) {
       const tm = somma(rp);
       h += `<div class="pm">
         <span class="pmh"><span class="pmn"><i class="pmi">${pa.ic}</i>${esc(pa.l)}</span><b>${r0(tm.k)} kcal</b></span>
-        <span class="pml">${rp.map(r => esc(r.n) + ' <i>' + r1(r.q) + ' g</i>').join(' · ')}</span>
+        <span class="pml">${rp.map(r => esc(r.n) + ' <b>' + r1(r.q) + ' g</b>').join(' · ')}</span>
       </div>`;
     }
     h += `</div>`;
@@ -1011,16 +1060,24 @@ function vistaPiano() {
   for (const g of GIORNI_SETT) {
     const gt = giornataDi(g.id);
     const tot = gt ? somma(gt.righe || []) : null;
+    const tu = turnoRec(g.id).turno;
     h += `<div class="ass">
       <span class="ass-g">${esc(g.l)}</span>
+      <span class="ass-k">${tot ? r0(tot.k) + ' kcal' : '—'}</span>
+      <select class="ass-t ${tu || ''}" data-assturno="${g.id}">
+        <option value="">turno?</option>
+        ${TURNI.map(x => `<option value="${x.id}" ${tu === x.id ? 'selected' : ''}>${x.ic} ${esc(x.l)}</option>`).join('')}
+      </select>
       <select class="ass-s" data-assegna="${g.id}">
-        <option value="">— nessuna —</option>
+        <option value="">— nessuna giornata —</option>
         ${gts.map(x => `<option value="${x.id}" ${gt && gt.id === x.id ? 'selected' : ''}>${esc(x.n)}</option>`).join('')}
       </select>
-      <span class="ass-k">${tot ? r0(tot.k) + ' kcal' : '—'}</span>
     </div>`;
   }
-  h += `</div>`;
+  h += `</div>
+    <p class="set-note">Il turno decide il bersaglio delle calorie: nei giorni <b>OFF</b>
+      scende a ${cfg().target.kcalOff}. Se una settimana i turni si scambiano, lo correggi
+      sul singolo giorno dalla scheda Oggi.</p>`;
 
   const senza = GIORNI_SETT.filter(g => !giornataDi(g.id));
   if (senza.length) {
@@ -2379,6 +2436,28 @@ function sheetNuovoAlimento(nome, a) {
 /* Il calendario del mese. Le frecce spostano di un giorno, la striscia della
    settimana di sette: per andare al mese scorso o alla settimana prossima
    servirebbero venti tocchi. Qui ci si arriva in uno. */
+/* La scelta del turno per una data. Ha anche la via d'uscita: tornare a
+   seguire la settimana, che è il caso normale. */
+function sheetTurno(d) {
+  const attuale = turnoDi(d);
+  const dallaSettimana = turnoRec(gsDiData(d)).turno;
+  const info = turnoInfo(dallaSettimana);
+  const t = cfg().target;
+
+  return `<h2 class="sheet-title">Turno di ${esc(nomeGiorno(d).toLowerCase())}</h2>
+    <p class="set-note" style="margin:0 0 12px">${esc(dataLunga(d))}</p>
+    ${TURNI.map(x => `<button class="sheet-row ${x.id === attuale ? 'sel' : ''}" data-turno="${x.id}">
+      <span class="ic">${x.ic}</span>
+      <span>${esc(x.l)}<span class="hint">${esc(x.ore)} · ${x.id === 'off' ? t.kcalOff : t.kcal} kcal</span></span>
+      ${x.id === attuale ? '<svg viewBox="0 0 24 24" style="color:var(--teal)"><path d="M5 12l5 5L20 7"/></svg>' : ''}
+    </button>`).join('')}
+    ${turnoScritto(d)
+      ? `<button class="btn sec" data-turno="">Segui la settimana${info ? ' (' + esc(info.l) + ')' : ''}</button>`
+      : ''}
+    <p class="set-note">Il turno di questo giorno vale solo per oggi. Per cambiarlo
+      tutte le settimane, usa i menu a tendina in <b>Cibo → Piano</b>.</p>`;
+}
+
 function sheetCalendario(sel) {
   const mese = sheetCtx.mese || sel.slice(0, 7);
   const [anno, mm] = mese.split('-').map(Number);
@@ -2656,7 +2735,7 @@ function sheetCombinazione(id) {
     ${PASTI.filter(p => perSlot[p.id]).map(p => `<div class="pm">
       <span class="pmh"><span class="pmn"><i class="pmi">${p.ic}</i>${esc(p.l)}</span>
         <b>${r0(somma(perSlot[p.id]).k)} kcal</b></span>
-      <span class="pml">${perSlot[p.id].map(x => esc(x.n) + ' <i>' + r1(x.q) + ' g</i>').join(' · ')}</span>
+      <span class="pml">${perSlot[p.id].map(x => esc(x.n) + ' <b>' + r1(x.q) + ' g</b>').join(' · ')}</span>
     </div>`).join('')}
     <button class="btn" data-act="usa-combinazione">Aggiungi al diario di oggi</button>
     <button class="btn sec" data-act="salva-combinazione">Salva il nome</button>
@@ -2832,13 +2911,14 @@ function esporta(cosa) {
       const g = perGiorno[r.d] = perGiorno[r.d] || { k: 0, p: 0, c: 0, g: 0 };
       g.k += m.k; g.p += m.p; g.c += m.c; g.g += m.g;
     }
-    const out = [['Data', 'Tipo giornata', 'Kcal', 'Bersaglio', 'Scarto', 'Proteine', 'Carboidrati', 'Grassi', 'Olio g', 'Acqua ml', 'Passi', 'Allenamenti', 'Durata min', 'Volume kg']];
+    const out = [['Data', 'Turno', 'Kcal', 'Bersaglio', 'Scarto', 'Proteine', 'Carboidrati', 'Grassi', 'Olio g', 'Acqua ml', 'Passi', 'Allenamenti', 'Durata min', 'Volume kg']];
     for (const d of Object.keys(perGiorno).sort()) {
       const g = perGiorno[d], kt = kcalTarget(d), gg = giorno(d);
       const s = di('w').filter(w => w.d === d);
       const vol = s.reduce((v, w) => v + statSessione(w).volume, 0);
       const dur = s.reduce((v, w) => v + num(w.dur), 0);
-      out.push([d, gg.tipo === 'off' ? 'riposo' : 'turno', r0(g.k), kt, r0(g.k - kt),
+      const tn = turnoInfo(turnoDi(d));
+      out.push([d, tn ? tn.l : '', r0(g.k), kt, r0(g.k - kt),
         r1(g.p), r1(g.c), r1(g.g), r1(olioDi(d)), gg.acqua || 0, gg.passi || 0, s.length, dur, r0(vol)]);
     }
     scarica('forma-report-' + oggi + '.csv', csv(out));
@@ -3022,6 +3102,11 @@ document.addEventListener('click', e => {
     const gt = giornataById(view.id);
     gt.tipo = d.gttipo; tocca(gt); render(); return;
   }
+  if (d.turno !== undefined) {
+    const g = giorno(sheetCtx.d || view.d, true);
+    g.turno = d.turno;
+    tocca(g); haptic(); chiudiSheet(); render(); return;
+  }
   if (d.vaidata) {
     view.d = d.vaidata;
     if (!$('#sheet').hidden) chiudiSheet();
@@ -3141,11 +3226,7 @@ function azione(a, b) {
 
   if (a === 'calendario') { apriSheet(sheetCalendario(view.d), { mese: view.d.slice(0, 7) }); return; }
 
-  if (a === 'cambia-tipo') {
-    const g = giorno(view.d, true);
-    g.tipo = g.tipo === 'off' ? 'turno' : 'off';
-    tocca(g); haptic(); render(); return;
-  }
+  if (a === 'scegli-turno') { apriSheet(sheetTurno(view.d), { d: view.d }); return; }
 
   /* Dal riepilogo al dettaglio senza passare dai filtri: il Diario si apre
      già ristretto al giorno che stavi guardando. */
@@ -3838,6 +3919,12 @@ document.addEventListener('change', e => {
     return;
   }
   /* Il menu a tendina dell'allenamento: valore "idScheda|nomeGiornata". */
+  if (d.assturno) {
+    const p = turnoRec(d.assturno, true);
+    p.turno = e.target.value;
+    tocca(p); haptic(); render();
+    return;
+  }
   if (d.assall) {
     const p = pianoAllRec(d.assall, true);
     const [sid, gn] = (e.target.value || '|').split('|');
@@ -3881,6 +3968,7 @@ window.addEventListener('popstate', e => {
 
 load();
 migraPiano();
+migraTurni();
 history.replaceState(view, '', '');
 render();
 
