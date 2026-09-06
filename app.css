@@ -441,6 +441,9 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .macro.c .bar i{background:var(--sky)}
 .macro.g .bar i{background:#B9C4DC}
 .macro .bar i.over{background:#FFD166}
+/* I grammi che restano stanno sotto la barra, non dentro: dentro avrebbero
+   costretto a rimpicciolire i numeri che si leggono davvero. */
+.macro .mr{margin-top:5px;font-size:10px;font-weight:600;color:rgba(255,255,255,.74);letter-spacing:.01em}
 
 /* ---------- assegnazione giorno → giornata tipo ---------- */
 /* Due righe: sopra il giorno con le sue calorie, sotto i due menu. Su una
@@ -544,7 +547,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .tb-t{flex:1;min-width:0}
 .tb-t b{display:block;font-size:16px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
 .tb-t span{
-  display:block;font-size:11.5px;margin-top:2px;opacity:.62;
+  display:block;font-size:11.5px;margin-top:2px;opacity:.78;
   font-variant-numeric:tabular-nums;
 }
 .tb-c{flex:none;opacity:.5}
@@ -641,6 +644,22 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   color:var(--navy-txt);font-weight:800;font-variant-numeric:tabular-nums;
   font-size:12.5px;letter-spacing:-.01em;
 }
+/* Il pasto già scritto nel diario si spegne, quello che manca tiene il suo
+   pulsante: la differenza fra "l'ho mangiato" e "devo ancora" è la sola cosa
+   che questo elenco deve dire quando il piano è sempre lo stesso. */
+.pmn{flex:1}
+.pm-ok{
+  flex:none;font-size:10.5px;font-weight:800;letter-spacing:.02em;
+  color:var(--ok-txt);background:var(--ok-bg);border-radius:var(--pillola);padding:2px 8px;
+}
+.pm-add{
+  flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+  background:var(--accent-soft);color:var(--coral-txt);font-size:13px;font-weight:800;
+  line-height:1;margin:-2px 0;
+}
+.pm-add:active{background:var(--coral);color:#fff}
+.pm.ok .pmn,.pm.ok .pml{color:var(--txt-faint)}
+.pm.ok .pml b,.pm.ok .pmh b{color:var(--txt-dim);font-weight:700}
 
 .ph-cta{
   display:block;width:100%;margin-top:12px;padding:11px;border-radius:11px;
@@ -715,6 +734,51 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .wk-bars .wb u.si{background:var(--teal)}
 .wk-bars .wb span{font-size:9.5px;font-weight:750;color:var(--txt-faint);text-transform:uppercase}
 .wk-bars .wb.on span{color:var(--navy-txt)}
+
+/* ---------- adesso: il prossimo pasto del piano ---------- */
+/* Sta in cima perché è l'unica scheda che risponde con un'azione invece che
+   con un numero: qui non guardi come è andata, decidi cosa fare adesso. */
+.adesso{
+  background:var(--superficie);border:1px solid var(--line);border-radius:var(--radius);
+  border-left:3px solid var(--teal);
+  padding:12px 13px;box-shadow:var(--shadow-sm);
+}
+.adesso.fatto{border-left-color:var(--ok);display:flex;align-items:center;gap:11px}
+.ad-h{display:flex;align-items:center;gap:11px}
+.ad-i{
+  width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;
+  background:var(--sky-tinta);font-size:18px;line-height:1;
+}
+.ad-t{flex:1;min-width:0}
+.ad-t b{display:block;font-size:15px;font-weight:750;color:var(--navy-txt);letter-spacing:-.015em}
+.ad-t span{display:block;font-size:11.5px;color:var(--txt-dim);margin-top:2px}
+.ad-cta{
+  flex:none;padding:8px 15px;border-radius:var(--pillola);
+  background:var(--navy);color:#fff;font-size:12.5px;font-weight:750;
+  box-shadow:var(--shadow-sm);
+}
+.ad-cta:active{background:var(--teal)}
+.ad-l{
+  margin-top:9px;padding-top:9px;border-top:1px solid var(--line);
+  font-size:12.5px;line-height:1.55;color:var(--txt-dim);
+}
+.ad-l b{color:var(--navy-txt);font-weight:750}
+/* I pasti che vengono dopo: una fila di pastiglie, così si vede in un colpo
+   quanto resta della giornata e si può scriverne uno fuori ordine. */
+.ad-dopo{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+/* Niente gap qui: fra l'emoji e il nome c'è un nodo di testo nudo, che il
+   gap del flex non stacca in modo affidabile. I margini sì. */
+.ad-p{
+  display:flex;align-items:center;padding:6px 10px;border-radius:var(--pillola);
+  background:var(--bg-elev2);border:1px solid var(--line);
+  font-size:12px;font-weight:650;color:var(--txt-dim);
+}
+.ad-p .em{font-style:normal;margin-right:5px}
+.ad-p b{margin-left:7px;color:var(--navy-txt);font-weight:800;font-variant-numeric:tabular-nums}
+.ad-p:active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ad-p:active b{color:#fff}
+.ad-tot{margin-top:9px;font-size:11.5px;color:var(--txt-faint)}
+.ad-tot b{color:var(--teal-txt);font-weight:800;font-variant-numeric:tabular-nums}
 
 /* ---------- gruppi di pasto ---------- */
 .meal{
@@ -1381,14 +1445,33 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   #rest{left:auto;right:30px;bottom:30px;width:340px;margin:0}
   #toast{left:auto;right:30px;transform:none;bottom:30px}
 
+  /* Frecce e striscia della settimana su una riga sola: sono lo stesso comando
+     e in colonna sprecavano la fascia più preziosa della pagina. */
+  .giorno-bar{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .giorno-bar .daynav{margin:0;flex:none;width:290px}
+  .giorno-bar .weekstrip{margin:0;flex:1;max-width:none}
+
   /* ---------- la plancia ---------- */
-  .board{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;align-items:start}
-  .bc-a,.bc-b{min-width:0}
-  .bc-a > :first-child,.bc-b > :first-child{margin-top:0}
-  .bc-b .section-head:first-child{margin-top:0}
+  /* Due colonne: a sinistra quello che fai adesso, a destra il contorno. La
+     settimana è la terza area, che sotto i 1400 px si accoda alla seconda
+     colonna invece di stringere tutto. */
+  .board{
+    display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);
+    grid-template-areas:"a b" "a c";
+    gap:20px;align-items:start;
+  }
+  .bc-a{grid-area:a}
+  .bc-b{grid-area:b}
+  .bc-c{grid-area:c}
+  .bc-a,.bc-b,.bc-c{min-width:0}
+  .bc-a > :first-child,.bc-b > :first-child,.bc-c > :first-child{margin-top:0}
+  .bc-b .section-head:first-child,.bc-c .section-head:first-child{margin-top:0}
 
   .fgrid{grid-template-columns:repeat(4,1fr)}
-  .kpis{grid-template-columns:repeat(4,1fr)}
+  /* auto-fit e non repeat(4): gli stessi KPI stanno sia larghi in fondo a un
+     report sia stretti dentro una colonna della plancia, e con quattro colonne
+     fisse là dentro l'ultimo veniva tagliato. */
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(148px,1fr))}
   .cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
   .cols2 .panel{margin-top:0}
 
@@ -1405,8 +1488,18 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   table.dt th,table.dt td{padding:10px 14px}
 }
 
-@media (min-width:1500px){
-  .wrap{max-width:1320px}
+/* Da qui in su lo schermo regge tre colonne: la settimana esce dalla coda
+   della seconda e si vede senza scorrere, che è il solo motivo per averla. */
+@media (min-width:1400px){
+  .wrap{max-width:1440px}
+  .board{
+    grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:"a b c";
+  }
+}
+
+@media (min-width:1700px){
+  .wrap{max-width:1560px}
 }
 
 /* ---------- stampa: il report diventa un PDF ---------- */

@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.06.7';
+const APP_VERSION = '2026.09.06.8';
 
 const KEY = 'forma.v1';
 
@@ -499,6 +499,27 @@ function applicaPiano(gs, data) {
   render();
 }
 
+/* Caricare un pasto solo, non tutta la giornata. È il gesto vero: il piano si
+   mangia un pasto alla volta, e chi lavora a turni salta o sposta un pasto
+   senza per questo voler ricaricare da capo tutto il giorno. */
+function applicaPasto(gs, data, slot) {
+  const g = giornataDi(gs);
+  if (!g) { toast('Questo giorno non ha ancora una giornata assegnata'); return; }
+  const rp = (g.righe || []).filter(r => r.slot === slot);
+  if (!rp.length) { toast('Il piano non prevede niente per questo pasto'); return; }
+
+  /* Se quel pasto è già scritto non lo si raddoppia: si sostituisce, altrimenti
+     un doppio tocco distratto conta due volte le stesse calorie. */
+  for (const r of righeDi(data).filter(r => r.slot === slot)) elimina(r.id);
+  for (const r of rp) {
+    aggiungi({ t: 'l', d: data, slot: r.slot, n: r.n, q: r.q, k: r.k, p: r.p, c: r.c, g: r.g });
+  }
+  haptic();
+  const pa = PASTI.find(x => x.id === slot);
+  toast((pa ? pa.l : 'Pasto') + ' nel diario · ' + r0(somma(rp).k) + ' kcal');
+  render();
+}
+
 const slotOra = () => {
   const h = new Date().getHours();
   if (h < 10) return 'colazione';
@@ -636,10 +657,14 @@ function anello(fatto, target) {
 function barraMacro(cls, nome, fatto, target) {
   const q = target > 0 ? fatto / target : 0;
   const over = q > 1.08;
+  /* Sotto la barra i grammi che mancano: "52 su 130" è un rapporto da
+     calcolare a mente, "ne restano 78" è la cosa che poi vai a mangiare. */
+  const resta = r0(target - fatto);
   return `<div class="macro ${cls}">
     <div class="mh"><span class="mn">${nome}</span>
       <span class="mv">${r0(fatto)}<i>/${target}</i></span></div>
     <div class="bar"><i class="${over ? 'over' : ''}" style="width:${Math.min(q, 1) * 100}%"></i></div>
+    <div class="mr">${resta > 0 ? 'restano ' + resta + ' g' : (resta < 0 ? Math.abs(resta) + ' g oltre' : 'a bersaglio')}</div>
   </div>`;
 }
 
@@ -652,7 +677,10 @@ function vistaOggi() {
   const kt = kcalTarget(d);
   const resta = r0(kt - tot.k);
 
-  let h = barraGiorno(d);
+  /* Frecce, data e striscia della settimana sono un comando solo: su schermo
+     largo stanno affiancati, e la data smette di essere scritta tre volte fra
+     titolo della pagina, navigatore e striscia. */
+  let h = `<div class="giorno-bar">` + barraGiorno(d);
 
   /* La settimana in cui cade il giorno mostrato: toccare "Gio" costa un tocco,
      mentre con le sole frecce ce ne vorrebbero tre. */
@@ -662,7 +690,7 @@ function vistaOggi() {
     const suo = righeDi(data).length > 0;
     return `<button data-vaidata="${data}" class="${data === d ? 'on' : ''}">
       ${wg.b}<i class="${suo ? 'pieno' : (pianoPieno(wg.id) ? 'piano' : '')}"></i></button>`;
-  }).join('')}</div>`;
+  }).join('')}</div></div>`;
 
   /* Turno o riposo non è sparito, è diventato la scritta stessa: dice già quale
      dei due sei e toccandola passi all'altro. Due pulsanti che ripetevano i
@@ -715,31 +743,9 @@ function vistaOggi() {
     </div>
   </div>`;
 
+  h += riquadroAdesso(d, righe);
   h += riquadroPiano(d, righe, tot);
   h += `</div><div class="bc-b">`;
-
-  /* Passi e olio: il primo si aggiorna una volta al giorno, il secondo si
-     conta da solo dalle righe del diario. Nessuno dei due ha bisogno di stare
-     nella scheda principale, ma tutti e due vanno visti prima di cena. */
-  const olio = olioDi(d);
-  h += `<div class="quick">
-    <div class="qcard">
-      <div class="qh">👟 Passi</div>
-      <div class="qv">${g.passi ? g.passi.toLocaleString('it-IT') : '—'}<small> / ${t.passi.toLocaleString('it-IT')}</small></div>
-      <div class="water">${Array.from({ length: 10 }, (_, i) =>
-        `<i class="${g.passi >= t.passi * (i + 1) / 10 ? 'on' : ''}"></i>`).join('')}</div>
-      <div class="qb"><button data-act="passi">Aggiorna</button></div>
-    </div>
-    <div class="qcard">
-      <div class="qh">🫒 Olio</div>
-      <div class="qv ${olio > t.olio ? 'oltre' : ''}">${olio ? r1(olio) : '—'}<small> / ${t.olio} g</small></div>
-      <div class="water">${Array.from({ length: 10 }, (_, i) =>
-        `<i class="${olio >= t.olio * (i + 1) / 10 ? (olio > t.olio ? 'oltre' : 'on') : ''}"></i>`).join('')}</div>
-      <div class="qb"><span class="qnota">${olio > t.olio
-        ? r1(olio - t.olio) + ' g oltre il massimo'
-        : olio ? 'ne restano ' + r1(t.olio - olio) + ' g' : 'si conta da solo'}</span></div>
-    </div>
-  </div>`;
 
   /* L'allenamento del giorno, se c'è. Sotto le calorie perché la domanda
      "ho già allenato oggi?" viene dopo "quanto ho mangiato?". */
@@ -805,6 +811,32 @@ function vistaOggi() {
     </div>`;
   }
 
+  /* Passi e olio: il primo si aggiorna una volta al giorno, il secondo si
+     conta da solo dalle righe del diario. Nessuno dei due ha bisogno di stare
+     nella scheda principale, ma tutti e due vanno visti prima di cena. */
+  const olio = olioDi(d);
+  h += `<div class="quick">
+    <div class="qcard">
+      <div class="qh">👟 Passi</div>
+      <div class="qv">${g.passi ? g.passi.toLocaleString('it-IT') : '—'}<small> / ${t.passi.toLocaleString('it-IT')}</small></div>
+      <div class="water">${Array.from({ length: 10 }, (_, i) =>
+        `<i class="${g.passi >= t.passi * (i + 1) / 10 ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="qb"><button data-act="passi">Aggiorna</button></div>
+    </div>
+    <div class="qcard">
+      <div class="qh">🫒 Olio</div>
+      <div class="qv ${olio > t.olio ? 'oltre' : ''}">${olio ? r1(olio) : '—'}<small> / ${t.olio} g</small></div>
+      <div class="water">${Array.from({ length: 10 }, (_, i) =>
+        `<i class="${olio >= t.olio * (i + 1) / 10 ? (olio > t.olio ? 'oltre' : 'on') : ''}"></i>`).join('')}</div>
+      <div class="qb"><span class="qnota">${olio > t.olio
+        ? r1(olio - t.olio) + ' g oltre il massimo'
+        : olio ? 'ne restano ' + r1(t.olio - olio) + ' g' : 'si conta da solo'}</span></div>
+    </div>
+  </div>`;
+
+  /* La settimana sta in una colonna sua: su schermo molto largo si vede senza
+     scorrere, sotto i 1400 px torna in coda alla seconda colonna. */
+  h += `</div><div class="bc-c">`;
   h += riquadroSettimana(d);
   h += `</div></div>`;
   return h;
@@ -905,6 +937,67 @@ function riquadroSettimana(d) {
    "cosa devo mangiare oggi" — e finché non è caricato nel diario è anche l'unica
    azione che ha senso fare qui. Sta subito sotto le calorie, prima di tutto il
    resto. */
+/* La domanda che si fa aprendo l'app non è "quante calorie ho mangiato" ma
+   "adesso cosa mi tocca". Questo riquadro risponde a quella: il primo pasto del
+   piano che non è ancora nel diario, con dentro cosa c'è e il pulsante per
+   scriverlo. Il pasto giusto lo decide il diario, non l'orologio — chi fa il
+   turno di notte cena alle tre e l'orologio sbaglierebbe sempre. */
+function riquadroAdesso(d, righe) {
+  const gs = gsDiData(d);
+  const gt = giornataDi(gs);
+  if (!gt || !(gt.righe || []).length) return '';
+
+  /* I pasti previsti dal piano, nell'ordine dell'orologio, con accanto se sono
+     già stati scritti nel diario. */
+  const scritti = new Set(righe.map(r => r.slot));
+  const previsti = PASTI
+    .map(pa => ({ pa, righe: (gt.righe || []).filter(r => r.slot === pa.id) }))
+    .filter(x => x.righe.length);
+  const restano = previsti.filter(x => !scritti.has(x.pa.id));
+
+  const kResta = r0(restano.reduce((k, x) => k + somma(x.righe).k, 0));
+  const fatti = previsti.length - restano.length;
+
+  let h = `<div class="section-head"><h2>Adesso</h2>
+    <span class="count">${fatti} di ${previsti.length} pasti</span></div>`;
+
+  if (!restano.length) {
+    return h + `<div class="adesso fatto">
+      <span class="ad-i">\u2705</span>
+      <span class="ad-t"><b>Piano completato</b>
+        <span>Tutti i ${previsti.length} pasti di ${esc(gt.n)} sono nel diario</span></span>
+    </div>`;
+  }
+
+  /* Quello che tocca adesso è il primo non ancora scritto; se l'orologio è già
+     oltre, lo dice ma non cambia il pasto: saltarne uno è una scelta, non un
+     errore da correggere in automatico. */
+  const x = restano[0];
+  const tm = somma(x.righe);
+  const tardi = PASTI.findIndex(pa => pa.id === slotOra()) > PASTI.findIndex(pa => pa.id === x.pa.id);
+
+  h += `<div class="adesso">
+    <div class="ad-h">
+      <span class="ad-i">${x.pa.ic}</span>
+      <span class="ad-t"><b>${esc(x.pa.l)}</b>
+        <span>${r0(tm.k)} kcal · ${r0(tm.p)} g prot${tardi && d === oggiISO() ? ' · in ritardo' : ''}</span></span>
+      <button class="ad-cta" data-pasto="${gs}|${x.pa.id}" data-data="${d}">Registra</button>
+    </div>
+    <div class="ad-l">${x.righe.map(r => esc(r.n) + ' <b>' + r1(r.q) + ' g</b>').join(' · ')}</div>
+  </div>`;
+
+  /* Quanto resta da mangiare secondo il piano, accanto a quanto resta di
+     budget: è il confronto che dice se la giornata sta tornando o no. */
+  if (restano.length > 1) {
+    h += `<div class="ad-dopo">${restano.slice(1).map(y =>
+      `<button class="ad-p" data-pasto="${gs}|${y.pa.id}" data-data="${d}">
+        <i class="em">${y.pa.ic}</i>${esc(y.pa.l)}<b>${r0(somma(y.righe).k)}</b></button>`).join('')}</div>`;
+  }
+  h += `<div class="ad-tot">Resta da mangiare <b>${kResta} kcal</b> in
+    ${restano.length} ${restano.length === 1 ? 'pasto' : 'pasti'}</div>`;
+  return h;
+}
+
 function riquadroPiano(d, righe, tot) {
   const gs = gsDiData(d);
   const g = GIORNI_SETT.find(x => x.id === gs);
@@ -940,13 +1033,21 @@ function riquadroPiano(d, righe, tot) {
     </div>`;
 
   if (aperto) {
+    /* Un pasto già scritto nel diario si vede a colpo d'occhio: senza questo,
+       l'elenco del piano e quello di quanto hai mangiato sembrano la stessa
+       cosa e non si capisce cosa manca ancora. */
+    const scritti = new Set(righe.map(r => r.slot));
     h += `<div class="ph-meals">`;
     for (const pa of PASTI) {
       const rp = p.righe.filter(r => r.slot === pa.id);
       if (!rp.length) continue;
       const tm = somma(rp);
-      h += `<div class="pm">
-        <span class="pmh"><span class="pmn"><i class="pmi">${pa.ic}</i>${esc(pa.l)}</span><b>${r0(tm.k)} kcal</b></span>
+      const ok = scritti.has(pa.id);
+      h += `<div class="pm ${ok ? 'ok' : ''}">
+        <span class="pmh"><span class="pmn"><i class="pmi">${pa.ic}</i>${esc(pa.l)}</span>
+          ${ok ? '<span class="pm-ok">✓ registrato</span>'
+               : `<button class="pm-add" data-pasto="${gs}|${pa.id}" data-data="${d}">＋</button>`}
+          <b>${r0(tm.k)} kcal</b></span>
         <span class="pml">${rp.map(r => esc(r.n) + ' <b>' + r1(r.q) + ' g</b>').join(' · ')}</span>
       </div>`;
     }
@@ -3931,6 +4032,10 @@ document.addEventListener('click', e => {
     return;
   }
   if (d.applica) { applicaPiano(d.applica, d.data || oggiISO()); return; }
+  if (d.pasto) {
+    const [gs, slot] = d.pasto.split('|');
+    applicaPasto(gs, d.data || oggiISO(), slot); return;
+  }
   if (d.padd) {
     const [gtId, slot] = d.padd.split('|');
     apriSheet(sheetCerca(slot, ''), { slot, giornata: gtId });

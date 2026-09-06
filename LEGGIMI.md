@@ -20,7 +20,7 @@ una volta sola e si ritrovano sull'altro dispositivo.
 | Scheda | A cosa serve |
 |---|---|
 | **Agenda** | La giornata ora per ora. In cima **dal tuo programma** — il turno e l'allenamento previsto, che l'app sa già e non riscrivi a mano. Sotto le voci **a orario** e le **cose da fare**, con categoria e colore. Le cose non fatte ti seguono nei giorni dopo per due settimane. |
-| **Oggi** | La giornata: il **turno di lavoro** in cima, anello delle calorie con acqua e macro, il piano del giorno, passi e olio, allenamento, e in fondo **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
+| **Oggi** | La giornata: il **turno di lavoro** in cima, anello delle calorie con acqua e macro (con quanti grammi ti restano), **Adesso** — il prossimo pasto del piano da registrare in un tocco — il piano del giorno con i pasti già fatti spuntati, passi e olio, allenamento, agenda, e **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
 | **Cibo → Diario** | Il registro di tutto quello che hai mangiato, **un giorno per riga**: tocchi il giorno e si apre con le sue voci e il totale. Filtri per periodo, pasto, categoria, ricerca sul nome. Export CSV. |
 | **Cibo → Piano** | Le tue **giornate tipo** (“Giorno 1 off”, “Giorno 2 on”) e, per ogni giorno della settimana, **due menu a tendina**: il turno di lavoro e la giornata che mangi. Da qui esce anche la **lista della spesa**, e ci stanno le **combinazioni** salvate. |
 | **Cibo → Alimenti** | L'anagrafica dei 71 alimenti più quelli che aggiungi tu, **raggruppati per categoria**: tocchi la categoria e si apre. Ricerca e filtro. |
@@ -33,9 +33,11 @@ una volta sola e si ritrovano sull'altro dispositivo.
 
 Da 1000 pixel in su l'app cambia impaginazione: la barra in basso sparisce e
 compare la **colonna di navigazione** a sinistra, con la pastiglia che scorre
-sulla voce aperta. La dashboard si apre su **due colonne**: a sinistra le
-calorie e il piano del giorno, a destra passi, olio, allenamento, agenda e la
-settimana.
+sulla voce aperta. Frecce e striscia dei giorni stanno su una riga sola, e la
+dashboard si apre su **due colonne**: a sinistra calorie, prossimo pasto e
+piano del giorno, a destra allenamento, agenda, passi e olio. Sopra i 1400 px
+diventano **tre**, con *La settimana* in una colonna sua, visibile senza
+scorrere.
 
 In fondo alla colonna ci sono due pulsanti:
 
