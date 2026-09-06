@@ -404,6 +404,43 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   .ass-s{grid-column:3}
 }
 
+/* ---------- agenda ---------- */
+.ag-r{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.ag-r:first-of-type{border-top:0;padding-top:2px}
+.ag-t{
+  width:24px;height:24px;flex:none;border-radius:7px;border:1.8px solid #C0CEDC;
+  display:grid;place-items:center;background:#fff;
+}
+.ag-t svg{width:14px;height:14px;stroke:#fff;stroke-width:3.2;opacity:0}
+.ag-r.fatto .ag-t{background:var(--ok);border-color:var(--ok)}
+.ag-r.fatto .ag-t svg{opacity:1}
+/* La striscia colorata dice la categoria senza rubare una parola alla riga. */
+.ag-c{width:3px;height:30px;border-radius:99px;flex:none}
+.ag-b{flex:1;min-width:0;text-align:left}
+.ag-n{display:block;font-size:14px;font-weight:600;color:var(--navy);line-height:1.35}
+.ag-n b{font-weight:800;font-variant-numeric:tabular-nums;margin-right:2px}
+.ag-m{
+  display:block;font-size:11px;color:var(--txt-faint);margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ag-r.fatto .ag-n{color:var(--txt-faint);text-decoration:line-through}
+
+/* Lo spazio fra due nodi di testo dentro un contenitore flex viene mangiato:
+   il margine è l'unico modo per staccare l'emoji dalla parola. */
+.ag-n .em,.ag-m .em{font-style:normal;margin-right:5px}
+
+.ag-piu{
+  width:100%;padding:9px 0 2px;font-size:12px;font-weight:700;color:var(--teal);
+  border-top:1px solid var(--line);margin-top:6px;
+}
+
+/* Le righe che vengono dal programma non si spuntano: portano altrove. */
+.ag-r.fisso{width:100%;text-align:left}
+.ag-o{
+  width:46px;flex:none;font-size:12px;font-weight:800;color:var(--teal);
+  font-variant-numeric:tabular-nums;
+}
+
 /* ---------- il turno di lavoro ---------- */
 .turno-bar{
   display:flex;align-items:center;gap:12px;width:100%;text-align:left;

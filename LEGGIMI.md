@@ -19,6 +19,7 @@ una volta sola e si ritrovano sull'altro dispositivo.
 
 | Scheda | A cosa serve |
 |---|---|
+| **Agenda** | La giornata ora per ora. In cima **dal tuo programma** — il turno e l'allenamento previsto, che l'app sa già e non riscrivi a mano. Sotto le voci **a orario** e le **cose da fare**, con categoria e colore. Le cose non fatte ti seguono nei giorni dopo per due settimane. |
 | **Oggi** | La giornata: il **turno di lavoro** in cima, anello delle calorie con acqua e macro, il piano del giorno, passi e olio, allenamento, e in fondo **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
 | **Cibo → Diario** | Il registro di tutto quello che hai mangiato, **un giorno per riga**: tocchi il giorno e si apre con le sue voci e il totale. Filtri per periodo, pasto, categoria, ricerca sul nome. Export CSV. |
 | **Cibo → Piano** | Le tue **giornate tipo** (“Giorno 1 off”, “Giorno 2 on”) e, per ogni giorno della settimana, **due menu a tendina**: il turno di lavoro e la giornata che mangi. Da qui esce anche la **lista della spesa**, e ci stanno le **combinazioni** salvate. |
@@ -42,6 +43,25 @@ Li **componi tu**: il piano della settimana e le schede di allenamento — a man
 **caricando un file** (vedi sotto).
 
 ---
+
+## L'agenda
+
+**Agenda** è la scheda della giornata. In cima c'è quello che l'app sa già da sé — il
+**turno** con il suo orario e l'**allenamento** previsto per quel giorno — e non si
+riscrive: toccandoli si va dove si cambiano.
+
+Sotto, quello che scrivi tu:
+
+- **Orari** — le voci con un'ora, in ordine.
+- **Da fare** — quelle senza ora. Se non le spunti, **ti seguono nei giorni successivi**
+  per due settimane, con la data in cui le avevi scritte. Una lista che dimentica quello
+  che non hai fatto non è una lista.
+
+Ogni voce ha una **categoria** (lavoro, palestra, casa, salute, spesa, personale) che le dà
+il colore della striscia a sinistra. Con **ripeti ogni lunedì** la voce torna tutte le
+settimane: spuntarla oggi non la dà per fatta la settimana prossima.
+
+Sulla scheda **Oggi** compaiono le prime tre cose ancora da fare.
 
 ## Il piano della settimana
 
@@ -353,7 +373,8 @@ lì per il giorno in cui volessi aggiornare i valori.
 
 Nel `localStorage` del browser, sotto la chiave `forma.v1`. Tutto in una struttura sola:
 una riga per cosa, con un tipo (`l` voce del diario, `gt` giornata tipo, `p` a quale
-giornata punta un giorno della settimana, `pa` quale seduta tocca in quale giorno, `tn` un turno di lavoro, `tu` il turno solito di un giorno
+giornata punta un giorno della settimana, `pa` quale seduta tocca in quale giorno, `ag` una voce di agenda, `agr` una voce che si
+ripete ogni settimana, `tn` un turno di lavoro, `tu` il turno solito di un giorno
 della settimana, `w` sessione, `m` misura, `s` scheda, `a` alimento tuo, `g` giorno,
 `cfg` bersagli). È la stessa forma che viaggia su Supabase,
 quindi aggiungere un campo in futuro non richiede toccare il database.

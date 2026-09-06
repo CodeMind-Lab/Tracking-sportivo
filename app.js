@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.06.1';
+const APP_VERSION = '2026.09.06.2';
 
 const KEY = 'forma.v1';
 
@@ -259,6 +259,61 @@ function recenti(n) {
   return out;
 }
 
+/* L'agenda di un giorno mette insieme tre cose: quello che ricorre ogni
+   settimana, quello che hai scritto solo per quella data, e quello che l'app
+   sa già da sé — il turno e l'allenamento previsto. Le prime due si toccano,
+   la terza no: si cambia dove è nata.
+ *
+ * Le voci ricorrenti tengono l'elenco delle date in cui le hai spuntate,
+ * invece di una bandierina: una bandierina sola le segnerebbe fatte per
+ * sempre, dalla settimana prossima in poi. */
+function agendaDi(data) {
+  const gs = gsDiData(data);
+  const out = [];
+
+  for (const r of di('agr').filter(x => x.gs === gs)) {
+    out.push({
+      id: r.id, ric: true, ora: r.ora || '', n: r.n, cat: r.cat || 'personale',
+      fatto: (r.fatti || []).includes(data), note: r.note || ''
+    });
+  }
+  for (const v of di('ag').filter(x => x.d === data)) {
+    out.push({
+      id: v.id, ric: false, ora: v.ora || '', n: v.n, cat: v.cat || 'personale',
+      fatto: !!v.fatto, note: v.note || ''
+    });
+  }
+
+  /* Con l'ora prima, in ordine; senza ora dopo, che è dove stanno le cose da
+     fare quando capita. */
+  return out.sort((a, b) => {
+    if (!a.ora && !b.ora) return 0;
+    if (!a.ora) return 1;
+    if (!b.ora) return -1;
+    return a.ora < b.ora ? -1 : a.ora > b.ora ? 1 : 0;
+  });
+}
+
+/* Le cose da fare rimaste indietro. Una lista che dimentica quello che non hai
+   fatto non è una lista: è un diario delle buone intenzioni. Si guarda fino a
+   due settimane addietro, oltre le quali una cosa non fatta è una cosa che non
+   farai. */
+function arretrati(data) {
+  if (data !== oggiISO()) return [];
+  const da = spostaData(data, -14);
+  return di('ag')
+    .filter(v => !v.fatto && !v.ora && v.d >= da && v.d < data)
+    .sort((a, b) => a.d < b.d ? -1 : 1);
+}
+
+const agendaFatta = v => v.fatto;
+
+/* Quanto resta da fare oggi, per il riepilogo sulla dashboard. */
+function agendaRestano(data) {
+  const l = agendaDi(data).filter(v => !v.fatto);
+  return l.length + arretrati(data).length;
+}
+
 const misure = () => di('m').sort((a, b) => a.d < b.d ? -1 : 1);
 const ultimaMisura = () => { const m = misure(); return m[m.length - 1] || null; };
 const sessioni = () => di('w').sort((a, b) => a.d < b.d ? 1 : -1);
@@ -285,6 +340,18 @@ const TURNI_INIZIALI = [
   { id: 'notte',    n: 'Notte',    ic: '\u{1F319}', ore: '23:30 – 07:30', col: 'viola',   riposo: false, ord: 2 },
   { id: 'off',      n: 'OFF',      ic: '\u{1F3E0}', ore: 'riposo',        col: 'verde',   riposo: true,  ord: 3 }
 ];
+
+/* Le categorie dell'agenda. Poche e fisse: una tassonomia che cresce a piacere
+   diventa in fretta un elenco di sinonimi in cui non trovi più niente. */
+const CAT_AGENDA = [
+  { id: 'lavoro',      l: 'Lavoro',      ic: '\u{1F4BC}', col: '#0F90B9' },
+  { id: 'palestra',    l: 'Palestra',    ic: '\u{1F3CB}\uFE0F', col: '#FF664C' },
+  { id: 'casa',        l: 'Casa',        ic: '\u{1F3E0}', col: '#2FA37B' },
+  { id: 'salute',      l: 'Salute',      ic: '\u{1FA7A}', col: '#8E7CF0' },
+  { id: 'spesa',       l: 'Spesa',       ic: '\u{1F6D2}', col: '#E8A317' },
+  { id: 'personale',   l: 'Personale',   ic: '\u{1F464}', col: '#6C7CA8' }
+];
+const catAgenda = id => CAT_AGENDA.find(c => c.id === id) || CAT_AGENDA[5];
 
 const turni = () => di('tn').sort((a, b) => (a.ord || 0) - (b.ord || 0));
 const turnoInfo = id => (id ? DB.items.find(x => x.t === 'tn' && x.id === id) : null) || null;
@@ -451,7 +518,7 @@ let view = { name: 'oggi', d: oggiISO() };
 const TITOLI = {
   oggi: 'Oggi', cibo: 'Cibo', allena: 'Allenamento', report: 'Report',
   settings: 'Impostazioni', scheda: 'Scheda', sessione: 'Allenamento',
-  spesa: 'Lista della spesa', giornata: 'Giornata tipo'
+  spesa: 'Lista della spesa', giornata: 'Giornata tipo', agenda: 'Agenda'
 };
 
 /* Le sottoschede: Cibo e Allenamento hanno ciascuna un registro filtrabile e
@@ -497,7 +564,7 @@ function render() {
      telefono e quella a sinistra sul Mac. */
   $$('#tabbar button, .side-menu button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
 
-  $('#fab').hidden = !['oggi', 'cibo', 'allena'].includes(t);
+  $('#fab').hidden = !['oggi', 'cibo', 'allena', 'agenda'].includes(t);
 
   if (t === 'oggi') app.innerHTML = vistaOggi();
   else if (t === 'cibo') app.innerHTML = vistaCibo();
@@ -508,6 +575,7 @@ function render() {
   else if (t === 'sessione') app.innerHTML = vistaSessione();
   else if (t === 'spesa') app.innerHTML = vistaSpesa();
   else if (t === 'giornata') app.innerHTML = vistaGiornata();
+  else if (t === 'agenda') app.innerHTML = vistaAgenda();
 
   const sf = $('#sideFoot');
   if (sf) sf.innerHTML = 'Versione <b>' + APP_VERSION + '</b><br>' +
@@ -689,6 +757,33 @@ function vistaOggi() {
         <span class="meta">Tocca per partire da una scheda</span></span>
       <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
     </button>`;
+  }
+
+  /* L'agenda in breve: le prossime due cose e quante ne restano. Il dettaglio
+     sta nella sua scheda — qui serve solo sapere se c'è qualcosa in sospeso. */
+  const voci = agendaDi(d).filter(v => !v.fatto);
+  const arr = arretrati(d);
+  const restano = voci.length + arr.length;
+  h += `<div class="section-head"><h2>Agenda</h2>
+    <button class="act" data-act="vai-agenda">${restano ? 'Vedi tutto' : 'Aggiungi'}</button></div>`;
+  if (!restano) {
+    h += `<button class="card-row" data-act="vai-agenda">
+      <span class="cbadge">${agendaDi(d).length ? '\u2705' : '\u{1F4CB}'}</span>
+      <span class="cb"><h3>${agendaDi(d).length ? 'Tutto fatto' : 'Niente in agenda'}</h3>
+        <span class="meta">${agendaDi(d).length
+          ? 'Non è rimasto niente per ' + esc(nomeGiorno(d).toLowerCase())
+          : 'Tocca per scrivere cosa devi fare'}</span></span>
+      <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+    </button>`;
+  } else {
+    h += `<div class="panel" style="margin-top:0">
+      ${voci.slice(0, 3).map(rigaAgenda).join('')}
+      ${arr.slice(0, Math.max(0, 3 - voci.length)).map(v => rigaAgenda({
+        id: v.id, ric: false, ora: '', n: v.n, cat: v.cat || 'personale',
+        fatto: false, note: '', da: v.d
+      })).join('')}
+      ${restano > 3 ? `<button class="ag-piu" data-act="vai-agenda">e altre ${restano - 3}</button>` : ''}
+    </div>`;
   }
 
   h += riquadroSettimana(d);
@@ -1231,6 +1326,126 @@ function vistaGiornata() {
     <button class="btn sec" data-act="duplica-giornata">Duplica questa giornata</button>
     <button class="btn danger" data-act="elimina-giornata">Elimina la giornata</button>`;
   return h;
+}
+
+/* ============================================================
+   Agenda
+   ============================================================ */
+
+function vistaAgenda() {
+  const d = view.d;
+  let h = barraGiorno(d);
+
+  const lun = lunediDi(d);
+  h += `<div class="weekstrip">${GIORNI_SETT.map((wg, i) => {
+    const data = spostaData(lun, i);
+    const n = agendaRestano(data);
+    return `<button data-vaidata="${data}" class="${data === d ? 'on' : ''}">
+      ${wg.b}<i class="${n ? 'pieno' : ''}"></i></button>`;
+  }).join('')}</div>`;
+
+  /* Quello che l'app sa già: non si riscrive a mano ogni giorno. */
+  const tn = turnoInfo(turnoDi(d));
+  const all = allenamentoDi(gsDiData(d));
+  const sess = di('w').filter(w => w.d === d);
+  if (tn || all || sess.length) {
+    h += `<div class="panel" style="margin-top:0"><div class="label">Dal tuo programma</div>`;
+    if (tn) {
+      h += `<button class="ag-r fisso" data-act="scegli-turno">
+        <span class="ag-o">${esc((tn.ore || '').split('–')[0].trim() || '—')}</span>
+        <span class="ag-c" style="background:${coloreTurno(tn)}"></span>
+        <span class="ag-b"><span class="ag-n"><i class="em">${tn.ic || ''}</i>${esc(tn.n)}</span>
+          <span class="ag-m">${esc(tn.ore || '')}${tn.riposo ? '' : ' · lavoro'}</span></span>
+      </button>`;
+    }
+    if (sess.length) {
+      for (const w of sess) {
+        h += `<button class="ag-r fisso" data-sess="${w.id}">
+          <span class="ag-o">${w.dur ? w.dur + "'" : '—'}</span>
+          <span class="ag-c" style="background:${catAgenda('palestra').col}"></span>
+          <span class="ag-b"><span class="ag-n"><i class="em">\u{1F3CB}\uFE0F</i>${esc(w.gn || 'Allenamento')}</span>
+            <span class="ag-m">${w.fine ? 'fatto' : 'in corso'}</span></span>
+        </button>`;
+      }
+    } else if (all) {
+      h += `<button class="ag-r fisso" data-avvia="${all.sc.id}|${esc(all.g.n)}">
+        <span class="ag-o">—</span>
+        <span class="ag-c" style="background:${catAgenda('palestra').col}"></span>
+        <span class="ag-b"><span class="ag-n"><i class="em">\u{1F3CB}\uFE0F</i>${esc(all.g.n)}</span>
+          <span class="ag-m">${esc(all.sc.n)} · tocca per iniziare</span></span>
+      </button>`;
+    }
+    h += `</div>`;
+  }
+
+  const voci = agendaDi(d);
+  const conOra = voci.filter(v => v.ora);
+  const senzaOra = voci.filter(v => !v.ora);
+  const vecchie = arretrati(d);
+
+  h += `<div class="section-head"><h2>Orari</h2>
+    <span class="count">${conOra.length ? conOra.filter(v => !v.fatto).length + ' da fare' : ''}</span></div>`;
+  if (!conOra.length) {
+    h += `<p class="set-note" style="margin-top:0">Niente a orario fisso. Aggiungi con <b>+</b>.</p>`;
+  } else {
+    h += `<div class="panel" style="margin-top:0">${conOra.map(rigaAgenda).join('')}</div>`;
+  }
+
+  h += `<div class="section-head"><h2>Da fare</h2>
+    <span class="count">${senzaOra.filter(v => !v.fatto).length + vecchie.length || ''}</span></div>`;
+  if (!senzaOra.length && !vecchie.length) {
+    h += `<p class="set-note" style="margin-top:0">Niente in sospeso.</p>`;
+  } else {
+    h += `<div class="panel" style="margin-top:0">
+      ${senzaOra.map(rigaAgenda).join('')}
+      ${vecchie.map(v => rigaAgenda({
+        id: v.id, ric: false, ora: '', n: v.n, cat: v.cat || 'personale',
+        fatto: false, note: v.note || '', da: v.d
+      })).join('')}
+    </div>`;
+  }
+  return h;
+}
+
+function rigaAgenda(v) {
+  const c = catAgenda(v.cat);
+  return `<div class="ag-r ${v.fatto ? 'fatto' : ''}">
+    <button class="ag-t" data-agfatto="${v.id}|${v.ric ? 1 : 0}" aria-label="Fatto">
+      <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></button>
+    <span class="ag-c" style="background:${c.col}"></span>
+    <button class="ag-b" data-agmod="${v.id}|${v.ric ? 1 : 0}">
+      <span class="ag-n">${v.ora ? '<b>' + esc(v.ora) + '</b> ' : ''}${esc(v.n)}</span>
+      <span class="ag-m"><i class="em">${c.ic}</i>${esc(c.l)}${v.ric ? ' · ogni settimana' : ''}${
+        v.da ? ' · da ' + esc(dataCorta(v.da)) : ''}${v.note ? ' · ' + esc(v.note) : ''}</span>
+    </button>
+  </div>`;
+}
+
+/* Il pannello per creare o modificare una voce. */
+function sheetAgenda(id, ric) {
+  const v = id ? DB.items.find(x => x.id === id) : null;
+  const cat = v ? (v.cat || 'personale') : (sheetCtx.agCat || 'personale');
+  const ripete = v ? !!ric : !!sheetCtx.agRic;
+
+  return `<h2 class="sheet-title">${v ? 'Modifica' : 'Nuova voce'}</h2>
+    <input class="txtin" id="agNome" value="${esc(v ? v.n : '')}"
+      placeholder="Cosa devi fare" autofocus style="margin-bottom:10px">
+    <div class="fgrid">
+      <div class="fgroup"><label>Ora</label>
+        <input type="time" id="agOra" value="${esc(v ? (v.ora || '') : '')}"></div>
+      <div class="fgroup"><label>Ripeti</label>
+        <div class="fchips"><button data-agric="${ripete ? 0 : 1}" class="${ripete ? 'on' : ''}">
+          ogni ${esc(GIORNI_SETT.find(g => g.id === gsDiData(view.d)).l.toLowerCase())}</button></div></div>
+      <div class="fgroup full"><label>Categoria</label>
+        <div class="fchips">${CAT_AGENDA.map(c => `<button data-agcat="${c.id}"
+          class="${c.id === cat ? 'on' : ''}">${c.ic} ${esc(c.l)}</button>`).join('')}</div></div>
+      <div class="fgroup full"><label>Nota</label>
+        <input type="text" id="agNota" value="${esc(v ? (v.note || '') : '')}" placeholder="facoltativa"></div>
+    </div>
+    <p class="set-note">Senza ora finisce fra le <b>cose da fare</b>, e se non la spunti
+      ti segue nei giorni dopo per due settimane.</p>
+    <button class="btn" data-act="salva-agenda">${v ? 'Salva' : 'Aggiungi'}</button>
+    ${v ? `<button class="btn danger" data-act="elimina-agenda">Elimina</button>` : ''}`;
 }
 
 /* ---------- la lista della spesa ---------- */
@@ -3254,6 +3469,43 @@ document.addEventListener('click', e => {
     const gt = giornataById(view.id);
     gt.tipo = d.gttipo; tocca(gt); render(); return;
   }
+  if (d.agfatto) {
+    const [id, ric] = d.agfatto.split('|');
+    const it = DB.items.find(x => x.id === id);
+    if (!it) return;
+    if (ric === '1') {
+      /* Sulle ricorrenti si segna la data, non una bandierina: altrimenti
+         spuntarla oggi la darebbe per fatta anche la settimana prossima. */
+      it.fatti = it.fatti || [];
+      const i = it.fatti.indexOf(view.d);
+      if (i < 0) it.fatti.push(view.d); else it.fatti.splice(i, 1);
+      // l'elenco non deve crescere all'infinito
+      const limite = spostaData(oggiISO(), -120);
+      it.fatti = it.fatti.filter(x => x >= limite);
+    } else {
+      it.fatto = !it.fatto;
+    }
+    tocca(it); haptic(); render(); return;
+  }
+  if (d.agmod) {
+    const [id, ric] = d.agmod.split('|');
+    const it = DB.items.find(x => x.id === id);
+    apriSheet(sheetAgenda(id, ric === '1'), {
+      agId: id, agRic: ric === '1', agCat: it ? (it.cat || 'personale') : 'personale'
+    });
+    return;
+  }
+  if (d.agcat) {
+    sheetCtx.agCat = d.agcat;
+    $$('#sheetContent [data-agcat]').forEach(b => b.classList.toggle('on', b.dataset.agcat === d.agcat));
+    return;
+  }
+  if (d.agric !== undefined) {
+    sheetCtx.agRic = d.agric === '1';
+    const b = $('#sheetContent [data-agric]');
+    if (b) { b.classList.toggle('on', sheetCtx.agRic); b.dataset.agric = sheetCtx.agRic ? '0' : '1'; }
+    return;
+  }
   if (d.turnomod) {
     const x = turnoInfo(d.turnomod);
     apriSheet(sheetModTurno(d.turnomod), { tnId: d.turnomod, tnCol: x.col || 'grigio', tnRiposo: !!x.riposo });
@@ -3394,6 +3646,36 @@ function azione(a, b) {
   if (a === 'calendario') { apriSheet(sheetCalendario(view.d), { mese: view.d.slice(0, 7) }); return; }
 
   if (a === 'scegli-turno') { apriSheet(sheetTurno(view.d), { d: view.d }); return; }
+
+  if (a === 'salva-agenda') {
+    const nome = $('#agNome').value.trim();
+    if (!nome) { toast('Serve almeno un nome'); return; }
+    const dati = {
+      n: nome, ora: $('#agOra').value || '',
+      cat: sheetCtx.agCat || 'personale', note: $('#agNota').value.trim()
+    };
+    const eraRic = sheetCtx.agRic;
+    const vecchia = sheetCtx.agId ? DB.items.find(x => x.id === sheetCtx.agId) : null;
+
+    /* Passare da "una volta" a "ogni settimana" cambia il tipo di riga: la
+       vecchia si butta e se ne fa una nuova, invece di lasciare un ibrido. */
+    const eraRicPrima = vecchia && vecchia.t === 'agr';
+    if (vecchia && eraRicPrima === !!eraRic) {
+      Object.assign(vecchia, dati); tocca(vecchia);
+    } else {
+      if (vecchia) elimina(vecchia.id);
+      if (eraRic) aggiungi(Object.assign({ t: 'agr', gs: gsDiData(view.d), fatti: [] }, dati));
+      else aggiungi(Object.assign({ t: 'ag', d: view.d, fatto: false }, dati));
+    }
+    chiudiSheet(); haptic(); render(); return;
+  }
+  if (a === 'elimina-agenda') {
+    const it = DB.items.find(x => x.id === sheetCtx.agId);
+    if (it && it.t === 'agr' &&
+        !confirm('Questa si ripete ogni settimana: eliminandola sparisce da tutti i giorni.')) return;
+    elimina(sheetCtx.agId); chiudiSheet(); render(); return;
+  }
+  if (a === 'vai-agenda') { vai({ name: 'agenda' }); return; }
 
   if (a === 'nuovo-turno') {
     apriSheet(sheetModTurno(null), { tnId: null, tnCol: 'azzurro', tnRiposo: false });
@@ -3760,6 +4042,7 @@ function fab() {
     else apriSheet(sheetCerca(slotOra(), ''), { slot: slotOra() });
     return;
   }
+  if (view.name === 'agenda') { apriSheet(sheetAgenda(null, false), { agCat: 'personale', agRic: false }); return; }
   if (view.name === 'allena') {
     if (SUB.allena === 'schede') {
       const s = aggiungi({ t: 's', n: 'Nuova scheda', giorni: [{ n: 'Giornata 1', eser: [] }] });
