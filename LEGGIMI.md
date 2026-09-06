@@ -29,6 +29,33 @@ una volta sola e si ritrovano sull'altro dispositivo.
 | **Report** | Media calorie e proteine, **aderenza** (quanti giorni sei rimasto entro il 10% del bersaglio), calorie giorno per giorno, ripartizione dei macro, cosa mangi davvero, acqua/passi/olio, volume per gruppo, progressione dei carichi, e il **peso con la media mobile** e il verdetto a tre settimane. Si stampa in PDF. |
 | **Impostazioni** | Bersagli, obiettivi, sincronizzazione, backup. |
 
+### Sul Mac: colonna, temi, scorciatoie
+
+Da 1000 pixel in su l'app cambia impaginazione: la barra in basso sparisce e
+compare la **colonna di navigazione** a sinistra, con la pastiglia che scorre
+sulla voce aperta. La dashboard si apre su **due colonne**: a sinistra le
+calorie e il piano del giorno, a destra passi, olio, allenamento, agenda e la
+settimana.
+
+In fondo alla colonna ci sono due pulsanti:
+
+- **Tema** — passa da chiaro a scuro. La scelta resta anche riaprendo l'app, ed
+  è per telefono e Mac insieme.
+- **Stringi** — riduce la colonna alle sole icone, per far spazio alle tabelle.
+
+Le scorciatoie da tastiera valgono solo quando non stai scrivendo in un campo:
+
+| Tasto | Cosa fa |
+|---|---|
+| `←` `→` | Giorno prima / giorno dopo (su Oggi e Agenda) |
+| `O` | Torna a oggi |
+| `1`…`6` | Le sei voci del menu, nell'ordine in cui si vedono |
+| `T` | Cambia tema |
+| `Esc` | Chiude il pannello aperto o lo scanner |
+
+Il carattere **Inter** sta dentro il repository, non su un CDN: l'app deve
+aprirsi uguale anche senza rete.
+
 ### Cosa è già dentro e cosa metti tu
 
 È **precaricato** il **database degli alimenti** con i valori per 100 g, preso dalle
@@ -288,10 +315,9 @@ GitHub Pages lo fa gratis e per sempre.
 Ora hai l'icona sulla schermata Home: si apre a schermo intero, senza barre, e
 **funziona in aereo**.
 
-Sul Mac apri lo stesso indirizzo col browser. Sopra i 1000 px l'app cambia forma: colonna
-di navigazione scura a sinistra, contenuto centrato, e le schede **affiancate su due
-colonne** invece che impilate in un nastro lungo un metro. Sotto quella soglia torna
-esattamente com'è sul telefono.
+Sul Mac apri lo stesso indirizzo col browser: sopra i 1000 px compare la colonna di
+navigazione e la dashboard si apre su due colonne — vedi *Sul Mac: colonna, temi,
+scorciatoie* più su. Sotto quella soglia torna esattamente com'è sul telefono.
 
 ## 3. Sincronizza iPhone e Mac (Supabase)
 

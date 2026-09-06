@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.06.6';
+const APP_VERSION = '2026.09.06.7';
 
 const KEY = 'forma.v1';
 
@@ -588,6 +588,7 @@ function render() {
   else if (t === 'agenda') dentro(vistaAgenda());
 
   aggiornaPallino();
+  muoviPillola();
   if (t === 'settings') mostraStatoPush();
 
   const sf = $('#sideFoot');
@@ -1476,6 +1477,48 @@ async function allineaIscrizione() {
   const sub = await iscrizionePush();
   if (!sub) return;
   try { await salvaIscrizione(sub); } catch (e) { /* si riprova al prossimo avvio */ }
+}
+
+/* ---------- l'aspetto: tema e colonna ----------
+ *
+ * La scelta sta in localStorage e viene applicata dal codice in cima al file,
+ * prima che la pagina si disegni: se la si applicasse qui si vedrebbe il lampo
+ * chiaro a ogni avvio.
+ */
+const TABS_ORDINE = ['oggi', 'agenda', 'cibo', 'allena', 'report', 'settings'];
+
+function applicaTema(t) {
+  document.documentElement.setAttribute('data-tema', t);
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute('content', t === 'scuro' ? '#061321' : '#F4F7FB');
+}
+
+function cambiaTema() {
+  const ora = document.documentElement.getAttribute('data-tema') === 'scuro' ? 'chiaro' : 'scuro';
+  try { localStorage.setItem('forma.tema', ora); } catch (e) {}
+  applicaTema(ora);
+  haptic();
+}
+
+function stringiColonna() {
+  const side = $('#side');
+  const stretta = side.classList.toggle('stretta');
+  try { localStorage.setItem('forma.rail', stretta ? '1' : '0'); } catch (e) {}
+  /* La pillola sta ferma solo se ricalcolata: il menu ha cambiato larghezza. */
+  muoviPillola();
+}
+
+/* La pillola che segue la voce accesa. Si sposta di un passo per voce invece
+   di accendersi e spegnersi: è l'unico pezzo di movimento della schermata, e
+   dice da dove a dove sei andato. */
+function muoviPillola() {
+  const ind = $('#sideInd');
+  if (!ind) return;
+  const radice = { scheda: 'allena', sessione: 'allena', spesa: 'cibo', giornata: 'cibo' };
+  const i = TABS_ORDINE.indexOf(radice[view.name] || view.name);
+  if (i < 0) { ind.style.opacity = '0'; return; }
+  ind.style.opacity = '1';
+  ind.style.setProperty('--i', i);
 }
 
 /* Il numero sull'icona della schermata Home. */
@@ -3705,6 +3748,9 @@ document.addEventListener('click', e => {
   if (d.sub) { SUB[view.name] = d.sub; render(); return; }
 
   /* ---------- barra del recupero ---------- */
+  if (b.id === 'btnTema') { cambiaTema(); return; }
+  if (b.id === 'btnStringi') { stringiColonna(); return; }
+
   if (b.id === 'scanChiudi') { Scanner.chiudi(); return; }
   if (b.id === 'scanManuale') { Scanner.chiudi(); sheetCodiceManuale(''); return; }
 
@@ -4789,9 +4835,30 @@ document.addEventListener('change', e => {
    ============================================================ */
 
 document.addEventListener('keydown', e => {
-  if (e.key !== 'Escape') return;
-  if (!$('#scan').hidden) { Scanner.chiudi(); return; }
-  if (!$('#sheet').hidden) chiudiSheet();
+  if (e.key === 'Escape') {
+    if (!$('#scan').hidden) { Scanner.chiudi(); return; }
+    if (!$('#sheet').hidden) chiudiSheet();
+    return;
+  }
+
+  /* Le scorciatoie valgono solo quando non stai scrivendo da qualche parte e
+     non c'è un pannello aperto: rubare la freccia a un campo di testo è il
+     modo più veloce di far odiare le scorciatoie. */
+  if (!$('#sheet').hidden || !$('#scan').hidden) return;
+  const a = document.activeElement;
+  if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+  const giorni = ['oggi', 'agenda'];
+  if (giorni.includes(view.name)) {
+    if (e.key === 'ArrowLeft')  { view.d = spostaData(view.d, -1); render(); return; }
+    if (e.key === 'ArrowRight') { view.d = spostaData(view.d, 1);  render(); return; }
+    if (e.key.toLowerCase() === 'o') { view.d = oggiISO(); render(); return; }
+  }
+  /* Da 1 a 6: le voci del menu nell'ordine in cui si vedono. */
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= TABS_ORDINE.length) { vai({ name: TABS_ORDINE[n - 1] }); return; }
+  if (e.key.toLowerCase() === 't') { cambiaTema(); return; }
 });
 
 /* Uscendo dall'app la fotocamera va spenta: lasciarla accesa in sottofondo
@@ -4835,6 +4902,12 @@ window.addEventListener('popstate', e => {
    abbastanza poco da non pesare su niente. */
 setInterval(controllaPromemoria, 30000);
 window.addEventListener('load', () => setTimeout(allineaIscrizione, 4000));
+
+/* La colonna stretta o larga: la scelta si ripristina prima del primo disegno,
+   così non si vede scattare. */
+try {
+  if (localStorage.getItem('forma.rail') === '1') $('#side').classList.add('stretta');
+} catch (e) {}
 
 load();
 migraPiano();
