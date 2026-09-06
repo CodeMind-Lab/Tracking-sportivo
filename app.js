@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.06.2';
+const APP_VERSION = '2026.09.06.3';
 
 const KEY = 'forma.v1';
 
@@ -273,14 +273,14 @@ function agendaDi(data) {
 
   for (const r of di('agr').filter(x => x.gs === gs)) {
     out.push({
-      id: r.id, ric: true, ora: r.ora || '', n: r.n, cat: r.cat || 'personale',
-      fatto: (r.fatti || []).includes(data), note: r.note || ''
+      id: r.id, ric: true, ora: r.ora || '', fine: r.fine || '', n: r.n,
+      cat: r.cat || 'personale', fatto: (r.fatti || []).includes(data), note: r.note || ''
     });
   }
   for (const v of di('ag').filter(x => x.d === data)) {
     out.push({
-      id: v.id, ric: false, ora: v.ora || '', n: v.n, cat: v.cat || 'personale',
-      fatto: !!v.fatto, note: v.note || ''
+      id: v.id, ric: false, ora: v.ora || '', fine: v.fine || '', n: v.n,
+      cat: v.cat || 'personale', fatto: !!v.fatto, note: v.note || ''
     });
   }
 
@@ -576,6 +576,8 @@ function render() {
   else if (t === 'spesa') app.innerHTML = vistaSpesa();
   else if (t === 'giornata') app.innerHTML = vistaGiornata();
   else if (t === 'agenda') app.innerHTML = vistaAgenda();
+
+  aggiornaPallino();
 
   const sf = $('#sideFoot');
   if (sf) sf.innerHTML = 'Versione <b>' + APP_VERSION + '</b><br>' +
@@ -1329,6 +1331,155 @@ function vistaGiornata() {
 }
 
 /* ============================================================
+   Promemoria
+   ============================================================
+
+   Sul web non esiste un modo di far suonare una notifica quando l'app è
+   chiusa senza un server che la spinga. Le notifiche programmate in locale
+   non sono mai arrivate in nessun browser, e su iPhone il push richiede una
+   chiave VAPID e qualcosa che stia sveglio a mandarla.
+   Quindi qui ci sono le tre cose che funzionano davvero senza infrastruttura:
+
+     1. il pallino sull'icona con quante cose restano — resta anche ad app
+        chiusa, ed è l'unico promemoria passivo che il web concede;
+     2. l'avviso mentre l'app è aperta, per le voci che stanno per iniziare;
+     3. l'esportazione nel calendario, che consegna gli avvisi al sistema:
+        quelli suonano davvero, anche a telefono in tasca.
+*/
+
+/* Il numero sull'icona della schermata Home. */
+function aggiornaPallino() {
+  if (!navigator.setAppBadge) return;
+  const n = agendaRestano(oggiISO());
+  try {
+    if (n > 0) navigator.setAppBadge(n); else navigator.clearAppBadge();
+  } catch (e) { /* su qualche browser esiste ma rifiuta: non è un problema */ }
+}
+
+const minutiDa = ora => {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(ora || '');
+  return m ? +m[1] * 60 + +m[2] : null;
+};
+
+let avvisate = {};
+
+/* Controlla se qualcosa sta per iniziare. Funziona solo mentre l'app è
+   aperta: è un limite del web, non una scelta. */
+function controllaPromemoria() {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const oggi = oggiISO();
+  const ora = new Date();
+  const adesso = ora.getHours() * 60 + ora.getMinutes();
+  const anticipo = num(DB.settings.preavviso, 15);
+
+  for (const v of agendaDi(oggi)) {
+    if (v.fatto || !v.ora) continue;
+    const m = minutiDa(v.ora);
+    if (m == null) continue;
+    const manca = m - adesso;
+    if (manca < 0 || manca > anticipo) continue;
+    const chiave = oggi + '|' + v.id;
+    if (avvisate[chiave]) continue;
+    avvisate[chiave] = 1;
+    try {
+      new Notification(v.n, {
+        body: manca <= 0 ? 'Comincia adesso' : 'Fra ' + manca + ' minuti · ' + v.ora,
+        tag: chiave, icon: 'icons/icon-192.png'
+      });
+    } catch (e) { toast(v.n + ' · fra ' + manca + ' minuti'); }
+  }
+}
+
+async function chiediNotifiche(bottone) {
+  if (typeof Notification === 'undefined') {
+    toast('Questo browser non sa mostrare notifiche');
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    toast('Permesso negato: Impostazioni → Notifiche → Forma');
+    return;
+  }
+  if (bottone) bottone.textContent = 'Attendo il permesso…';
+  try { await Notification.requestPermission(); } catch (e) {}
+  render();
+}
+
+/* ---------- esportazione nel calendario ---------- */
+
+/* Il calendario di sistema è l'unico posto da cui un avviso suona davvero a
+   telefono chiuso. Si esportano trenta giorni: le voci fisse come eventi
+   singoli, quelle ricorrenti con una regola settimanale che vale per sempre. */
+function icsData(d, ora) {
+  const p = d.replace(/-/g, '');
+  return ora ? p + 'T' + ora.replace(':', '') + '00' : p;
+}
+const icsFuga = t => String(t || '').replace(/[\\;,]/g, m => '\\' + m).replace(/\n/g, '\\n');
+
+function esportaCalendario() {
+  const anticipo = num(DB.settings.preavviso, 15);
+  const oggi = oggiISO();
+  const righe = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//CodeMind.Lab//Forma//IT',
+    'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:Forma · agenda'
+  ];
+  const bollo = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  let quanti = 0;
+
+  const allarme = t => ['BEGIN:VALARM', 'TRIGGER:-PT' + anticipo + 'M', 'ACTION:DISPLAY',
+                        'DESCRIPTION:' + icsFuga(t), 'END:VALARM'];
+
+  const evento = (uid, inizio, fine, titolo, cat, rrule) => {
+    righe.push('BEGIN:VEVENT', 'UID:' + uid + '@forma.codemind.lab', 'DTSTAMP:' + bollo);
+    if (inizio.length > 8) {
+      righe.push('DTSTART:' + inizio, 'DTEND:' + fine);
+    } else {
+      righe.push('DTSTART;VALUE=DATE:' + inizio, 'DTEND;VALUE=DATE:' + fine);
+    }
+    if (rrule) righe.push(rrule);
+    righe.push('SUMMARY:' + icsFuga(titolo));
+    if (cat) righe.push('CATEGORIES:' + icsFuga(cat));
+    righe.push(...allarme(titolo), 'END:VEVENT');
+    quanti++;
+  };
+
+  /* Le ricorrenti: una sola volta, con la regola settimanale. Ripeterle
+     trenta volte gonfierebbe il calendario e renderebbe impossibile
+     cancellarle in blocco. */
+  const GIORNO_ICS = { lun: 'MO', mar: 'TU', mer: 'WE', gio: 'TH', ven: 'FR', sab: 'SA', dom: 'SU' };
+  for (const r of di('agr')) {
+    if (!r.ora) continue;
+    const lun = lunediDi(oggi);
+    const idx = GIORNI_SETT.findIndex(g => g.id === r.gs);
+    let data = spostaData(lun, idx);
+    if (data < oggi) data = spostaData(data, 7);
+    const fine = r.fine || sommaMinuti(r.ora, 60);
+    evento(r.id, icsData(data, r.ora), icsData(data, fine), r.n,
+           catAgenda(r.cat).l, 'RRULE:FREQ=WEEKLY;BYDAY=' + GIORNO_ICS[r.gs]);
+  }
+
+  for (const v of di('ag')) {
+    if (v.d < oggi || v.d > spostaData(oggi, 30) || v.fatto) continue;
+    if (v.ora) {
+      evento(v.id, icsData(v.d, v.ora), icsData(v.d, v.fine || sommaMinuti(v.ora, 60)),
+             v.n, catAgenda(v.cat).l);
+    } else {
+      evento(v.id, icsData(v.d), icsData(spostaData(v.d, 1)), v.n, catAgenda(v.cat).l);
+    }
+  }
+
+  if (!quanti) { toast('Non c’è niente da esportare'); return; }
+  righe.push('END:VCALENDAR');
+  scarica('forma-agenda-' + oggi + '.ics', righe.join('\r\n'), 'text/calendar');
+}
+
+function sommaMinuti(ora, m) {
+  const t = minutiDa(ora);
+  if (t == null) return ora;
+  const x = (t + m) % 1440;
+  return String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0');
+}
+
+/* ============================================================
    Agenda
    ============================================================ */
 
@@ -1414,7 +1565,7 @@ function rigaAgenda(v) {
       <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></button>
     <span class="ag-c" style="background:${c.col}"></span>
     <button class="ag-b" data-agmod="${v.id}|${v.ric ? 1 : 0}">
-      <span class="ag-n">${v.ora ? '<b>' + esc(v.ora) + '</b> ' : ''}${esc(v.n)}</span>
+      <span class="ag-n">${v.ora ? '<b>' + esc(v.ora) + (v.fine ? '–' + esc(v.fine) : '') + '</b> ' : ''}${esc(v.n)}</span>
       <span class="ag-m"><i class="em">${c.ic}</i>${esc(c.l)}${v.ric ? ' · ogni settimana' : ''}${
         v.da ? ' · da ' + esc(dataCorta(v.da)) : ''}${v.note ? ' · ' + esc(v.note) : ''}</span>
     </button>
@@ -1431,9 +1582,11 @@ function sheetAgenda(id, ric) {
     <input class="txtin" id="agNome" value="${esc(v ? v.n : '')}"
       placeholder="Cosa devi fare" autofocus style="margin-bottom:10px">
     <div class="fgrid">
-      <div class="fgroup"><label>Ora</label>
+      <div class="fgroup"><label>Inizio</label>
         <input type="time" id="agOra" value="${esc(v ? (v.ora || '') : '')}"></div>
-      <div class="fgroup"><label>Ripeti</label>
+      <div class="fgroup"><label>Fine</label>
+        <input type="time" id="agFine" value="${esc(v ? (v.fine || '') : '')}"></div>
+      <div class="fgroup full"><label>Ripeti</label>
         <div class="fchips"><button data-agric="${ripete ? 0 : 1}" class="${ripete ? 'on' : ''}">
           ogni ${esc(GIORNI_SETT.find(g => g.id === gsDiData(view.d)).l.toLowerCase())}</button></div></div>
       <div class="fgroup full"><label>Categoria</label>
@@ -2549,6 +2702,28 @@ function vistaSettings() {
       ${t.kcalOff} kcal. È l'unica cosa che il turno decide.</p>
   </div>`;
 
+  const permesso = typeof Notification !== 'undefined' ? Notification.permission : 'assente';
+  h += `<div class="panel"><div class="label">Promemoria</div>
+    <div class="field"><label>Avvisami prima</label>
+      <input type="number" inputmode="numeric" data-preav value="${num(DB.settings.preavviso, 15)}"><span class="unit">min</span></div>
+    <div class="stat-row"><span>Avvisi nel telefono</span><span>${
+      permesso === 'granted' ? 'attivi' : permesso === 'denied' ? 'negati' : 'da attivare'}</span></div>
+    ${permesso === 'granted' ? '' :
+      `<button class="btn sec" data-act="chiedi-notifiche">Attiva gli avvisi</button>`}
+    <p class="set-note">Un'app web può avvisarti <b>solo mentre è aperta</b>: far suonare
+      una notifica a telefono chiuso richiede un server che la spinga, e questa app non ne
+      ha uno. Quello che resta e funziona davvero:</p>
+    <div class="stat-row"><span>Pallino sull'icona</span><span>${
+      navigator.setAppBadge ? 'sì' : 'non supportato'}</span></div>
+    <p class="set-note" style="margin-top:6px">Il numero delle cose da fare compare
+      sull'icona nella schermata Home, e resta anche ad app chiusa.</p>
+    <button class="btn" data-act="esporta-calendario">Manda l'agenda al calendario</button>
+    <p class="set-note">Questa è la strada buona: le voci diventano eventi del calendario
+      di sistema, con la sveglia ${num(DB.settings.preavviso, 15)} minuti prima. Quelli
+      suonano davvero, anche col telefono in tasca. Le voci che si ripetono ogni settimana
+      diventano eventi ricorrenti, quindi si esporta una volta sola.</p>
+  </div>`;
+
   h += `<div class="panel"><div class="label">Recupero fra le serie</div>
     <div class="field"><label>Durata predefinita</label>
       <input type="number" inputmode="numeric" data-rec value="${DB.settings.recDefault}"><span class="unit">sec</span></div>
@@ -3651,9 +3826,11 @@ function azione(a, b) {
     const nome = $('#agNome').value.trim();
     if (!nome) { toast('Serve almeno un nome'); return; }
     const dati = {
-      n: nome, ora: $('#agOra').value || '',
+      n: nome, ora: $('#agOra').value || '', fine: $('#agFine').value || '',
       cat: sheetCtx.agCat || 'personale', note: $('#agNota').value.trim()
     };
+    // una fine prima dell'inizio è quasi sempre un dito storto, non una notte
+    if (dati.fine && dati.ora && dati.fine <= dati.ora) dati.fine = '';
     const eraRic = sheetCtx.agRic;
     const vecchia = sheetCtx.agId ? DB.items.find(x => x.id === sheetCtx.agId) : null;
 
@@ -3676,6 +3853,8 @@ function azione(a, b) {
     elimina(sheetCtx.agId); chiudiSheet(); render(); return;
   }
   if (a === 'vai-agenda') { vai({ name: 'agenda' }); return; }
+  if (a === 'chiedi-notifiche') { chiediNotifiche(b); return; }
+  if (a === 'esporta-calendario') { esportaCalendario(); return; }
 
   if (a === 'nuovo-turno') {
     apriSheet(sheetModTurno(null), { tnId: null, tnCol: 'azzurro', tnRiposo: false });
@@ -4364,6 +4543,10 @@ document.addEventListener('input', e => {
     tocca(c); return;
   }
   if (d.rec !== undefined) { DB.settings.recDefault = Math.max(10, r0(num(el.value, 90))); save(); return; }
+  if (d.preav !== undefined) {
+    DB.settings.preavviso = Math.max(0, Math.min(240, r0(num(el.value, 15))));
+    save(); return;
+  }
   if (d.sn) { const s = DB.items.find(i => i.id === d.sn); s.n = el.value; tocca(s); return; }
   if (d.gn !== undefined) {
     const s = DB.items.find(i => i.id === view.id);
@@ -4445,7 +4628,9 @@ document.addEventListener('visibilitychange', () => {
     if (typeof Scanner !== 'undefined') Scanner.chiudi();
   } else {
     controllaAggiornamenti();
+    controllaPromemoria();
   }
+  aggiornaPallino();
 });
 
 window.addEventListener('popstate', e => {
@@ -4464,6 +4649,10 @@ window.addEventListener('popstate', e => {
   view = e.state || { name: 'oggi', d: oggiISO() };
   render();
 });
+
+/* Ogni mezzo minuto: abbastanza da non far arrivare un avviso in ritardo,
+   abbastanza poco da non pesare su niente. */
+setInterval(controllaPromemoria, 30000);
 
 load();
 migraPiano();

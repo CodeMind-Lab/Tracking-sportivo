@@ -61,7 +61,26 @@ Ogni voce ha una **categoria** (lavoro, palestra, casa, salute, spesa, personale
 il colore della striscia a sinistra. Con **ripeti ogni lunedì** la voce torna tutte le
 settimane: spuntarla oggi non la dà per fatta la settimana prossima.
 
+Ogni voce ha un **inizio** e una **fine** facoltativa: `09:30–10:45`.
+
 Sulla scheda **Oggi** compaiono le prime tre cose ancora da fare.
+
+### I promemoria
+
+Va detto com'è: **un'app web può avvisarti solo mentre è aperta.** Far suonare una notifica
+a telefono chiuso richiede un server che la spinga, e questa app non ne ha uno — gira su
+GitHub Pages, che serve file e basta. Quello che c'è, e che funziona davvero:
+
+1. **Il pallino sull'icona** con quante cose restano da fare. Compare sulla schermata Home
+   e **resta anche ad app chiusa**: è l'unico promemoria passivo che il web conceda.
+2. **L'avviso mentre l'app è aperta**, per le voci che stanno per cominciare. Si attiva da
+   *Impostazioni → Promemoria → Attiva gli avvisi*, e il preavviso si sceglie in minuti.
+3. **L'esportazione nel calendario** — ed è questa la strada buona.
+   *Impostazioni → Manda l'agenda al calendario* produce un file `.ics` che l'iPhone apre
+   in Calendario: ogni voce diventa un evento con la sveglia al preavviso che hai scelto,
+   e **quelle suonano davvero**, col telefono in tasca. Le voci che si ripetono ogni
+   settimana diventano eventi ricorrenti, quindi si esporta una volta sola. Vengono
+   esportati i prossimi trenta giorni, saltando quello che hai già spuntato.
 
 ## Il piano della settimana
 
