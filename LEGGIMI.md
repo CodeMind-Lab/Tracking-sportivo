@@ -213,9 +213,15 @@ In quel caso usa **Impostazioni → Backup → Esporta tutto**: è l'unica copia
 
 ## Come si usa, in pratica
 
-**Il turno di lavoro.** In cima alla scheda Oggi, con l'orario: **Apertura** (07:30–15:30),
-**Chiusura** (15:30–23:30), **Notte** (23:30–07:30), **OFF**. Il colore a sinistra cambia
-con il turno, così lo riconosci senza leggerlo.
+**Il turno di lavoro.** In cima alla scheda Oggi, con l'orario e il suo colore a sinistra,
+così lo riconosci senza leggerlo. Parte con quattro turni — **Apertura** (07:30–15:30),
+**Chiusura** (15:30–23:30), **Notte** (23:30–07:30), **OFF** — ma sono solo un punto di
+partenza: in **Impostazioni → Turni di lavoro** li rinomini, cambi orario, icona e colore,
+ne aggiungi altri o li elimini.
+
+Un turno segnato **è un riposo** abbassa il bersaglio di calorie a quello dei giorni di
+riposo. È l'unica cosa che il turno decide. Eliminando un turno, i giorni che lo usavano
+restano senza — l'app te lo dice prima, con quanti sono.
 
 Il turno solito di ogni giorno si imposta una volta in **Cibo → Piano**, nella stessa
 tabella dove scegli le giornate alimentari. Quando una settimana i turni si scambiano,
@@ -225,8 +231,11 @@ tocchi la barra sulla scheda Oggi e cambi **solo quel giorno**: l'app te lo segn
 **Nei giorni OFF il bersaglio di calorie scende** da solo a quello dei giorni di riposo.
 Gli orari sono quelli del piano v3: se sono cambiati, dimmelo e li rendo modificabili.
 
-**Spostarsi fra i giorni.** Le frecce vanno avanti e indietro di un giorno, anche nel
-futuro: serve per preparare in anticipo la giornata di un turno. La striscia Lun‑Dom salta
+**Spostarsi fra i giorni.** Il giorno che scegli **resta scelto**: passi a Cibo o a Report
+e tornando su Oggi sei ancora lì. Riparte da oggi solo quando riapri l'app.
+
+Le frecce vanno avanti e indietro di un giorno, anche nel futuro: serve per preparare in
+anticipo la giornata di un turno. La striscia Lun‑Dom salta
 dentro la settimana. Toccando la data si apre il **calendario del mese**, dove ogni giorno
 porta i suoi pallini — corallo se hai registrato, azzurro se c'è solo il piano, teal se hai
 allenato — e da lì vai ovunque in un tocco.
@@ -344,8 +353,8 @@ lì per il giorno in cui volessi aggiornare i valori.
 
 Nel `localStorage` del browser, sotto la chiave `forma.v1`. Tutto in una struttura sola:
 una riga per cosa, con un tipo (`l` voce del diario, `gt` giornata tipo, `p` a quale
-giornata punta un giorno della settimana, `pa` quale seduta tocca in quale giorno, `tu` il turno solito di un giorno della
-settimana, `w` sessione, `m` misura, `s` scheda, `a` alimento tuo, `g` giorno,
+giornata punta un giorno della settimana, `pa` quale seduta tocca in quale giorno, `tn` un turno di lavoro, `tu` il turno solito di un giorno
+della settimana, `w` sessione, `m` misura, `s` scheda, `a` alimento tuo, `g` giorno,
 `cfg` bersagli). È la stessa forma che viaggia su Supabase,
 quindi aggiungere un campo in futuro non richiede toccare il database.
 

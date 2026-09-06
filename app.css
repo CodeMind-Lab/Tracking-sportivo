@@ -374,11 +374,9 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230F90B9' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 8px center;background-size:15px;
 }
-/* Il turno si riconosce dal colore anche senza leggere: sono sette righe. */
-.ass-t.apertura{border-color:#FFC24B;color:#8A6200;background-color:rgba(255,194,75,.14)}
-.ass-t.chiusura{border-color:var(--coral);color:#B33A26;background-color:var(--accent-soft)}
-.ass-t.notte{border-color:#8E7CF0;color:#4B3BA8;background-color:rgba(142,124,240,.14)}
-.ass-t.off{border-color:var(--teal);color:#0B5E7C;background-color:rgba(108,211,240,.16)}
+/* Bordo e testo prendono il colore del turno, messo lì dal codice: sono sette
+   righe, e riconoscerle dal colore evita di rileggerle una per una. */
+.ass-t{font-weight:700}
 .ass-t:focus{outline:none;box-shadow:0 0 0 3px rgba(15,144,185,.13)}
 .ass-s{
   grid-column:2;min-width:0;
@@ -413,10 +411,9 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   background:var(--navy);color:#fff;box-shadow:var(--shadow-sm);
   border-left:4px solid var(--sky);
 }
-.turno-bar.apertura{border-left-color:#FFC24B}
-.turno-bar.chiusura{border-left-color:var(--coral)}
-.turno-bar.notte{border-left-color:#8E7CF0}
-.turno-bar.off{background:var(--bg-elev);color:var(--navy);border-left-color:var(--teal)}
+/* Il colore arriva da come hai impostato il turno, non da una classe fissa:
+   i turni si possono aggiungere e rinominare. */
+.turno-bar.riposo{background:var(--bg-elev);color:var(--navy)}
 .turno-bar.vuoto{
   background:var(--bg-elev);color:var(--txt-dim);
   border:1px dashed var(--line);border-left:4px solid var(--txt-faint);
@@ -441,6 +438,30 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 /* la riga selezionata nel pannello di scelta */
 .sheet-row.sel{background:var(--bg-elev);border-radius:10px}
 .sheet-row.sel span:not(.ic){font-weight:700}
+
+/* ---------- i turni nelle impostazioni ---------- */
+.tn-r{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  padding:11px 0;border-top:1px solid var(--line);
+}
+.tn-r:first-of-type{border-top:0;padding-top:2px}
+.tn-c{width:4px;height:32px;border-radius:99px;flex:none}
+.tn-i{font-size:18px;flex:none;line-height:1}
+.tn-b{flex:1;min-width:0}
+.tn-n{display:block;font-size:14px;font-weight:700;color:var(--navy);line-height:1.3}
+.tn-o{display:block;font-size:11.5px;color:var(--txt-faint);margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tn-r .go{flex:none;color:var(--txt-faint)}
+.tn-r .go svg{width:18px;height:18px}
+
+/* la tavolozza: il pallino mostra il colore, il bordo dice qual è scelto */
+.tn-col button{position:relative;padding-left:26px}
+.tn-col button::before{
+  content:"";position:absolute;left:9px;top:50%;transform:translateY(-50%);
+  width:11px;height:11px;border-radius:50%;background:var(--c);
+}
+.tn-col button.on{background:var(--c);border-color:var(--c);color:#fff}
+.tn-col button.on::before{background:#fff}
 
 /* ---------- il piano del giorno ---------- */
 .plan-hero{

@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.08.22.4';
+const APP_VERSION = '2026.09.06.1';
 
 const KEY = 'forma.v1';
 
@@ -196,7 +196,8 @@ const turnoScritto = d => !!giorno(d).turno;
 
 const kcalTarget = d => {
   const t = cfg().target;
-  return turnoDi(d) === 'off' ? t.kcalOff : t.kcal;
+  const tn = turnoInfo(turnoDi(d));
+  return tn && tn.riposo ? t.kcalOff : t.kcal;
 };
 
 const righeDi = d => di('l').filter(i => i.d === d);
@@ -263,15 +264,44 @@ const ultimaMisura = () => { const m = misure(); return m[m.length - 1] || null;
 const sessioni = () => di('w').sort((a, b) => a.d < b.d ? 1 : -1);
 const schede = () => di('s');
 
-/* I turni di lavoro. Gli orari vengono dal piano alimentare v3, dove le
-   giornate tipo sono costruite proprio attorno a questi tre turni. */
-const TURNI = [
-  { id: 'apertura', l: 'Apertura', ic: '\u{1F305}', ore: '07:30 – 15:30' },
-  { id: 'chiusura', l: 'Chiusura', ic: '\u{1F306}', ore: '15:30 – 23:30' },
-  { id: 'notte',    l: 'Notte',    ic: '\u{1F319}', ore: '23:30 – 07:30' },
-  { id: 'off',      l: 'OFF',      ic: '\u{1F3E0}', ore: 'riposo' }
+/* I turni di lavoro sono dati, non codice: si rinominano, si cambiano gli
+   orari, se ne aggiungono. Un turno con riposo=true abbassa il bersaglio delle
+   calorie a quello dei giorni di riposo — è l'unica cosa che il turno decide. */
+const COLORI_TURNO = [
+  { id: 'ambra',   n: 'Ambra',   v: '#E8A317' },
+  { id: 'corallo', n: 'Corallo', v: '#FF664C' },
+  { id: 'viola',   n: 'Viola',   v: '#8E7CF0' },
+  { id: 'azzurro', n: 'Azzurro', v: '#0F90B9' },
+  { id: 'verde',   n: 'Verde',   v: '#2FA37B' },
+  { id: 'grigio',  n: 'Grigio',  v: '#6C7CA8' }
 ];
-const turnoInfo = id => TURNI.find(t => t.id === id) || null;
+const coloreTurno = t => (COLORI_TURNO.find(c => c.id === (t && t.col)) || COLORI_TURNO[5]).v;
+
+/* I primi quattro, creati una volta sola. Gli orari vengono dal piano
+   alimentare v3, dove le giornate tipo sono costruite attorno a questi turni. */
+const TURNI_INIZIALI = [
+  { id: 'apertura', n: 'Apertura', ic: '\u{1F305}', ore: '07:30 – 15:30', col: 'ambra',   riposo: false, ord: 0 },
+  { id: 'chiusura', n: 'Chiusura', ic: '\u{1F306}', ore: '15:30 – 23:30', col: 'corallo', riposo: false, ord: 1 },
+  { id: 'notte',    n: 'Notte',    ic: '\u{1F319}', ore: '23:30 – 07:30', col: 'viola',   riposo: false, ord: 2 },
+  { id: 'off',      n: 'OFF',      ic: '\u{1F3E0}', ore: 'riposo',        col: 'verde',   riposo: true,  ord: 3 }
+];
+
+const turni = () => di('tn').sort((a, b) => (a.ord || 0) - (b.ord || 0));
+const turnoInfo = id => (id ? DB.items.find(x => x.t === 'tn' && x.id === id) : null) || null;
+const turnoRiposo = () => turni().find(x => x.riposo) || null;
+
+/* Il seme parte una volta sola, e il segno che è già partito sta nel cfg, che
+   si sincronizza: sul secondo dispositivo i turni arrivano dalla rete, non
+   vengono ricreati uguali col rischio di doppioni. */
+function migraElencoTurni() {
+  const c = cfg();
+  if (c.turniSeed) return;
+  if (!di('tn').length) {
+    for (const x of TURNI_INIZIALI) aggiungi(Object.assign({ t: 'tn' }, x));
+  }
+  c.turniSeed = true;
+  tocca(c);
+}
 
 /* I sette giorni. L'ordine è quello del calendario italiano: getDay() mette la
    domenica a 0, e usarlo così farebbe cominciare la settimana di domenica. */
@@ -318,9 +348,10 @@ const giornataById = id => DB.items.find(i => i.id === id && i.t === 'gt') || nu
    "turno" non diceva se era apertura, chiusura o notte, e inventarlo sarebbe
    peggio che lasciarlo vuoto. */
 function migraTurni() {
+  const riposo = turnoRiposo();
   for (const g of di('g')) {
     if (g.turno !== undefined) continue;
-    g.turno = g.tipo === 'off' ? 'off' : '';
+    g.turno = (g.tipo === 'off' && riposo) ? riposo.id : '';
     delete g.tipo;
     tocca(g);
   }
@@ -391,9 +422,10 @@ function applicaPiano(gs, data) {
      ogni volta sarebbe un modo sicuro di sbagliarlo. */
   /* Una giornata segnata OFF dice anche che quel giorno non lavori. Una
      segnata ON non dice quale turno, quindi non tocca niente. */
-  if (g.tipo === 'off' && turnoDi(data) !== 'off') {
+  const riposo = turnoRiposo();
+  if (g.tipo === 'off' && riposo && turnoDi(data) !== riposo.id) {
     const gg = giorno(data, true);
-    gg.turno = 'off'; tocca(gg);
+    gg.turno = riposo.id; tocca(gg);
   }
   haptic();
   toast(g.righe.length + ' voci caricate · ' + g.n);
@@ -428,10 +460,14 @@ const TITOLI = {
 const SUB = { cibo: 'diario', allena: 'sessioni' };
 
 function vai(v, push) {
-  /* Ogni stato porta con sé la data, anche chi non la usa. Senza, un
-     vai({name:'oggi'}) scritto da qualche parte senza pensarci arriverebbe a
-     new Date('undefined') e farebbe cadere tutta la schermata — ed è successo. */
-  if (!v.d) v.d = oggiISO();
+  /* Ogni stato porta con sé la data, anche chi non la usa: senza, un
+     vai({name:'oggi'}) scritto senza pensarci arriverebbe a
+     new Date('undefined') e farebbe cadere la schermata.
+     E la data che si eredita è quella che stavi guardando, non oggi: se stai
+     sistemando giovedì e passi a Cibo, tornando indietro devi ritrovarti su
+     giovedì. Ricominciare da oggi a ogni cambio di scheda voleva dire
+     riselezionare il giorno ogni volta. */
+  if (!v.d) v.d = view.d || oggiISO();
   view = v;
   if (push !== false) history.pushState(v, '', '');
   window.scrollTo(0, 0);
@@ -555,12 +591,12 @@ function vistaOggi() {
 
   /* Il turno di lavoro è la cosa che decide la giornata: quando mangi, quanto
      mangi, se ti alleni. Sta in cima, largo, e si cambia toccandolo. */
-  const tid = turnoDi(d);
-  const tn = turnoInfo(tid);
-  h += `<button class="turno-bar ${tid || 'vuoto'}" data-act="scegli-turno">
-    <span class="tb-i">${tn ? tn.ic : '\u{1F553}'}</span>
-    <span class="tb-t"><b>${tn ? esc(tn.l) : 'Turno non impostato'}</b>
-      <span>${tn ? esc(tn.ore) : 'Tocca per dire che turno fai oggi'}</span></span>
+  const tn = turnoInfo(turnoDi(d));
+  h += `<button class="turno-bar ${tn ? (tn.riposo ? 'riposo' : '') : 'vuoto'}" data-act="scegli-turno"
+    ${tn ? `style="border-left-color:${coloreTurno(tn)}"` : ''}>
+    <span class="tb-i">${tn ? (tn.ic || '\u{1F553}') : '\u{1F553}'}</span>
+    <span class="tb-t"><b>${tn ? esc(tn.n) : 'Turno non impostato'}</b>
+      <span>${tn ? esc(tn.ore || '') : 'Tocca per dire che turno fai oggi'}</span></span>
     <span class="tb-c"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
   </button>`;
 
@@ -1064,9 +1100,10 @@ function vistaPiano() {
     h += `<div class="ass">
       <span class="ass-g">${esc(g.l)}</span>
       <span class="ass-k">${tot ? r0(tot.k) + ' kcal' : '—'}</span>
-      <select class="ass-t ${tu || ''}" data-assturno="${g.id}">
+      <select class="ass-t" data-assturno="${g.id}"
+        style="${tu ? 'border-color:' + coloreTurno(turnoInfo(tu)) + ';color:' + coloreTurno(turnoInfo(tu)) : ''}">
         <option value="">turno?</option>
-        ${TURNI.map(x => `<option value="${x.id}" ${tu === x.id ? 'selected' : ''}>${x.ic} ${esc(x.l)}</option>`).join('')}
+        ${turni().map(x => `<option value="${x.id}" ${tu === x.id ? 'selected' : ''}>${x.ic || ''} ${esc(x.n)}</option>`).join('')}
       </select>
       <select class="ass-s" data-assegna="${g.id}">
         <option value="">— nessuna giornata —</option>
@@ -2275,6 +2312,28 @@ function vistaSettings() {
       sotto 0,50 è considerato il livello di riferimento.</p>
   </div>`;
 
+  const ts = turni();
+  h += `<div class="panel"><div class="label">Turni di lavoro</div>`;
+  if (!ts.length) {
+    h += `<p class="set-note" style="margin:0">Nessun turno. Senza, la barra in cima alla
+      scheda Oggi resta vuota.</p>`;
+  } else {
+    for (const x of ts) {
+      const usato = GIORNI_SETT.filter(g => turnoRec(g.id).turno === x.id);
+      h += `<button class="tn-r" data-turnomod="${x.id}">
+        <span class="tn-c" style="background:${coloreTurno(x)}"></span>
+        <span class="tn-i">${x.ic || '\u{1F553}'}</span>
+        <span class="tn-b"><span class="tn-n">${esc(x.n)}</span>
+          <span class="tn-o">${esc(x.ore || 'nessun orario')}${x.riposo ? ' · riposo' : ''}${usato.length ? ' · ' + usato.map(g => g.b).join(' ') : ''}</span></span>
+        <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+      </button>`;
+    }
+  }
+  h += `<button class="btn sec" data-act="nuovo-turno">Aggiungi un turno</button>
+    <p class="set-note">Un turno segnato <b>riposo</b> abbassa il bersaglio a
+      ${t.kcalOff} kcal. È l'unica cosa che il turno decide.</p>
+  </div>`;
+
   h += `<div class="panel"><div class="label">Recupero fra le serie</div>
     <div class="field"><label>Durata predefinita</label>
       <input type="number" inputmode="numeric" data-rec value="${DB.settings.recDefault}"><span class="unit">sec</span></div>
@@ -2447,6 +2506,37 @@ function sheetNuovoAlimento(nome, a) {
    servirebbero venti tocchi. Qui ci si arriva in uno. */
 /* La scelta del turno per una data. Ha anche la via d'uscita: tornare a
    seguire la settimana, che è il caso normale. */
+/* Modifica di un turno. Il colore si sceglie da una tavolozza invece che
+   scrivendolo: sei colori che stanno bene sul navy della barra, e nessun modo
+   di finire con un giallo su bianco che non si legge. */
+function sheetModTurno(id) {
+  const x = id ? turnoInfo(id) : null;
+  const nuovo = !x;
+  const col = x ? (x.col || 'grigio') : 'azzurro';
+
+  return `<h2 class="sheet-title">${nuovo ? 'Nuovo turno' : 'Modifica turno'}</h2>
+    <div class="fgrid">
+      <div class="fgroup"><label>Nome</label>
+        <input type="text" id="tnNome" value="${esc(x ? x.n : '')}" placeholder="Apertura" autofocus></div>
+      <div class="fgroup"><label>Icona</label>
+        <input type="text" id="tnIcona" value="${esc(x ? (x.ic || '') : '')}" placeholder="🌅" maxlength="4"></div>
+      <div class="fgroup full"><label>Orario</label>
+        <input type="text" id="tnOre" value="${esc(x ? (x.ore || '') : '')}" placeholder="07:30 – 15:30"></div>
+      <div class="fgroup full"><label>Colore</label>
+        <div class="fchips tn-col">
+          ${COLORI_TURNO.map(c => `<button data-tncol="${c.id}" class="${c.id === col ? 'on' : ''}"
+            style="--c:${c.v}">${esc(c.n)}</button>`).join('')}
+        </div></div>
+      <div class="fgroup full"><label>Tipo di giornata</label>
+        <div class="fchips">
+          <button data-tnriposo="0" class="${x && x.riposo ? '' : 'on'}">Si lavora</button>
+          <button data-tnriposo="1" class="${x && x.riposo ? 'on' : ''}">È un riposo</button>
+        </div></div>
+    </div>
+    <button class="btn" data-act="salva-turno">${nuovo ? 'Crea' : 'Salva'}</button>
+    ${nuovo ? '' : `<button class="btn danger" data-act="elimina-turno">Elimina il turno</button>`}`;
+}
+
 function sheetTurno(d) {
   const attuale = turnoDi(d);
   const dallaSettimana = turnoRec(gsDiData(d)).turno;
@@ -2454,13 +2544,14 @@ function sheetTurno(d) {
 
   return `<h2 class="sheet-title">Turno di ${esc(nomeGiorno(d).toLowerCase())}</h2>
     <p class="set-note" style="margin:0 0 12px">${esc(dataLunga(d))}</p>
-    ${TURNI.map(x => `<button class="sheet-row ${x.id === attuale ? 'sel' : ''}" data-turno="${x.id}">
-      <span class="ic">${x.ic}</span>
-      <span>${esc(x.l)}<span class="hint">${esc(x.ore)}</span></span>
+    ${turni().map(x => `<button class="sheet-row ${x.id === attuale ? 'sel' : ''}" data-turno="${x.id}">
+      <span class="ic">${x.ic || '\u{1F553}'}</span>
+      <span>${esc(x.n)}<span class="hint">${esc(x.ore || '')}</span></span>
       ${x.id === attuale ? '<svg viewBox="0 0 24 24" style="color:var(--teal)"><path d="M5 12l5 5L20 7"/></svg>' : ''}
     </button>`).join('')}
+    ${turni().length ? '' : '<p class="set-note">Non hai nessun turno. Creane uno in Impostazioni.</p>'}
     ${turnoScritto(d)
-      ? `<button class="btn sec" data-turno="">Segui la settimana${info ? ' (' + esc(info.l) + ')' : ''}</button>`
+      ? `<button class="btn sec" data-turno="">Segui la settimana${info ? ' (' + esc(info.n) + ')' : ''}</button>`
       : ''}
     <p class="set-note">Il turno di questo giorno vale solo per oggi. Per cambiarlo
       tutte le settimane, usa i menu a tendina in <b>Cibo → Piano</b>.</p>`;
@@ -3046,7 +3137,7 @@ document.addEventListener('click', e => {
   const d = b.dataset;
 
   /* ---------- navigazione ---------- */
-  if (d.tab) { vai({ name: d.tab, d: oggiISO() }); return; }
+  if (d.tab) { vai({ name: d.tab }); return; }
   if (b.id === 'settingsBtn') { vai({ name: 'settings' }); return; }
   if (b.id === 'backBtn') { history.back(); return; }
   if (b.id === 'fab') { fab(); return; }
@@ -3162,6 +3253,21 @@ document.addEventListener('click', e => {
   if (d.gttipo !== undefined) {
     const gt = giornataById(view.id);
     gt.tipo = d.gttipo; tocca(gt); render(); return;
+  }
+  if (d.turnomod) {
+    const x = turnoInfo(d.turnomod);
+    apriSheet(sheetModTurno(d.turnomod), { tnId: d.turnomod, tnCol: x.col || 'grigio', tnRiposo: !!x.riposo });
+    return;
+  }
+  if (d.tncol) {
+    sheetCtx.tnCol = d.tncol;
+    $$('#sheetContent [data-tncol]').forEach(b => b.classList.toggle('on', b.dataset.tncol === d.tncol));
+    return;
+  }
+  if (d.tnriposo !== undefined) {
+    sheetCtx.tnRiposo = d.tnriposo === '1';
+    $$('#sheetContent [data-tnriposo]').forEach(b => b.classList.toggle('on', b.dataset.tnriposo === d.tnriposo));
+    return;
   }
   if (d.turno !== undefined) {
     const g = giorno(sheetCtx.d || view.d, true);
@@ -3289,6 +3395,49 @@ function azione(a, b) {
 
   if (a === 'scegli-turno') { apriSheet(sheetTurno(view.d), { d: view.d }); return; }
 
+  if (a === 'nuovo-turno') {
+    apriSheet(sheetModTurno(null), { tnId: null, tnCol: 'azzurro', tnRiposo: false });
+    return;
+  }
+
+  if (a === 'salva-turno') {
+    const nome = $('#tnNome').value.trim();
+    if (!nome) { toast('Serve un nome'); return; }
+    const dati = {
+      n: nome,
+      ic: $('#tnIcona').value.trim().slice(0, 4),
+      ore: $('#tnOre').value.trim(),
+      col: sheetCtx.tnCol || 'grigio',
+      riposo: !!sheetCtx.tnRiposo
+    };
+    if (sheetCtx.tnId) {
+      const x = turnoInfo(sheetCtx.tnId);
+      Object.assign(x, dati); tocca(x);
+    } else {
+      aggiungi(Object.assign({ t: 'tn', ord: turni().length }, dati));
+    }
+    chiudiSheet(); render(); return;
+  }
+
+  if (a === 'elimina-turno') {
+    const x = turnoInfo(sheetCtx.tnId);
+    if (!x) return;
+    const giorniSett = GIORNI_SETT.filter(g => turnoRec(g.id).turno === x.id);
+    const date = di('g').filter(g => g.turno === x.id);
+    if (!confirm('Eliminare il turno “' + x.n + '”?' +
+      (giorniSett.length || date.length
+        ? ' Resteranno senza turno ' + giorniSett.length + ' giorni della settimana e ' +
+          date.length + ' date già registrate.'
+        : ''))) return;
+    /* Chi lo puntava va liberato: un turno cancellato che resta scritto sui
+       giorni è un riferimento a niente, e la barra mostrerebbe il vuoto senza
+       spiegare perché. */
+    for (const g of giorniSett) { const p = turnoRec(g.id, true); p.turno = ''; tocca(p); }
+    for (const g of date) { g.turno = ''; tocca(g); }
+    elimina(x.id);
+    chiudiSheet(); render(); return;
+  }
+
   /* Dal riepilogo al dettaglio senza passare dai filtri: il Diario si apre
      già ristretto al giorno che stavi guardando. */
   if (a === 'vai-diario') {
@@ -3332,7 +3481,7 @@ function azione(a, b) {
       const r = DB.items.find(i => i.id === sheetCtx.rigaId);
       r.q = q; r.slot = slot; tocca(r);
     } else {
-      aggiungi(Object.assign({ t: 'l', d: (view.name === 'oggi' ? view.d : oggiISO()) }, riga));
+      aggiungi(Object.assign({ t: 'l', d: view.d || oggiISO() }, riga));
     }
     chiudiSheet(); haptic(); render(); return;
   }
@@ -3526,7 +3675,7 @@ function azione(a, b) {
   if (a === 'usa-combinazione') {
     const r = DB.items.find(i => i.id === sheetCtx.ricId);
     for (const x of (r.righe || [])) {
-      aggiungi({ t: 'l', d: oggiISO(), slot: x.slot || slotOra(), n: x.n, q: x.q, k: x.k, p: x.p, c: x.c, g: x.g });
+      aggiungi({ t: 'l', d: view.d || oggiISO(), slot: x.slot || slotOra(), n: x.n, q: x.q, k: x.k, p: x.p, c: x.c, g: x.g });
     }
     chiudiSheet(); haptic(); toast(r.n + ' aggiunta al diario di oggi'); render(); return;
   }
@@ -3643,7 +3792,7 @@ function avviaAllenamento(sid, gn) {
       () => ({ r: ripNumero(e.rip), w: e.peso || '', ok: false }))
   }));
   const w = aggiungi({
-    t: 'w', d: oggiISO(), sid: sid || '', sn: s ? s.n : '', gn: gn || 'Allenamento',
+    t: 'w', d: view.d || oggiISO(), sid: sid || '', sn: s ? s.n : '', gn: gn || 'Allenamento',
     eser, fine: false, inizio: Date.now()
   });
   chiudiSheet();
@@ -4035,6 +4184,7 @@ window.addEventListener('popstate', e => {
 
 load();
 migraPiano();
+migraElencoTurni();
 migraTurni();
 history.replaceState(view, '', '');
 render();
