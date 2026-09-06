@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.06.4';
+const APP_VERSION = '2026.09.06.6';
 
 const KEY = 'forma.v1';
 
@@ -554,9 +554,15 @@ function render() {
   /* Sulla dashboard il titolo è il marchio. Nelle altre schede resta la parola:
      il logo ripetuto ovunque smetterebbe di dire qualcosa e toglierebbe spazio
      al nome della schermata in cui ti trovi. */
-  $('#topTitle').innerHTML = t === 'oggi'
+  /* Sul telefono la barra in alto porta il marchio, perché è l'unico posto in
+     cui può stare. Sul Mac il marchio è già nella colonna di sinistra:
+     ripeterlo due volte sulla stessa schermata è rumore, e quello spazio serve
+     a dire dove sei. */
+  const largo = window.innerWidth >= 1000;
+  $('#topTitle').innerHTML = (t === 'oggi' && !largo)
     ? `<img class="brand" src="icons/logo-lockup.png" alt="CodeMind.Lab" width="719" height="90">`
-    : esc(TITOLI[t] || 'Forma');
+    : `${esc(TITOLI[t] || 'Forma')}${largo && ['oggi', 'agenda'].includes(t)
+        ? `<small class="tt-d">${esc(nomeGiorno(view.d))} · ${esc(dataLunga(view.d))}</small>` : ''}`;
   $('#backBtn').hidden = !['scheda', 'sessione', 'spesa', 'giornata'].includes(t);
   $('#settingsBtn').hidden = t === 'settings';
 
@@ -566,16 +572,20 @@ function render() {
 
   $('#fab').hidden = !['oggi', 'cibo', 'allena', 'agenda'].includes(t);
 
-  if (t === 'oggi') app.innerHTML = vistaOggi();
-  else if (t === 'cibo') app.innerHTML = vistaCibo();
-  else if (t === 'allena') app.innerHTML = vistaAllena();
-  else if (t === 'report') app.innerHTML = vistaReport();
-  else if (t === 'settings') app.innerHTML = vistaSettings();
-  else if (t === 'scheda') app.innerHTML = vistaScheda();
-  else if (t === 'sessione') app.innerHTML = vistaSessione();
-  else if (t === 'spesa') app.innerHTML = vistaSpesa();
-  else if (t === 'giornata') app.innerHTML = vistaGiornata();
-  else if (t === 'agenda') app.innerHTML = vistaAgenda();
+  /* Tutto dentro un contenitore: sul Mac si centra invece di restare
+     appiccicato alla colonna di sinistra con il vuoto a destra. */
+  const dentro = html => { app.innerHTML = '<div class="wrap">' + html + '</div>'; };
+
+  if (t === 'oggi') dentro(vistaOggi());
+  else if (t === 'cibo') dentro(vistaCibo());
+  else if (t === 'allena') dentro(vistaAllena());
+  else if (t === 'report') dentro(vistaReport());
+  else if (t === 'settings') dentro(vistaSettings());
+  else if (t === 'scheda') dentro(vistaScheda());
+  else if (t === 'sessione') dentro(vistaSessione());
+  else if (t === 'spesa') dentro(vistaSpesa());
+  else if (t === 'giornata') dentro(vistaGiornata());
+  else if (t === 'agenda') dentro(vistaAgenda());
 
   aggiornaPallino();
   if (t === 'settings') mostraStatoPush();
@@ -671,6 +681,10 @@ function vistaOggi() {
     <span class="tb-c"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
   </button>`;
 
+  /* Da qui in giù, due colonne sul Mac e una sola sul telefono: le stesse
+     schede, impilate o affiancate. La navigazione qui sopra resta larga. */
+  h += `<div class="board"><div class="bc-a">`;
+
   h += `<div class="kcal-card">
     <div class="kcal-top">
       ${anello(tot.k, kt)}
@@ -701,6 +715,7 @@ function vistaOggi() {
   </div>`;
 
   h += riquadroPiano(d, righe, tot);
+  h += `</div><div class="bc-b">`;
 
   /* Passi e olio: il primo si aggiorna una volta al giorno, il secondo si
      conta da solo dalle righe del diario. Nessuno dei due ha bisogno di stare
@@ -790,6 +805,7 @@ function vistaOggi() {
   }
 
   h += riquadroSettimana(d);
+  h += `</div></div>`;
   return h;
 }
 
@@ -1610,6 +1626,8 @@ function vistaAgenda() {
       ${wg.b}<i class="${n ? 'pieno' : ''}"></i></button>`;
   }).join('')}</div>`;
 
+  h += `<div class="board"><div class="bc-a">`;
+
   /* Quello che l'app sa già: non si riscrive a mano ogni giorno. */
   const tn = turnoInfo(turnoDi(d));
   const all = allenamentoDi(gsDiData(d));
@@ -1657,6 +1675,8 @@ function vistaAgenda() {
     h += `<div class="panel" style="margin-top:0">${conOra.map(rigaAgenda).join('')}</div>`;
   }
 
+  h += `</div><div class="bc-b">`;
+
   h += `<div class="section-head"><h2>Da fare</h2>
     <span class="count">${senzaOra.filter(v => !v.fatto).length + vecchie.length || ''}</span></div>`;
   if (!senzaOra.length && !vecchie.length) {
@@ -1670,6 +1690,7 @@ function vistaAgenda() {
       })).join('')}
     </div>`;
   }
+  h += `</div></div>`;
   return h;
 }
 
@@ -4783,6 +4804,14 @@ document.addEventListener('visibilitychange', () => {
     controllaPromemoria();
   }
   aggiornaPallino();
+});
+
+/* Passando da una finestra stretta a una larga cambiano sia le colonne sia la
+   barra in alto: senza ridisegnare, resterebbero quelle dell'altra misura. */
+let largoPrima = window.innerWidth >= 1000;
+window.addEventListener('resize', () => {
+  const ora = window.innerWidth >= 1000;
+  if (ora !== largoPrima) { largoPrima = ora; render(); }
 });
 
 window.addEventListener('popstate', e => {

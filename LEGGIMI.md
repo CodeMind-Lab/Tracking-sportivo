@@ -286,8 +286,12 @@ GitHub Pages lo fa gratis e per sempre.
 3. Scorri e tocca **Aggiungi a Home** → **Aggiungi**.
 
 Ora hai l'icona sulla schermata Home: si apre a schermo intero, senza barre, e
-**funziona in aereo**. Sul Mac apri lo stesso indirizzo col browser: compare la
-colonna di navigazione a sinistra, come nel gestionale.
+**funziona in aereo**.
+
+Sul Mac apri lo stesso indirizzo col browser. Sopra i 1000 px l'app cambia forma: colonna
+di navigazione scura a sinistra, contenuto centrato, e le schede **affiancate su due
+colonne** invece che impilate in un nastro lungo un metro. Sotto quella soglia torna
+esattamente com'è sul telefono.
 
 ## 3. Sincronizza iPhone e Mac (Supabase)
 

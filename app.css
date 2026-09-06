@@ -821,7 +821,12 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .chart .goal{stroke:var(--coral);stroke-width:1.4;stroke-dasharray:4 4}
 .bars{display:flex;align-items:flex-end;gap:5px;height:104px;margin-top:6px}
 .bars .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%}
-.bars .b i{width:100%;border-radius:5px 5px 0 0;background:var(--sky);min-height:3px;display:block}
+/* Con due o tre giorni registrati una colonna larga tutto lo schermo non è un
+   grafico, è una lastra: si tiene una larghezza massima e si centra. */
+.bars .b i{
+  width:100%;max-width:52px;margin:0 auto;
+  border-radius:5px 5px 0 0;background:var(--sky);min-height:3px;display:block;
+}
 .bars .b i.over{background:var(--coral)}
 .bars .b i.vuoto{background:var(--bg-elev2)}
 .bars .b span{font-size:9.5px;font-weight:700;color:var(--txt-faint);text-transform:uppercase}
@@ -1173,46 +1178,114 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
 /* ---------- colonna di sinistra (solo Mac) ---------- */
 #side{display:none}
 
-@media (min-width:900px){
+/* ============================================================
+   Il Mac: una plancia, non un telefono stirato
+   ============================================================
+
+   Sotto i 1000 px resta tutto com'è sul telefono. Sopra, la stessa app diventa
+   un gestionale: colonna di navigazione a sinistra, contenuto centrato, e le
+   schede affiancate invece che impilate in un nastro lungo un metro.
+*/
+@media (min-width:1000px){
+  body{background:var(--bg-elev)}
+
+  /* ---------- colonna di sinistra ---------- */
   #side{
     display:flex;flex-direction:column;
-    position:fixed;top:0;left:0;bottom:0;width:248px;z-index:45;
-    background:var(--navy);color:#fff;padding:22px 16px 16px;
+    position:fixed;top:0;left:0;bottom:0;width:236px;z-index:45;
+    background:var(--navy);color:#fff;padding:20px 14px 14px;
+    /* un filo di corallo: è l'accento del marchio, e qui separa senza pesare */
+    box-shadow:inset -1px 0 0 rgba(255,255,255,.06);
   }
-  .side-logo{text-align:center;margin-bottom:26px}
-  .side-logo .wm{display:none}
-  /* Il logo su fondo navy: il marchio ha già il proprio blu scuro nei contorni,
-     che sul navy sparirebbe. Un riquadro bianco lo tiene leggibile. */
+  .side-logo{text-align:center;margin-bottom:22px}
   .side-logo img{
-    display:block;width:100%;max-width:186px;height:auto;margin:0 auto 10px;
-    background:#fff;border-radius:12px;padding:11px 13px;
+    display:block;width:100%;max-width:156px;height:auto;margin:0 auto 8px;
+    background:#fff;border-radius:11px;padding:9px 11px;
   }
-  .side-logo .sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px;font-weight:600}
-  .side-menu{display:flex;flex-direction:column;gap:5px}
+  .side-logo .sub{
+    font-size:10px;color:rgba(255,255,255,.45);margin-top:2px;font-weight:650;
+    letter-spacing:.02em;
+  }
+  .side-menu{display:flex;flex-direction:column;gap:3px}
   .side-menu button{
-    display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:10px;
-    color:rgba(255,255,255,.72);font-size:14px;font-weight:650;text-align:left;
+    display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;
+    color:rgba(255,255,255,.7);font-size:13.5px;font-weight:650;text-align:left;
+    transition:background .12s,color .12s;
   }
-  .side-menu button svg{width:19px;height:19px}
+  .side-menu button svg{width:18px;height:18px;flex:none;opacity:.8}
   .side-menu button:hover{background:rgba(255,255,255,.07);color:#fff}
-  .side-menu button.on{background:var(--coral);color:#fff;box-shadow:0 3px 12px rgba(255,102,76,.35)}
-  .side-foot{margin-top:auto;font-size:11px;color:rgba(255,255,255,.42);line-height:1.6}
-  .side-foot b{color:rgba(255,255,255,.72);font-weight:700}
+  .side-menu button.on{background:var(--coral);color:#fff;box-shadow:0 3px 12px rgba(255,102,76,.32)}
+  .side-menu button.on svg{opacity:1}
+  .side-foot{
+    margin-top:auto;padding-top:14px;font-size:10.5px;line-height:1.65;
+    color:rgba(255,255,255,.38);border-top:1px solid rgba(255,255,255,.08);
+  }
+  .side-foot b{color:rgba(255,255,255,.66);font-weight:700}
 
   #tabbar{display:none}
-  #topbar{left:248px}
-  #app{padding-left:26px;padding-right:26px;padding-bottom:40px;max-width:1080px;margin:0 0 0 248px}
-  #fab{right:26px;bottom:26px}
-  #rest{left:274px;right:26px;bottom:26px;margin:0}
-  #toast{left:calc(50% + 124px)}
-  body{background:var(--bg-elev)}
-  #topbar{background:rgba(255,255,255,.92)}
+
+  /* ---------- barra in alto e contenuto ---------- */
+  #topbar{
+    left:236px;height:calc(58px + var(--safe-top));
+    padding-left:32px;padding-right:24px;
+    background:rgba(247,250,252,.88);
+  }
+  #topTitle{font-size:20px;letter-spacing:-.022em;padding-left:0;flex-direction:column;
+    align-items:flex-start;justify-content:center;gap:1px}
+  /* Niente capitalize: in italiano i mesi sono minuscoli, e "6 Settembre"
+     è un inglesismo. La maiuscola iniziale la mette il codice. */
+  .tt-d{font-size:11.5px;font-weight:600;color:var(--txt-faint);letter-spacing:0}
+
+  #app{
+    margin:0 0 0 236px;max-width:none;
+    padding:calc(58px + var(--safe-top) + 22px) 32px 48px;
+  }
+  /* Il contenuto si ferma prima del bordo e sta in mezzo: su uno schermo largo
+     una riga lunga due palmi non si legge. */
+  .wrap{max-width:1180px;margin:0 auto}
+
+  #fab{right:32px;bottom:32px}
+  #rest{left:auto;right:32px;bottom:32px;width:340px;margin:0}
+  #toast{left:calc(50% + 118px)}
+
+  /* ---------- la plancia ---------- */
+  .board{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;align-items:start}
+  .bc-a,.bc-b{min-width:0}
+  /* La prima scheda di ogni colonna non deve staccarsi dall'alto: nate per
+     essere impilate, portano tutte un margine sopra. */
+  .bc-a > :first-child,.bc-b > :first-child{margin-top:0}
+  .bc-b .section-head:first-child{margin-top:0}
+
+  /* ---------- le schede, con più aria ---------- */
   .fgrid{grid-template-columns:repeat(4,1fr)}
   .kpis{grid-template-columns:repeat(4,1fr)}
-  .quick{max-width:520px}
-  .kcal-card{max-width:none}
   .cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
   .cols2 .panel{margin-top:0}
+
+  /* L'anello ha spazio: tanto vale farlo vedere. */
+  .kcal-card{padding:20px}
+  .ring,.ring svg{width:116px;height:116px}
+  .ring .mid b{font-size:27px}
+  .kcal-side .big{font-size:17px}
+  .macros{gap:18px}
+
+  .turno-bar{padding:14px 16px}
+  .tb-t b{font-size:17px}
+
+  /* Sette pulsanti larghi un pollice non servono a nessuno. */
+  .weekstrip{max-width:560px}
+  .daynav{max-width:560px}
+
+  /* Le tabelle respirano: è il posto dove lo schermo largo serve davvero. */
+  table.dt th,table.dt td{padding:10px 14px}
+  .tablewrap{max-height:none}
+}
+
+/* Oltre i 1500 px la colonna secondaria smette di allargarsi: una scheda larga
+   il doppio del necessario non contiene niente di più. */
+@media (min-width:1500px){
+  .board{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+  .wrap{max-width:1320px}
 }
 
 /* ---------- stampa: il report diventa un PDF ---------- */
@@ -1220,6 +1293,10 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   #topbar,#tabbar,#fab,#side,#rest,#sheet,#toast,.filters .freset,.fsummary .exp{display:none !important}
   body{background:#fff}
   #app{margin:0;padding:0;max-width:none}
+  /* Su carta le due colonne diventano una: stampando si legge dall'alto in
+     basso, non a zig-zag. */
+  .wrap{max-width:none;margin:0}
+  .board{display:block}
   .panel,.tablewrap,.kpi{box-shadow:none;break-inside:avoid}
   table.dt th{background:#F7F9FC !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .kcal-card{background:#fff !important;color:var(--navy) !important;border:1px solid var(--line)}
