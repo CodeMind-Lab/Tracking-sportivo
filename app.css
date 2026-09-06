@@ -1,7 +1,10 @@
-/* Forma — tema CodeMind.Lab, impianto "Focus Flow"
-   Gli stessi colori e le stesse forme del gestionale budget: navy portante,
-   corallo solo come accento, pagina chiara e schede bianche con angoli larghi.
-   I colori non sono a memoria: sono quelli campionati dal logo. */
+/* Forma — tema viola su nero
+   Un colore solo che comanda, il viola, e tutto il resto in grigi neutri: è
+   quello che rende leggibile un pannello pieno di numeri per ore. Il bianco
+   pieno non è una superficie in nessuno dei due temi — di sera abbaglia e di
+   giorno appiattisce le schede una sull'altra. I nomi delle variabili dicono
+   il ruolo (primario, accento, evidenza) e non la tinta: cambiare tavolozza
+   deve costare due blocchi, non duecento regole. */
 
 /* Il carattere sta nel repository e non su un CDN: l'app deve aprirsi in
    aereo, e un font che arriva dalla rete lascerebbe il testo di ripiego. */
@@ -16,62 +19,71 @@
                  U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-:root, :root[data-tema="chiaro"] {
-  /* colori di marca */
-  --navy:#0C2441;
-  --navy-vivo:#1B4068;
-  --navy-tinta:#E7EDF5;
-  --sky:#6CD4F0;
-  --sky-tinta:#E6F7FD;
-  --teal:#0F90B9;
-  --coral:#FF674C;
-  --coral-scuro:#E24E33;
+:root, :root[data-tema="scuro"] {
+  /* Viola su nero. Il viola è l'unico colore che comanda: tutto il resto è
+     grigio, e i colori vivi restano ai dati (macro, esiti, avvisi). Il bianco
+     non è più una superficie, è solo inchiostro. */
+  --primario:#7C4DFF;
+  --primario-vivo:#9670FF;
+  --primario-tinta:rgba(124,77,255,.18);
+  --accento:#B79BFF;
+  --accento-tinta:rgba(167,139,250,.16);
+  --secondario:#A78BFA;
+  --evidenza:#F0508A;
+  --evidenza-scuro:#D83A72;
 
-  /* superfici */
-  --fondo:#F4F7FB;
-  --superficie:#FFFFFF;
-  --superficie-2:#F7F9FC;
+  /* superfici: nero con una punta di viola, così i grigi non virano al verde */
+  --fondo:#08070E;
+  --superficie:#121020;
+  --superficie-2:#191529;
   --bg:var(--superficie);
   --bg-elev:var(--superficie-2);
-  --bg-elev2:#EDF2F8;
-  --line:#E3E8EF;
-  --line-forte:#D2DAE6;
+  --bg-elev2:#221D36;
+  --line:#2A2440;
+  --line-forte:#3B3355;
 
-  /* testo */
-  --txt:#16202F;
-  --txt-dim:#4B5768;
-  --txt-faint:#5F6C7D;
+  /* testo: tre gradini, tutti sopra la soglia di leggibilità sul fondo */
+  --txt:#F5F3FF;
+  --txt-dim:#C4BDD9;
+  --txt-faint:#9C94B5;
+  --txt-forte:#FFFFFF;
 
-  /* ruoli */
-  /* Il navy e il teal servono sia da fondo pieno sia da colore del testo: due
-     mestieri che nel tema scuro vogliono valori diversi, quindi due nomi. */
-  --navy-txt:var(--navy);
-  --teal-txt:#0B7391;
-  --sky-txt:#0B5E7C;
-  --rail-barra:var(--navy);
+  --secondario-txt:#C4B0FF;
+  --accento-txt:#CBB8FF;
+  --rail-barra:var(--primario);
+  /* La colonna non è il fondo: è un pannello, e si stacca alzandola di un
+     gradino invece che con una riga più marcata. */
+  --rail-bg:#100D1B;
+  --rail-line:#241E38;
+  /* Il viola pieno va bene su un pulsante, non su mezza schermata: i pannelli
+     grandi usano un viola profondo, e l'accento resta un accento. */
+  --pannello:#1E1638;
+  --pannello-line:#332A52;
 
-  /* etichette: fondo tenue + testo scuro dello stesso colore */
-  --ok-bg:#DCF3EC;   --ok-txt:#0B6B58;
-  --no-bg:#FDE4E0;   --no-txt:#A02A1A;
-  --coral-txt:#B33A26;
+  /* etichette: fondo tenue e testo dello stesso colore, mai riempimenti pieni */
+  --ok-bg:rgba(52,211,153,.18);   --ok-txt:#6EE7B7;
+  --no-bg:rgba(248,113,113,.18);  --no-txt:#FCA5A5;
+  --evidenza-txt:#FF8FB4;
 
-  --accent:var(--coral);
-  --accent-soft:rgba(255,103,76,.12);
-  --prog:var(--teal);
-  --ok:#12A150;
-  --ok-tinta:#E7F8EE;
-  --danger:#C62B31;
+  --accent:var(--evidenza);
+  --accent-soft:rgba(240,80,138,.18);
+  --prog:var(--primario);
+  --ok:#34D399;
+  --ok-tinta:rgba(52,211,153,.16);
+  --danger:#F87171;
 
-  --prot:#FF674C;
-  --carb:#0F90B9;
-  --gras:#6C7CA8;
+  /* I tre macro sono dati, non decorazione: servono tre tinte che si
+     distinguono anche in una barra alta cinque pixel e anche di fianco. */
+  --prot:#B79BFF;
+  --carb:#F0508A;
+  --gras:#F2B33D;
 
   --radius:16px;
   --raggio-xl:22px;
   --pillola:999px;
-  --shadow-sm:0 1px 2px rgba(12,36,65,.05);
-  --shadow-md:0 4px 14px -6px rgba(12,36,65,.18);
-  --shadow-lg:0 12px 28px -14px rgba(12,36,65,.30);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.45);
+  --shadow-md:0 6px 18px -8px rgba(0,0,0,.7);
+  --shadow-lg:0 16px 36px -16px rgba(0,0,0,.8);
 
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bot:env(safe-area-inset-bottom,0px);
@@ -79,51 +91,64 @@
   --tabbar-h:58px;
   --rail:240px;
 
-  color-scheme:light;
+  color-scheme:dark;
 }
 
-/* Il tema scuro cambia solo i valori, non una regola di impaginazione: è per
-   questo che i nomi delle variabili restano gli stessi. */
-:root[data-tema="scuro"] {
-  --navy-tinta:rgba(108,212,240,.13);
-  --sky-tinta:rgba(108,212,240,.12);
-  --teal:#35A8CC;
-  /* Sul fondo notte il navy del marchio sparisce: come pannello pieno si
-     schiarisce, come testo diventa quasi bianco. */
-  --navy:#1D4E80;
-  --navy-txt:#EDF3FA;
-  --teal-txt:#5FC9E8;
-  --sky-txt:#9FE3F7;
-  --rail-barra:var(--sky);
+/* Il tema chiaro cambia solo i valori, non una regola di impaginazione. Anche
+   qui il bianco pieno non c'è: le schede stanno su un grigio caldo, che di
+   giorno stanca meno e non spara in faccia la sera. */
+:root[data-tema="chiaro"] {
+  --primario:#5B2ED6;
+  --primario-vivo:#4A22B8;
+  --primario-tinta:rgba(91,46,214,.11);
+  --accento:#8B6BF0;
+  --accento-tinta:rgba(139,107,240,.13);
+  --secondario:#6D45D9;
+  --evidenza:#D6266A;
+  --evidenza-scuro:#B01554;
 
-  --ok-bg:rgba(61,214,140,.16);   --ok-txt:#7BE8B4;
-  --no-bg:rgba(255,122,127,.16);  --no-txt:#FFB3B5;
-  --coral-txt:#FF9D89;
-
-  --fondo:#061321;
-  --superficie:#0D2038;
-  --superficie-2:#132A45;
+  --fondo:#E9E7F0;
+  --superficie:#F6F5FA;
+  --superficie-2:#EFEDF6;
   --bg:var(--superficie);
   --bg-elev:var(--superficie-2);
-  --bg-elev2:#1A3452;
-  --line:#1F3A57;
-  --line-forte:#2A4A6B;
+  --bg-elev2:#E4E1EE;
+  --line:#D7D3E4;
+  --line-forte:#BFB9D2;
 
-  --txt:#FFFFFF;
-  --txt-dim:#AFBACB;
-  --txt-faint:#98A5B8;
+  --txt:#16121F;
+  --txt-dim:#443C58;
+  --txt-faint:#5C5474;
+  --txt-forte:#0F0B18;
 
-  --ok:#3DD68C;
-  --ok-tinta:rgba(61,214,140,.14);
-  --danger:#FF7A7F;
-  --accent-soft:rgba(255,103,76,.16);
-  --gras:#8E9CC0;
+  --secondario-txt:#5B2ED6;
+  --accento-txt:#5A3AB8;
+  --rail-barra:var(--primario);
+  --rail-bg:#DFDCEB;
+  --rail-line:#CBC6DC;
+  --pannello:#241A47;
+  --pannello-line:#3A2C68;
 
-  --shadow-sm:0 1px 2px rgba(0,0,0,.28);
-  --shadow-md:0 4px 14px -6px rgba(0,0,0,.5);
-  --shadow-lg:0 12px 28px -14px rgba(0,0,0,.6);
+  --ok-bg:rgba(4,120,87,.13);    --ok-txt:#046B4E;
+  --no-bg:rgba(190,24,60,.12);   --no-txt:#A5133C;
+  --evidenza-txt:#AE1256;
 
-  color-scheme:dark;
+  --accent:var(--evidenza);
+  --accent-soft:rgba(214,38,106,.12);
+  --prog:var(--primario);
+  --ok:#059669;
+  --ok-tinta:rgba(5,150,105,.13);
+  --danger:#C01B33;
+
+  --prot:#6D45D9;
+  --carb:#D6266A;
+  --gras:#B07407;
+
+  --shadow-sm:0 1px 2px rgba(22,18,31,.07);
+  --shadow-md:0 5px 16px -7px rgba(22,18,31,.22);
+  --shadow-lg:0 14px 32px -16px rgba(22,18,31,.34);
+
+  color-scheme:light;
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -132,7 +157,7 @@ html,body{margin:0;padding:0}
 body{
   background:var(--fondo);
   color:var(--txt);
-  font:15px/1.5 'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font:15.5px/1.55 'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   font-feature-settings:'cv05' 1,'ss03' 1;
   overscroll-behavior-y:none;
   -webkit-font-smoothing:antialiased;
@@ -140,6 +165,19 @@ body{
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 input,textarea,select{font:inherit;color:inherit}
 svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+/* Il monogramma sostituisce il logo a colori fissi: è testo dentro un
+   quadrato, quindi segue il tema e resta nitido a qualunque densità. */
+.mk{
+  width:34px;height:34px;flex:none;border-radius:10px;
+  display:grid;place-items:center;
+  background:var(--primario);color:#fff;
+  font-size:17px;font-weight:800;line-height:1;letter-spacing:-.02em;
+  box-shadow:0 2px 10px -3px var(--primario);
+}
+.marchio{display:flex;align-items:center;gap:10px}
+.marchio .mk{width:30px;height:30px;font-size:15px;border-radius:9px}
+.marchio b{font-size:18px;font-weight:800;letter-spacing:-.025em;color:var(--txt-forte)}
 
 /* ---------- barra superiore ---------- */
 #topbar{
@@ -154,16 +192,11 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 #topTitle{
   flex:1;margin:0;font-size:17px;font-weight:700;letter-spacing:-.015em;
   padding-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  color:var(--navy-txt);display:flex;align-items:center;
+  color:var(--txt-forte);display:flex;align-items:center;
 }
-#topTitle .brand{height:24px;width:auto;display:block}
-/* Il lockup è un PNG con la scritta navy: sul fondo notte sparirebbe.
-   Invertire e ruotare la tinta di mezzo giro schiarisce il marchio
-   lasciandogli i suoi colori, invece di appiattirlo in bianco. */
-:root[data-tema="scuro"] #topTitle .brand{filter:invert(1) hue-rotate(180deg) saturate(1.15)}
 .icon-btn{
   width:38px;height:38px;display:grid;place-items:center;border-radius:10px;
-  color:var(--navy-txt);flex:none;
+  color:var(--txt-forte);flex:none;
 }
 .icon-btn:active{background:var(--bg-elev2)}
 
@@ -186,17 +219,17 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 }
 #tabbar button{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;color:var(--txt-faint);font-size:10px;font-weight:600;letter-spacing:.01em;
+  gap:3px;color:var(--txt-dim);font-size:11px;font-weight:650;letter-spacing:.01em;
 }
 #tabbar button svg{width:21px;height:21px}
-#tabbar button.on{color:var(--coral)}
+#tabbar button.on{color:var(--evidenza)}
 
 /* ---------- pulsante aggiungi ---------- */
 #fab{
   position:fixed;right:18px;z-index:41;
   bottom:calc(var(--tabbar-h) + var(--safe-bot) + 16px);
   width:54px;height:54px;border-radius:50%;
-  background:var(--coral);color:#fff;
+  background:var(--evidenza);color:#fff;
   display:grid;place-items:center;
   box-shadow:0 6px 20px rgba(255,102,76,.42);
 }
@@ -210,21 +243,21 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 }
 .section-head:first-child{margin-top:4px}
 .section-head h2{
-  margin:0;font-size:19px;font-weight:750;letter-spacing:-.022em;color:var(--navy-txt);
+  margin:0;font-size:20.5px;font-weight:780;letter-spacing:-.022em;color:var(--txt-forte);
   position:relative;padding-left:11px;
 }
 .section-head h2::before{
   content:"";position:absolute;left:0;top:.18em;bottom:.18em;width:3px;
-  border-radius:2px;background:var(--coral);
+  border-radius:2px;background:var(--evidenza);
 }
-.section-head .count{font-size:12px;color:var(--txt-faint);font-variant-numeric:tabular-nums}
-.section-head .act{font-size:12.5px;font-weight:700;color:var(--teal-txt)}
+.section-head .count{font-size:12.5px;color:var(--txt-faint);font-variant-numeric:tabular-nums}
+.section-head .act{font-size:13px;font-weight:700;color:var(--secondario-txt)}
 
 .empty{text-align:center;color:var(--txt-faint);padding:38px 20px}
 .empty .ic{font-size:34px;display:block;margin-bottom:12px;opacity:.55}
-.empty strong{display:block;color:var(--navy-txt);font-size:16px;margin-bottom:7px;font-weight:700}
+.empty strong{display:block;color:var(--txt-forte);font-size:16px;margin-bottom:7px;font-weight:700}
 .empty p{margin:0;font-size:13px;line-height:1.65;color:var(--txt-dim)}
-.empty b{color:var(--coral-txt)}
+.empty b{color:var(--evidenza-txt)}
 
 .chips{
   display:flex;gap:7px;overflow-x:auto;padding:2px 16px 10px;scrollbar-width:none;
@@ -236,7 +269,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke
   background:var(--superficie);color:var(--txt-dim);border:1px solid var(--line);
   white-space:nowrap;
 }
-.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.chip.on{background:var(--primario);color:#fff;border-color:var(--primario)}
 
 .panel{
   background:var(--superficie);border:1px solid var(--line);border-radius:var(--radius);
@@ -244,15 +277,19 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 }
 .panel > .label{
   font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
-  color:var(--teal-txt);margin-bottom:11px;
+  color:var(--secondario-txt);margin-bottom:11px;
 }
 
+/* Il pulsante principale porta il colore principale. Il magenta resta agli
+   avvisi e ai dati: se lo usa anche il pulsante che premi più spesso, smette
+   di voler dire "guarda qui". */
 .btn{
-  display:block;width:100%;padding:13px;border-radius:12px;text-align:center;
-  font-size:15px;font-weight:700;background:var(--coral);color:#fff;margin-top:13px;
-  box-shadow:0 3px 12px rgba(255,102,76,.30);
+  display:block;width:100%;padding:14px;border-radius:12px;text-align:center;
+  font-size:15.5px;font-weight:750;background:var(--primario);color:#fff;margin-top:13px;
+  box-shadow:0 4px 16px -6px var(--primario);
 }
-.btn.sec{background:var(--superficie);color:var(--navy-txt);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.btn:active{background:var(--primario-vivo)}
+.btn.sec{background:var(--superficie);color:var(--txt-forte);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
 .btn.danger{background:var(--superficie);color:var(--danger);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
 .btn:active{opacity:.85}
 .btn.sm{padding:9px;font-size:13.5px;margin-top:9px}
@@ -269,7 +306,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 .field input[type=date],.field input[type=number],.field input[type=text],.field select{
   flex:none;width:104px;
   background:var(--bg-elev2);border:1px solid var(--line);border-radius:9px;
-  padding:8px 10px;font-size:14px;font-weight:650;color:var(--navy-txt);
+  padding:8px 10px;font-size:14px;font-weight:650;color:var(--txt-forte);
   text-align:right;font-variant-numeric:tabular-nums;
 }
 .field input[type=date]{width:132px;text-align:center;font-weight:600}
@@ -283,15 +320,15 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 .field.sel select{flex:1;width:auto;min-width:0;text-align:left}
 .txtin{
   width:100%;background:var(--bg-elev2);border:1px solid var(--line);border-radius:10px;
-  padding:11px 12px;font-size:14px;color:var(--navy-txt);
+  padding:11px 12px;font-size:14px;color:var(--txt-forte);
 }
 textarea.notes{
   width:100%;min-height:74px;resize:vertical;
   background:var(--bg-elev2);border:1px solid var(--line);border-radius:10px;
-  padding:10px 12px;font-size:14px;line-height:1.55;color:var(--navy-txt);
+  padding:10px 12px;font-size:14px;line-height:1.55;color:var(--txt-forte);
 }
 textarea.notes:focus,.field input:focus,.txtin:focus{
-  outline:none;border-color:var(--teal);background:var(--superficie);
+  outline:none;border-color:var(--secondario);background:var(--superficie);
   box-shadow:0 0 0 3px rgba(15,144,185,.13);
 }
 .seg{display:flex;gap:5px;background:var(--bg-elev2);padding:4px;border-radius:11px}
@@ -299,33 +336,33 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   flex:1;padding:8px 4px;border-radius:8px;font-size:12px;font-weight:650;color:var(--txt-dim);
   white-space:nowrap;
 }
-.seg button.on{background:var(--superficie);color:var(--navy-txt);box-shadow:var(--shadow-sm)}
+.seg button.on{background:var(--superficie);color:var(--txt-forte);box-shadow:var(--shadow-sm)}
 
 .stat-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:13.5px}
 .stat-row:first-child{border-top:0}
 .stat-row span:first-child{color:var(--txt-dim)}
-.stat-row span:last-child{color:var(--navy-txt);font-weight:650;font-variant-numeric:tabular-nums}
+.stat-row span:last-child{color:var(--txt-forte);font-weight:650;font-variant-numeric:tabular-nums}
 .set-note{font-size:12px;color:var(--txt-dim);line-height:1.6;margin:9px 0 0}
-.set-note a{color:var(--teal-txt);font-weight:650}
-.set-note b{color:var(--navy-txt)}
+.set-note a{color:var(--secondario-txt);font-weight:650}
+.set-note b{color:var(--txt-forte)}
 
 /* ---------- navigatore del giorno ---------- */
 .daynav{
   display:flex;align-items:center;gap:6px;margin:0 0 14px;
   background:var(--bg-elev2);border-radius:12px;padding:4px;
 }
-.daynav button.arw{width:36px;height:34px;display:grid;place-items:center;color:var(--teal-txt);border-radius:9px}
+.daynav button.arw{width:36px;height:34px;display:grid;place-items:center;color:var(--secondario-txt);border-radius:9px}
 .daynav button.arw:active{background:var(--superficie)}
 .daynav button.arw[disabled]{color:var(--txt-faint);opacity:.4}
 
 /* ---------- calendario del mese ---------- */
 .cal-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .cal-top .arw{
-  width:36px;height:34px;display:grid;place-items:center;color:var(--teal-txt);
+  width:36px;height:34px;display:grid;place-items:center;color:var(--secondario-txt);
   border-radius:9px;background:var(--bg-elev2);flex:none;
 }
-.cal-top .arw:active{background:var(--teal);color:#fff}
-.cal-m{flex:1;text-align:center;font-size:15px;font-weight:750;color:var(--navy-txt)}
+.cal-top .arw:active{background:var(--secondario);color:#fff}
+.cal-m{flex:1;text-align:center;font-size:15px;font-weight:750;color:var(--txt-forte)}
 .cal-h{
   display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;
 }
@@ -340,24 +377,24 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   align-items:center;justify-content:center;gap:3px;
   font-variant-numeric:tabular-nums;background:var(--bg-elev);
 }
-.cal-g b{font-size:14px;font-weight:650;color:var(--navy-txt);line-height:1}
+.cal-g b{font-size:14px;font-weight:650;color:var(--txt-forte);line-height:1}
 .cal-g.futuro b{color:var(--txt-faint);font-weight:600}
 /* Oggi si riconosce dal bordo, il giorno scelto dal pieno: due segni diversi
    perché spesso sono lo stesso giorno e uno solo non basterebbe a dirlo. */
-.cal-g.oggi{box-shadow:inset 0 0 0 2px var(--teal)}
-.cal-g.sel{background:var(--navy)}
+.cal-g.oggi{box-shadow:inset 0 0 0 2px var(--secondario)}
+.cal-g.sel{background:var(--primario)}
 .cal-g.sel b{color:#fff}
 .cal-g:active{background:var(--bg-elev2)}
 .cal-p{display:flex;gap:3px;height:5px}
 .cal-p i{width:5px;height:5px;border-radius:50%;background:transparent;display:block}
-.cal-p i.cibo{background:var(--coral)}
-.cal-p i.piano{background:var(--sky)}
-.cal-p i.pesi{background:var(--teal)}
+.cal-p i.cibo{background:var(--evidenza)}
+.cal-p i.piano{background:var(--accento)}
+.cal-p i.pesi{background:var(--secondario)}
 .cal-g.sel .cal-p i.cibo,.cal-g.sel .cal-p i.piano,.cal-g.sel .cal-p i.pesi{background:#fff}
 
 /* La data in cima ora è un pulsante: deve sembrarlo. */
 .daynav .lbl{
-  flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--navy-txt);
+  flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--txt-forte);
   letter-spacing:-.01em;padding:4px 0;border-radius:9px;
 }
 .daynav .lbl small{display:block;font-size:10.5px;font-weight:600;color:var(--txt-faint);letter-spacing:.02em}
@@ -371,13 +408,13 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   font-size:11.5px;font-weight:750;color:var(--txt-dim);
   display:flex;flex-direction:column;align-items:center;gap:4px;
 }
-.weekstrip button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.weekstrip button.on{background:var(--primario);color:#fff;border-color:var(--primario)}
 /* Il pallino dice a colpo d'occhio dove c'è già qualcosa: corallo = registrato
    davvero, azzurro = c'è solo il piano. Senza, dovresti aprire i giorni uno per
    uno per sapere quali hai compilato. */
 .weekstrip button i{width:5px;height:5px;border-radius:50%;background:transparent;display:block}
-.weekstrip button i.pieno{background:var(--coral)}
-.weekstrip button i.piano{background:var(--sky)}
+.weekstrip button i.pieno{background:var(--evidenza)}
+.weekstrip button i.piano{background:var(--accento)}
 .weekstrip button.on i.pieno,.weekstrip button.on i.piano{background:#fff}
 
 .weekstrip.giorni{flex-wrap:wrap;gap:6px}
@@ -387,19 +424,20 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   font-size:9.5px;font-weight:650;opacity:.72;max-width:100%;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.weekstrip.giorni button.piu{flex:0 0 46px;color:var(--coral-txt);font-size:17px;justify-content:center}
+.weekstrip.giorni button.piu{flex:0 0 46px;color:var(--evidenza-txt);font-size:17px;justify-content:center}
 
 /* ---------- riepilogo calorie ---------- */
 .kcal-card{
-  background:var(--navy);border-radius:18px;padding:16px 16px 14px;color:#fff;
-  box-shadow:0 6px 22px rgba(14,35,66,.22);
+  background:var(--pannello);border:1px solid var(--pannello-line);
+  border-radius:18px;padding:16px 16px 14px;color:#fff;
+  box-shadow:var(--shadow-md);
 }
 .kcal-top{display:flex;align-items:center;gap:16px}
 .ring{width:96px;height:96px;flex:none;position:relative}
 .ring svg{width:96px;height:96px;stroke:none}
 .ring .rest{fill:none;stroke:rgba(255,255,255,.16);stroke-width:9}
-.ring .arc{fill:none;stroke:var(--sky);stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .45s}
-.ring.over .arc{stroke:var(--coral)}
+.ring .arc{fill:none;stroke:var(--accento);stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .45s}
+.ring.over .arc{stroke:var(--evidenza)}
 .ring .mid{
   position:absolute;inset:0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;line-height:1;
@@ -421,29 +459,29 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .tipo-sw{
   display:inline-flex;align-items:center;gap:5px;
   padding:4px 9px;border-radius:99px;
-  background:rgba(108,211,240,.18);color:var(--sky);
+  background:rgba(108,211,240,.18);color:var(--accento);
   font-size:11.5px;font-weight:750;letter-spacing:.01em;
   font-variant-numeric:tabular-nums;
 }
 .tipo-sw.off{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
 .tipo-sw svg{width:12px;height:12px;stroke-width:2.4;opacity:.75}
-.tipo-sw:active{background:var(--sky);color:var(--navy)}
+.tipo-sw:active{background:var(--accento);color:var(--primario)}
 
 .macros{display:flex;gap:12px;margin-top:14px;padding-top:13px;border-top:1px solid rgba(255,255,255,.12)}
 .macro{flex:1;min-width:0}
 .macro .mh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
-.macro .mn{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.74)}
-.macro .mv{font-size:12px;font-weight:750;font-variant-numeric:tabular-nums}
+.macro .mn{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.74)}
+.macro .mv{font-size:13.5px;font-weight:750;font-variant-numeric:tabular-nums}
 .macro .mv i{font-style:normal;color:rgba(255,255,255,.68);font-weight:600}
-.macro .bar{height:5px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden}
+.macro .bar{height:7px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden}
 .macro .bar i{display:block;height:100%;border-radius:99px;transition:width .4s}
-.macro.p .bar i{background:var(--coral)}
-.macro.c .bar i{background:var(--sky)}
-.macro.g .bar i{background:#B9C4DC}
-.macro .bar i.over{background:#FFD166}
+.macro.p .bar i{background:var(--prot)}
+.macro.c .bar i{background:var(--carb)}
+.macro.g .bar i{background:var(--gras)}
+.macro .bar i.over{background:var(--danger)}
 /* I grammi che restano stanno sotto la barra, non dentro: dentro avrebbero
    costretto a rimpicciolire i numeri che si leggono davvero. */
-.macro .mr{margin-top:5px;font-size:10px;font-weight:600;color:rgba(255,255,255,.74);letter-spacing:.01em}
+.macro .mr{margin-top:6px;font-size:11px;font-weight:600;color:rgba(255,255,255,.74);letter-spacing:.01em}
 
 /* ---------- assegnazione giorno → giornata tipo ---------- */
 /* Due righe: sopra il giorno con le sue calorie, sotto i due menu. Su una
@@ -453,7 +491,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   padding:10px 0;border-top:1px solid var(--line);align-items:center;
 }
 .ass:first-of-type{border-top:0;padding-top:2px}
-.ass-g{font-size:13.5px;font-weight:700;color:var(--navy-txt)}
+.ass-g{font-size:13.5px;font-weight:700;color:var(--txt-forte)}
 .ass-t{
   grid-column:1;min-width:0;
   background:var(--bg-elev2);border:1px solid var(--line);border-radius:9px;
@@ -469,12 +507,12 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .ass-s{
   grid-column:2;min-width:0;
   background:var(--bg-elev2);border:1px solid var(--line);border-radius:9px;
-  padding:8px 26px 8px 10px;font-size:13.5px;color:var(--navy-txt);
+  padding:8px 26px 8px 10px;font-size:13.5px;color:var(--txt-forte);
   appearance:none;-webkit-appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230F90B9' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 8px center;background-size:15px;
 }
-.ass-s:focus{outline:none;border-color:var(--teal);background-color:var(--superficie);box-shadow:0 0 0 3px rgba(15,144,185,.13)}
+.ass-s:focus{outline:none;border-color:var(--secondario);background-color:var(--superficie);box-shadow:0 0 0 3px rgba(15,144,185,.13)}
 .ass-k{
   text-align:right;font-size:12px;font-weight:700;
   color:var(--txt-faint);font-variant-numeric:tabular-nums;
@@ -505,7 +543,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 /* La striscia colorata dice la categoria senza rubare una parola alla riga. */
 .ag-c{width:3px;height:30px;border-radius:99px;flex:none}
 .ag-b{flex:1;min-width:0;text-align:left}
-.ag-n{display:block;font-size:14px;font-weight:600;color:var(--navy-txt);line-height:1.35}
+.ag-n{display:block;font-size:14px;font-weight:600;color:var(--txt-forte);line-height:1.35}
 .ag-n b{font-weight:800;font-variant-numeric:tabular-nums;margin-right:2px}
 .ag-m{
   display:block;font-size:11px;color:var(--txt-faint);margin-top:1px;
@@ -518,14 +556,14 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .ag-n .em,.ag-m .em{font-style:normal;margin-right:5px}
 
 .ag-piu{
-  width:100%;padding:9px 0 2px;font-size:12px;font-weight:700;color:var(--teal-txt);
+  width:100%;padding:9px 0 2px;font-size:12px;font-weight:700;color:var(--secondario-txt);
   border-top:1px solid var(--line);margin-top:6px;
 }
 
 /* Le righe che vengono dal programma non si spuntano: portano altrove. */
 .ag-r.fisso{width:100%;text-align:left}
 .ag-o{
-  width:46px;flex:none;font-size:12px;font-weight:800;color:var(--teal-txt);
+  width:46px;flex:none;font-size:12px;font-weight:800;color:var(--secondario-txt);
   font-variant-numeric:tabular-nums;
 }
 
@@ -533,12 +571,13 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .turno-bar{
   display:flex;align-items:center;gap:12px;width:100%;text-align:left;
   padding:12px 14px;border-radius:var(--radius);margin-bottom:12px;
-  background:var(--navy);color:#fff;box-shadow:var(--shadow-sm);
-  border-left:4px solid var(--sky);
+  background:var(--pannello);border:1px solid var(--pannello-line);
+  color:#fff;box-shadow:var(--shadow-sm);
+  border-left:4px solid var(--accento);
 }
 /* Il colore arriva da come hai impostato il turno, non da una classe fissa:
    i turni si possono aggiungere e rinominare. */
-.turno-bar.riposo{background:var(--bg-elev);color:var(--navy-txt)}
+.turno-bar.riposo{background:var(--bg-elev);color:var(--txt-forte)}
 .turno-bar.vuoto{
   background:var(--bg-elev);color:var(--txt-dim);
   border:1px dashed var(--line);border-left:4px solid var(--txt-faint);
@@ -556,7 +595,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 
 /* quando il turno del giorno non segue la settimana */
 .kcal-side .ecc{
-  font-size:10.5px;font-weight:700;color:var(--sky);
+  font-size:10.5px;font-weight:700;color:var(--accento);
   background:rgba(108,211,240,.16);padding:2px 7px;border-radius:99px;
 }
 
@@ -573,7 +612,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .tn-c{width:4px;height:32px;border-radius:99px;flex:none}
 .tn-i{font-size:18px;flex:none;line-height:1}
 .tn-b{flex:1;min-width:0}
-.tn-n{display:block;font-size:14px;font-weight:700;color:var(--navy-txt);line-height:1.3}
+.tn-n{display:block;font-size:14px;font-weight:700;color:var(--txt-forte);line-height:1.3}
 .tn-o{display:block;font-size:11.5px;color:var(--txt-faint);margin-top:1px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tn-r .go{flex:none;color:var(--txt-faint)}
@@ -594,7 +633,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   margin-top:12px;padding:13px;box-shadow:var(--shadow-sm);
   /* La striscia azzurra a sinistra è la stessa convenzione delle card del
      manuale: dice "questo è un modello", non un dato registrato. */
-  border-left:3px solid var(--sky);
+  border-left:3px solid var(--accento);
 }
 .plan-hero.vuoto{
   display:flex;align-items:center;gap:11px;width:100%;text-align:left;
@@ -603,11 +642,11 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .ph-top{display:flex;align-items:center;gap:11px}
 .ph-badge{
   width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
-  background:var(--sky-tinta);color:var(--sky-txt);
+  background:var(--accento-tinta);color:var(--accento-txt);
   font-size:11px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
 }
 .ph-t{flex:1;min-width:0;display:block}
-.ph-t b{display:block;font-size:15px;font-weight:750;color:var(--navy-txt);letter-spacing:-.015em}
+.ph-t b{display:block;font-size:15px;font-weight:750;color:var(--txt-forte);letter-spacing:-.015em}
 .ph-t span{
   display:block;font-size:11.5px;color:var(--txt-faint);font-variant-numeric:tabular-nums;
   margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -615,8 +654,8 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 /* Nel riquadro vuoto la frase è un invito, non un dato: deve poter andare a
    capo invece di finire in tre puntini. */
 .plan-hero.vuoto .ph-t span{white-space:normal;line-height:1.45}
-.ph-edit{flex:none;font-size:12px;font-weight:700;color:var(--teal-txt);padding:4px 2px}
-.ph-chev{flex:none;color:var(--teal-txt);transition:transform .18s}
+.ph-edit{flex:none;font-size:12px;font-weight:700;color:var(--secondario-txt);padding:4px 2px}
+.ph-chev{flex:none;color:var(--secondario-txt);transition:transform .18s}
 .ph-chev svg{width:17px;height:17px;display:block}
 .ph-chev.su{transform:rotate(180deg)}
 .ph-top{cursor:pointer}
@@ -628,21 +667,21 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .pm:first-child{border-top:0}
 .pmh{
   display:flex;justify-content:space-between;gap:8px;
-  font-size:12.5px;font-weight:700;color:var(--navy-txt);
+  font-size:13.5px;font-weight:700;color:var(--txt-forte);
 }
 /* L'emoji va staccata dal nome con un margine, non con uno spazio: dentro un
    contenitore flex lo spazio fra due nodi di testo viene mangiato. */
 .pmn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pmi{font-style:normal;margin-right:6px}
-.pmh b{color:var(--teal-txt);font-variant-numeric:tabular-nums;flex:none}
+.pmh b{color:var(--secondario-txt);font-variant-numeric:tabular-nums;flex:none}
 .pml{
-  display:block;margin-top:2px;font-size:11.5px;line-height:1.5;color:var(--txt-dim);
+  display:block;margin-top:3px;font-size:12.5px;line-height:1.55;color:var(--txt-dim);
 }
 /* I grammi sono la sola cosa che devi guardare mentre pesi: vanno letti a
    colpo d'occhio dentro una riga di nomi. Le macro restano dove sono. */
 .pml b{
-  color:var(--navy-txt);font-weight:800;font-variant-numeric:tabular-nums;
-  font-size:12.5px;letter-spacing:-.01em;
+  color:var(--txt-forte);font-weight:800;font-variant-numeric:tabular-nums;
+  font-size:13.5px;letter-spacing:-.01em;
 }
 /* Il pasto già scritto nel diario si spegne, quello che manca tiene il suo
    pulsante: la differenza fra "l'ho mangiato" e "devo ancora" è la sola cosa
@@ -654,26 +693,26 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 }
 .pm-add{
   flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
-  background:var(--accent-soft);color:var(--coral-txt);font-size:13px;font-weight:800;
+  background:var(--accent-soft);color:var(--evidenza-txt);font-size:13px;font-weight:800;
   line-height:1;margin:-2px 0;
 }
-.pm-add:active{background:var(--coral);color:#fff}
+.pm-add:active{background:var(--evidenza);color:#fff}
 .pm.ok .pmn,.pm.ok .pml{color:var(--txt-faint)}
 .pm.ok .pml b,.pm.ok .pmh b{color:var(--txt-dim);font-weight:700}
 
 .ph-cta{
   display:block;width:100%;margin-top:12px;padding:11px;border-radius:11px;
-  background:var(--coral);color:#fff;font-size:14px;font-weight:750;text-align:center;
+  background:var(--evidenza);color:#fff;font-size:14px;font-weight:750;text-align:center;
   box-shadow:0 3px 12px rgba(255,102,76,.28);
 }
-.ph-cta.sec{background:var(--superficie);color:var(--navy-txt);border:1px solid var(--line);box-shadow:none}
+.ph-cta.sec{background:var(--superficie);color:var(--txt-forte);border:1px solid var(--line);box-shadow:none}
 .ph-cta:active{opacity:.85}
 .ph-conf{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   margin-top:11px;padding-top:11px;border-top:1px solid var(--line);
   font-size:12px;color:var(--txt-dim);
 }
-.ph-conf b{color:var(--navy-txt);font-weight:750;font-variant-numeric:tabular-nums}
+.ph-conf b{color:var(--txt-forte);font-weight:750;font-variant-numeric:tabular-nums}
 
 /* ---------- l'acqua, dentro la scheda delle calorie ---------- */
 .acqua-row{
@@ -689,10 +728,10 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   padding:6px 11px;border-radius:9px;background:rgba(255,255,255,.14);
   color:#fff;font-size:12px;font-weight:750;
 }
-.ar-b button:active{background:var(--sky);color:var(--navy)}
+.ar-b button:active{background:var(--accento);color:var(--primario)}
 .acqua-row .water{grid-column:1 / -1;margin-top:0}
 .acqua-row .water i{background:rgba(255,255,255,.16)}
-.acqua-row .water i.on{background:var(--sky)}
+.acqua-row .water i.on{background:var(--accento)}
 
 /* ---------- contatori rapidi ---------- */
 /* Passi e olio affiancati: due contatori che si guardano insieme. La regola
@@ -704,18 +743,18 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   flex:1;background:var(--superficie);border:1px solid var(--line);border-radius:var(--radius);
   padding:11px 12px;box-shadow:var(--shadow-sm);min-width:0;
 }
-.qcard .qh{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--txt-faint);margin-bottom:7px}
-.qcard .qv{font-size:19px;font-weight:800;color:var(--navy-txt);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.qcard .qh{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--txt-faint);margin-bottom:7px}
+.qcard .qv{font-size:21px;font-weight:800;color:var(--txt-forte);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .qcard .qv small{font-size:11.5px;font-weight:650;color:var(--txt-faint);letter-spacing:0}
 .qcard .qb{display:flex;gap:6px;margin-top:9px}
 .qcard .qb button{
   flex:1;padding:6px 0;border-radius:8px;background:var(--bg-elev2);
-  font-size:12px;font-weight:750;color:var(--teal-txt);border:1px solid var(--line);
+  font-size:12px;font-weight:750;color:var(--secondario-txt);border:1px solid var(--line);
 }
-.qcard .qb button:active{background:var(--teal);color:#fff}
+.qcard .qb button:active{background:var(--secondario);color:#fff}
 .water{display:flex;gap:4px;margin-top:8px}
 .water i{flex:1;height:7px;border-radius:99px;background:var(--bg-elev2)}
-.water i.on{background:var(--sky)}
+.water i.on{background:var(--accento)}
 
 /* ---------- l'andamento della settimana ---------- */
 .wk-bars{display:flex;align-items:flex-end;gap:6px;height:96px}
@@ -725,60 +764,60 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   border-radius:9px;padding:3px 2px;
 }
 .wk-bars .wb.on{background:var(--bg-elev2)}
-.wk-bars .wb i{width:100%;max-width:26px;border-radius:5px 5px 0 0;background:var(--sky);display:block}
-.wk-bars .wb i.over{background:var(--coral)}
+.wk-bars .wb i{width:100%;max-width:26px;border-radius:5px 5px 0 0;background:var(--accento);display:block}
+.wk-bars .wb i.over{background:var(--evidenza)}
 .wk-bars .wb i.vuoto{background:var(--line)}
 /* Il puntino sotto la colonna dice che quel giorno hai anche allenato: due
    informazioni nello stesso spazio, senza un secondo grafico. */
 .wk-bars .wb u{width:5px;height:5px;border-radius:50%;background:transparent;display:block}
-.wk-bars .wb u.si{background:var(--teal)}
+.wk-bars .wb u.si{background:var(--secondario)}
 .wk-bars .wb span{font-size:9.5px;font-weight:750;color:var(--txt-faint);text-transform:uppercase}
-.wk-bars .wb.on span{color:var(--navy-txt)}
+.wk-bars .wb.on span{color:var(--txt-forte)}
 
 /* ---------- adesso: il prossimo pasto del piano ---------- */
 /* Sta in cima perché è l'unica scheda che risponde con un'azione invece che
    con un numero: qui non guardi come è andata, decidi cosa fare adesso. */
 .adesso{
   background:var(--superficie);border:1px solid var(--line);border-radius:var(--radius);
-  border-left:3px solid var(--teal);
+  border-left:3px solid var(--secondario);
   padding:12px 13px;box-shadow:var(--shadow-sm);
 }
 .adesso.fatto{border-left-color:var(--ok);display:flex;align-items:center;gap:11px}
 .ad-h{display:flex;align-items:center;gap:11px}
 .ad-i{
   width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;
-  background:var(--sky-tinta);font-size:18px;line-height:1;
+  background:var(--accento-tinta);font-size:18px;line-height:1;
 }
 .ad-t{flex:1;min-width:0}
-.ad-t b{display:block;font-size:15px;font-weight:750;color:var(--navy-txt);letter-spacing:-.015em}
+.ad-t b{display:block;font-size:15px;font-weight:750;color:var(--txt-forte);letter-spacing:-.015em}
 .ad-t span{display:block;font-size:11.5px;color:var(--txt-dim);margin-top:2px}
 .ad-cta{
   flex:none;padding:8px 15px;border-radius:var(--pillola);
-  background:var(--navy);color:#fff;font-size:12.5px;font-weight:750;
+  background:var(--primario);color:#fff;font-size:12.5px;font-weight:750;
   box-shadow:var(--shadow-sm);
 }
-.ad-cta:active{background:var(--teal)}
+.ad-cta:active{background:var(--secondario)}
 .ad-l{
   margin-top:9px;padding-top:9px;border-top:1px solid var(--line);
-  font-size:12.5px;line-height:1.55;color:var(--txt-dim);
+  font-size:13.5px;line-height:1.55;color:var(--txt-dim);
 }
-.ad-l b{color:var(--navy-txt);font-weight:750}
+.ad-l b{color:var(--txt-forte);font-weight:750}
 /* I pasti che vengono dopo: una fila di pastiglie, così si vede in un colpo
    quanto resta della giornata e si può scriverne uno fuori ordine. */
 .ad-dopo{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 /* Niente gap qui: fra l'emoji e il nome c'è un nodo di testo nudo, che il
    gap del flex non stacca in modo affidabile. I margini sì. */
 .ad-p{
-  display:flex;align-items:center;padding:6px 10px;border-radius:var(--pillola);
+  display:flex;align-items:center;padding:7px 11px;border-radius:var(--pillola);
   background:var(--bg-elev2);border:1px solid var(--line);
-  font-size:12px;font-weight:650;color:var(--txt-dim);
+  font-size:13px;font-weight:650;color:var(--txt-dim);
 }
 .ad-p .em{font-style:normal;margin-right:5px}
-.ad-p b{margin-left:7px;color:var(--navy-txt);font-weight:800;font-variant-numeric:tabular-nums}
-.ad-p:active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ad-p b{margin-left:7px;color:var(--txt-forte);font-weight:800;font-variant-numeric:tabular-nums}
+.ad-p:active{background:var(--primario);color:#fff;border-color:var(--primario)}
 .ad-p:active b{color:#fff}
-.ad-tot{margin-top:9px;font-size:11.5px;color:var(--txt-faint)}
-.ad-tot b{color:var(--teal-txt);font-weight:800;font-variant-numeric:tabular-nums}
+.ad-tot{margin-top:10px;font-size:12.5px;color:var(--txt-faint)}
+.ad-tot b{color:var(--secondario-txt);font-weight:800;font-variant-numeric:tabular-nums}
 
 /* ---------- gruppi di pasto ---------- */
 .meal{
@@ -788,19 +827,19 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .meal.vuoto{border-style:dashed;box-shadow:none;background:transparent}
 .meal > .mtop{display:flex;align-items:center;gap:9px;width:100%;padding:11px 13px;text-align:left}
 .meal .mic{font-size:16px;flex:none;line-height:1}
-.meal .mname{flex:1;font-size:14px;font-weight:700;color:var(--navy-txt);min-width:0}
+.meal .mname{flex:1;font-size:14px;font-weight:700;color:var(--txt-forte);min-width:0}
 .meal.vuoto .mname{color:var(--txt-faint);font-weight:600}
-.meal .mkcal{font-size:12.5px;font-weight:750;color:var(--teal-txt);font-variant-numeric:tabular-nums;flex:none}
+.meal .mkcal{font-size:12.5px;font-weight:750;color:var(--secondario-txt);font-variant-numeric:tabular-nums;flex:none}
 .meal .madd{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;flex:none}
-.meal .madd svg{width:16px;height:16px;stroke-width:2.6;color:var(--coral)}
+.meal .madd svg{width:16px;height:16px;stroke-width:2.6;color:var(--evidenza)}
 .meal .rows{border-top:1px solid var(--line)}
 
 .frow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 13px;border-top:1px solid var(--line)}
 .frow:first-child{border-top:0}
 .frow .fb{flex:1;min-width:0}
-.frow .fn{font-size:13.5px;font-weight:600;color:var(--navy-txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frow .fn{font-size:13.5px;font-weight:600;color:var(--txt-forte);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .frow .fm{font-size:11.5px;color:var(--txt-faint);font-variant-numeric:tabular-nums;margin-top:1px}
-.frow .fk{font-size:13px;font-weight:750;color:var(--navy-txt);font-variant-numeric:tabular-nums;flex:none}
+.frow .fk{font-size:13px;font-weight:750;color:var(--txt-forte);font-variant-numeric:tabular-nums;flex:none}
 .frow:active{background:var(--bg-elev)}
 
 /* ---------- ricerca alimenti ---------- */
@@ -809,50 +848,50 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   background:var(--bg-elev2);border:1px solid var(--line);border-radius:11px;
   padding:10px 12px;margin-bottom:12px;
 }
-.searchbar:focus-within{background:var(--superficie);border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,144,185,.13)}
-.searchbar svg{width:18px;height:18px;color:var(--teal-txt);flex:none}
-.searchbar input{flex:1;background:none;border:0;font-size:15px;min-width:0;color:var(--navy-txt)}
+.searchbar:focus-within{background:var(--superficie);border-color:var(--secondario);box-shadow:0 0 0 3px rgba(15,144,185,.13)}
+.searchbar svg{width:18px;height:18px;color:var(--secondario-txt);flex:none}
+.searchbar input{flex:1;background:none;border:0;font-size:15px;min-width:0;color:var(--txt-forte)}
 .searchbar input:focus{outline:none}
 .scan-btn{
   flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
-  background:var(--accent-soft);color:var(--coral-txt);
+  background:var(--accent-soft);color:var(--evidenza-txt);
 }
 .scan-btn svg{width:18px;height:18px;stroke-width:2}
-.scan-btn:active{background:var(--coral);color:#fff}
+.scan-btn:active{background:var(--evidenza);color:#fff}
 
 .res{display:flex;gap:11px;width:100%;text-align:left;padding:10px 2px;border-bottom:1px solid var(--line);align-items:center}
 .res .ic{width:34px;height:34px;border-radius:10px;background:var(--bg-elev2);display:grid;place-items:center;font-size:16px;flex:none}
 .res .body{flex:1;min-width:0}
-.res h3{margin:0 0 2px;font-size:14px;font-weight:650;line-height:1.3;color:var(--navy-txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res h3{margin:0 0 2px;font-size:14px;font-weight:650;line-height:1.3;color:var(--txt-forte);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .res .meta{font-size:11.5px;color:var(--txt-faint);font-variant-numeric:tabular-nums}
-.res .meta b{color:var(--teal-txt);font-weight:700}
-.res .meta .mine{color:var(--coral-txt);font-weight:750}
+.res .meta b{color:var(--secondario-txt);font-weight:700}
+.res .meta .mine{color:var(--evidenza-txt);font-weight:750}
 .res .add{flex:none;width:31px;height:31px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center}
-.res .add svg{width:17px;height:17px;stroke-width:2.6;color:var(--coral)}
+.res .add svg{width:17px;height:17px;stroke-width:2.6;color:var(--evidenza)}
 
 /* ---------- quantità ---------- */
 .qty{text-align:center;padding:2px 0 4px}
 .qty .qn{font-size:13px;color:var(--txt-dim);margin-bottom:2px}
 .qty .qbig{
-  font-size:44px;font-weight:800;color:var(--navy-txt);letter-spacing:-.04em;
+  font-size:44px;font-weight:800;color:var(--txt-forte);letter-spacing:-.04em;
   font-variant-numeric:tabular-nums;line-height:1.1;
 }
 .qty .qbig span{font-size:19px;font-weight:700;color:var(--txt-faint);letter-spacing:0}
 .qty .qmac{font-size:12.5px;color:var(--txt-dim);margin-top:4px;font-variant-numeric:tabular-nums}
-.qty .qmac b{color:var(--navy-txt);font-weight:750}
+.qty .qmac b{color:var(--txt-forte);font-weight:750}
 .pads{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .pads button{
   padding:12px 0;border-radius:11px;background:var(--bg-elev2);border:1px solid var(--line);
-  font-size:16px;font-weight:750;color:var(--navy-txt);font-variant-numeric:tabular-nums;
+  font-size:16px;font-weight:750;color:var(--txt-forte);font-variant-numeric:tabular-nums;
 }
-.pads button:active{background:var(--teal);color:#fff;border-color:var(--teal)}
-.pads button.op{color:var(--teal-txt);font-size:14px}
+.pads button:active{background:var(--secondario);color:#fff;border-color:var(--secondario)}
+.pads button.op{color:var(--secondario-txt);font-size:14px}
 .porz{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;justify-content:center}
 .porz button{
   padding:6px 11px;border-radius:99px;font-size:12px;font-weight:650;
   background:var(--superficie);border:1px solid var(--line);color:var(--txt-dim);
 }
-.porz button:active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.porz button:active{background:var(--primario);color:#fff;border-color:var(--primario)}
 
 /* ---------- allenamento ---------- */
 .card-row{
@@ -862,29 +901,29 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 }
 .card-row .cbadge{
   width:42px;height:42px;border-radius:12px;flex:none;display:grid;place-items:center;
-  background:var(--bg-elev2);font-size:11px;font-weight:800;color:var(--teal-txt);
+  background:var(--bg-elev2);font-size:11px;font-weight:800;color:var(--secondario-txt);
   letter-spacing:.02em;text-align:center;line-height:1.1;
 }
-.card-row .cbadge.coral{background:var(--accent-soft);color:var(--coral-txt)}
+.card-row .cbadge.coral{background:var(--accent-soft);color:var(--evidenza-txt)}
 .card-row .cb{flex:1;min-width:0}
-.card-row h3{margin:0 0 3px;font-size:14.5px;font-weight:700;color:var(--navy-txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-row h3{margin:0 0 3px;font-size:14.5px;font-weight:700;color:var(--txt-forte);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-row .meta{font-size:11.5px;color:var(--txt-faint)}
 .card-row .go{flex:none;color:var(--txt-faint)}
 .card-row .go svg{width:18px;height:18px}
 .card-row .cta{
   flex:none;padding:9px 13px;border-radius:10px;background:var(--accent-soft);
-  color:var(--coral-txt);font-size:12px;font-weight:800;white-space:nowrap;
+  color:var(--evidenza-txt);font-size:12px;font-weight:800;white-space:nowrap;
 }
-.card-row .cta:active{background:var(--coral);color:#fff}
+.card-row .cta:active{background:var(--evidenza);color:#fff}
 
 .ex{border-top:1px solid var(--line);padding:12px 0}
 .ex:first-of-type{border-top:0}
 /* Non annidata sotto .ex: la stessa intestazione serve anche nei pannelli
    della sessione, dove non c'è nessun .ex attorno. */
 .eh{display:flex;align-items:center;gap:9px;margin-bottom:9px}
-.eh .en{flex:1;font-size:14px;font-weight:700;color:var(--navy-txt);min-width:0;line-height:1.25}
+.eh .en{flex:1;font-size:14px;font-weight:700;color:var(--txt-forte);min-width:0;line-height:1.25}
 .eh .ed{
-  font-size:10.5px;font-weight:700;color:var(--teal-txt);flex:none;
+  font-size:10.5px;font-weight:700;color:var(--secondario-txt);flex:none;
   background:var(--bg-elev2);padding:3px 8px;border-radius:99px;white-space:nowrap;
 }
 .eh .del{color:var(--txt-faint);flex:none;width:26px;height:26px;display:grid;place-items:center}
@@ -900,16 +939,16 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .setrow input{
   flex:1;min-width:0;width:100%;height:34px;text-align:center;
   background:var(--bg-elev2);border:1px solid var(--line);border-radius:9px;
-  font-size:14px;font-weight:650;color:var(--navy-txt);font-variant-numeric:tabular-nums;
+  font-size:14px;font-weight:650;color:var(--txt-forte);font-variant-numeric:tabular-nums;
   padding:0 4px;
 }
-.setrow input:focus{outline:none;border-color:var(--teal);background:var(--superficie);box-shadow:0 0 0 3px rgba(15,144,185,.13)}
+.setrow input:focus{outline:none;border-color:var(--secondario);background:var(--superficie);box-shadow:0 0 0 3px rgba(15,144,185,.13)}
 .setrow .u{font-size:11px;color:var(--txt-faint);flex:none;width:20px}
 .setrow .tick{
-  width:34px;height:34px;flex:none;border-radius:9px;border:1.8px solid #C0CEDC;
+  width:34px;height:34px;flex:none;border-radius:9px;border:1.8px solid var(--line-forte);
   display:grid;place-items:center;background:var(--superficie);
 }
-.setrow .tick svg{width:16px;height:16px;stroke:#C0CEDC;stroke-width:3.2}
+.setrow .tick svg{width:16px;height:16px;stroke:var(--txt-faint);stroke-width:3.2}
 .setrow.on .tick{background:var(--ok);border-color:var(--ok)}
 .setrow.on .tick svg{stroke:#fff}
 .setrow.on input{color:var(--txt-faint)}
@@ -920,18 +959,18 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .addset{
   margin-top:8px;padding:7px 0;border-radius:9px;width:100%;
   background:var(--bg-elev2);border:1px dashed var(--line);
-  font-size:12px;font-weight:700;color:var(--teal-txt);
+  font-size:12px;font-weight:700;color:var(--secondario-txt);
 }
 
 /* La nota del preparatore, dentro la sessione. */
 .nota-es{
   margin:0 0 9px;padding:8px 10px;border-radius:9px;
-  background:var(--accent-soft);border-left:2px solid var(--coral);
+  background:var(--accent-soft);border-left:2px solid var(--evidenza);
   font-size:12.5px;line-height:1.5;color:var(--txt-dim);
 }
 .sez-es{
   margin:16px 0 -4px;font-size:10px;font-weight:800;letter-spacing:.07em;
-  text-transform:uppercase;color:var(--teal-txt);
+  text-transform:uppercase;color:var(--secondario-txt);
 }
 
 /* ---------- barra del recupero ---------- */
@@ -939,7 +978,8 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   position:fixed;left:12px;right:12px;z-index:50;
   bottom:calc(var(--tabbar-h) + var(--safe-bot) + 12px);
   display:flex;align-items:center;gap:11px;
-  background:var(--navy);color:#fff;border-radius:14px;
+  background:var(--pannello);border:1px solid var(--pannello-line);
+  color:#fff;border-radius:14px;
   padding:11px 13px;box-shadow:var(--shadow-lg);
   max-width:736px;margin:0 auto;
 }
@@ -952,31 +992,31 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 /* ---------- progressi ---------- */
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .kpi{background:var(--superficie);border:1px solid var(--line);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow-sm)}
-.kpi .kl{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--txt-faint);margin-bottom:6px}
-.kpi .kv{font-size:23px;font-weight:800;color:var(--navy-txt);letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.05}
+.kpi .kl{font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--txt-faint);margin-bottom:6px}
+.kpi .kv{font-size:25px;font-weight:800;color:var(--txt-forte);letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.05}
 .kpi .kv small{font-size:12px;font-weight:650;color:var(--txt-faint);letter-spacing:0}
-.kpi .kd{font-size:11.5px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
-.kpi .kd.giu{color:var(--teal-txt)}
-.kpi .kd.su{color:var(--coral-txt)}
+.kpi .kd{font-size:12px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .kd.giu{color:var(--secondario-txt)}
+.kpi .kd.su{color:var(--evidenza-txt)}
 .kpi .kd.pari{color:var(--txt-faint)}
 
 .chart{width:100%;height:170px;display:block;stroke:none;margin-top:4px;overflow:visible}
 .chart .grid{stroke:var(--line);stroke-width:1}
 .chart .lbl{fill:var(--txt-faint);font-size:9.5px;font-weight:600}
-.chart .lin{fill:none;stroke:var(--teal);stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
+.chart .lin{fill:none;stroke:var(--secondario);stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
 .chart .area{fill:rgba(15,144,185,.10);stroke:none}
-.chart .dot{fill:#fff;stroke:var(--teal);stroke-width:2.2}
-.chart .dot.last{fill:var(--coral);stroke:var(--coral)}
-.chart .goal{stroke:var(--coral);stroke-width:1.4;stroke-dasharray:4 4}
+.chart .dot{fill:#fff;stroke:var(--secondario);stroke-width:2.2}
+.chart .dot.last{fill:var(--evidenza);stroke:var(--evidenza)}
+.chart .goal{stroke:var(--evidenza);stroke-width:1.4;stroke-dasharray:4 4}
 .bars{display:flex;align-items:flex-end;gap:5px;height:104px;margin-top:6px}
 .bars .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%}
 /* Con due o tre giorni registrati una colonna larga tutto lo schermo non è un
    grafico, è una lastra: si tiene una larghezza massima e si centra. */
 .bars .b i{
   width:100%;max-width:52px;margin:0 auto;
-  border-radius:5px 5px 0 0;background:var(--sky);min-height:3px;display:block;
+  border-radius:5px 5px 0 0;background:var(--accento);min-height:3px;display:block;
 }
-.bars .b i.over{background:var(--coral)}
+.bars .b i.over{background:var(--evidenza)}
 .bars .b i.vuoto{background:var(--bg-elev2)}
 .bars .b span{font-size:9.5px;font-weight:700;color:var(--txt-faint);text-transform:uppercase}
 
@@ -1006,13 +1046,13 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 #sheetContent .sheet-title{padding-right:38px}
 @keyframes slide{from{transform:translateY(100%)}}
 @keyframes fade{from{opacity:0}}
-.sheet-title{font-size:17px;font-weight:750;margin:0 0 14px;letter-spacing:-.015em;color:var(--navy-txt)}
+.sheet-title{font-size:17px;font-weight:750;margin:0 0 14px;letter-spacing:-.015em;color:var(--txt-forte)}
 .sheet-row{
   display:flex;align-items:center;gap:12px;width:100%;text-align:left;
-  padding:13px 2px;border-top:1px solid var(--line);font-size:15px;color:var(--navy-txt);
+  padding:13px 2px;border-top:1px solid var(--line);font-size:15px;color:var(--txt-forte);
 }
 .sheet-row:first-of-type{border-top:0}
-.sheet-row svg{width:20px;height:20px;color:var(--teal-txt);flex:none}
+.sheet-row svg{width:20px;height:20px;color:var(--secondario-txt);flex:none}
 .sheet-row .ic{font-size:19px;width:20px;text-align:center;flex:none}
 .sheet-row.danger{color:var(--danger)}
 .sheet-row.danger svg{color:var(--danger)}
@@ -1034,7 +1074,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 }
 .sm-box i{
   position:absolute;left:8px;right:8px;top:50%;height:2px;
-  background:var(--coral);box-shadow:0 0 10px rgba(255,102,76,.9);
+  background:var(--evidenza);box-shadow:0 0 10px rgba(255,102,76,.9);
   animation:scanline 1.8s ease-in-out infinite;
 }
 @keyframes scanline{0%,100%{transform:translateY(-42px)}50%{transform:translateY(42px)}}
@@ -1063,9 +1103,9 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   padding:12px;margin-bottom:4px;
 }
 .trovato .tb{flex:1;min-width:0}
-.trovato h3{margin:0 0 3px;font-size:15px;font-weight:750;color:var(--navy-txt);line-height:1.3}
+.trovato h3{margin:0 0 3px;font-size:15px;font-weight:750;color:var(--txt-forte);line-height:1.3}
 .trovato .meta{font-size:12px;color:var(--txt-dim);font-variant-numeric:tabular-nums}
-.trovato .meta b{color:var(--teal-txt);font-weight:750}
+.trovato .meta b{color:var(--secondario-txt);font-weight:750}
 .trovato .ean{
   font-size:10.5px;color:var(--txt-faint);font-variant-numeric:tabular-nums;
   letter-spacing:.04em;margin-top:3px;
@@ -1075,14 +1115,14 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 #toast{
   position:fixed;left:50%;transform:translateX(-50%);
   bottom:calc(var(--tabbar-h) + var(--safe-bot) + 22px);z-index:80;
-  background:var(--navy);color:#fff;
+  background:var(--pannello);border:1px solid var(--pannello-line);color:#fff;
   padding:11px 17px;border-radius:11px;font-size:13.5px;font-weight:600;
   box-shadow:var(--shadow-lg);animation:fade .2s;max-width:88vw;text-align:center;
 }
 
 .brand-foot{text-align:center;margin:26px 0 4px}
-.brand-foot .wm{font-size:13px;font-weight:800;color:var(--navy-txt);letter-spacing:-.01em}
-.brand-foot .wm span{color:var(--coral)}
+.brand-foot .wm{font-size:13px;font-weight:800;color:var(--txt-forte);letter-spacing:-.01em}
+.brand-foot .wm span{color:var(--evidenza-txt)}
 .brand-foot p{margin:7px 0 0;font-size:11.5px;color:var(--txt-faint)}
 
 /* ============================================================
@@ -1096,11 +1136,11 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 }
 .filters .fhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .filters .fhead .ft{
-  font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--teal-txt);
+  font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--secondario-txt);
 }
 /* Il pulsante di azzeramento resta visibile ma spento quando non c'è niente da
    azzerare: se sparisse, l'area dei filtri cambierebbe altezza a ogni tocco. */
-.filters .freset{font-size:12px;font-weight:750;color:var(--coral-txt)}
+.filters .freset{font-size:12px;font-weight:750;color:var(--evidenza-txt)}
 .filters .freset[disabled]{color:var(--txt-faint);opacity:.5;pointer-events:none}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .fgroup{min-width:0}
@@ -1110,36 +1150,36 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 }
 .fgroup select,.fgroup input{
   width:100%;background:var(--bg-elev2);border:1px solid var(--line);border-radius:9px;
-  padding:9px 10px;font-size:13.5px;color:var(--navy-txt);appearance:none;-webkit-appearance:none;
+  padding:9px 10px;font-size:13.5px;color:var(--txt-forte);appearance:none;-webkit-appearance:none;
 }
 .fgroup select{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230F90B9' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 8px center;background-size:15px;padding-right:28px;
 }
-.fgroup select:focus,.fgroup input:focus{outline:none;border-color:var(--teal);background-color:var(--superficie);box-shadow:0 0 0 3px rgba(15,144,185,.13)}
+.fgroup select:focus,.fgroup input:focus{outline:none;border-color:var(--secondario);background-color:var(--superficie);box-shadow:0 0 0 3px rgba(15,144,185,.13)}
 .fgroup.full{grid-column:1 / -1}
 .fchips{display:flex;flex-wrap:wrap;gap:6px}
 .fchips button{
   padding:6px 11px;border-radius:99px;font-size:12px;font-weight:650;
   background:var(--bg-elev2);color:var(--txt-dim);border:1px solid var(--line);
 }
-.fchips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.fchips button.on{background:var(--primario);color:#fff;border-color:var(--primario)}
 .fsearch{display:flex;align-items:center;gap:8px;background:var(--bg-elev2);border:1px solid var(--line);border-radius:9px;padding:0 10px}
-.fsearch svg{width:16px;height:16px;color:var(--teal-txt);flex:none}
+.fsearch svg{width:16px;height:16px;color:var(--secondario-txt);flex:none}
 .fsearch input{flex:1;background:none;border:0;padding:9px 0;font-size:13.5px;min-width:0}
 .fsearch input:focus{outline:none}
-.fsearch:focus-within{background:var(--superficie);border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,144,185,.13)}
+.fsearch:focus-within{background:var(--superficie);border-color:var(--secondario);box-shadow:0 0 0 3px rgba(15,144,185,.13)}
 .fsearch .clr{color:var(--txt-faint);font-size:17px;line-height:1;flex:none;width:20px}
 
 .fsummary{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   margin-bottom:10px;font-size:12px;color:var(--txt-dim);
 }
-.fsummary b{color:var(--navy-txt);font-weight:750;font-variant-numeric:tabular-nums}
+.fsummary b{color:var(--txt-forte);font-weight:750;font-variant-numeric:tabular-nums}
 .fsummary .exp{display:flex;gap:7px;flex:none}
 .fsummary .exp button{
   padding:6px 10px;border-radius:8px;font-size:11.5px;font-weight:750;
-  background:var(--superficie);border:1px solid var(--line);color:var(--teal-txt);box-shadow:var(--shadow-sm);
+  background:var(--superficie);border:1px solid var(--line);color:var(--secondario-txt);box-shadow:var(--shadow-sm);
 }
 
 /* ---------- tabella dati ---------- */
@@ -1154,15 +1194,15 @@ table.dt th{
   color:var(--txt-faint);background:var(--bg-elev);position:sticky;top:0;z-index:1;
 }
 table.dt th.n,table.dt td.n{text-align:right;font-variant-numeric:tabular-nums}
-table.dt td.nome{white-space:normal;min-width:150px;font-weight:600;color:var(--navy-txt)}
+table.dt td.nome{white-space:normal;min-width:150px;font-weight:600;color:var(--txt-forte)}
 table.dt tbody tr:last-child td{border-bottom:0}
 table.dt tbody tr:active{background:var(--bg-elev)}
 table.dt tfoot td{
-  border-top:2px solid var(--line);border-bottom:0;font-weight:800;color:var(--navy-txt);
+  border-top:2px solid var(--line);border-bottom:0;font-weight:800;color:var(--txt-forte);
   background:var(--bg-elev);font-variant-numeric:tabular-nums;
 }
 table.dt th[data-sort]{cursor:pointer}
-table.dt th[data-sort] i{font-style:normal;color:var(--teal-txt);margin-left:2px}
+table.dt th[data-sort] i{font-style:normal;color:var(--secondario-txt);margin-left:2px}
 table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:600;white-space:nowrap}
 
 /* Su un telefono in verticale non ci stanno otto colonne: quelle marcate "opt"
@@ -1182,20 +1222,20 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   flex:1;font-size:12px;color:var(--txt-dim);margin:0 10px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.filters .fhead .riass b{color:var(--navy-txt);font-weight:700}
-.filters .fhead .chev{color:var(--teal-txt);flex:none;transition:transform .18s}
+.filters .fhead .riass b{color:var(--txt-forte);font-weight:700}
+.filters .fhead .chev{color:var(--secondario-txt);flex:none;transition:transform .18s}
 .filters .fhead .chev svg{width:17px;height:17px}
 .filters:not(.chiuso) .fhead .chev{transform:rotate(180deg)}
 
 .badge{
-  display:inline-block;padding:3px 8px;border-radius:99px;
-  font-size:10.5px;font-weight:800;letter-spacing:.02em;white-space:nowrap;
+  display:inline-block;padding:3.5px 9px;border-radius:99px;
+  font-size:11px;font-weight:800;letter-spacing:.02em;white-space:nowrap;
 }
 .badge.ok{background:var(--ok-bg);color:var(--ok-txt)}
 .badge.no{background:var(--no-bg);color:var(--no-txt)}
 .badge.neutro{background:var(--bg-elev2);color:var(--txt-dim)}
-.badge.sky{background:var(--sky-tinta);color:var(--sky-txt)}
-.badge.coral{background:var(--accent-soft);color:var(--coral-txt)}
+.badge.sky{background:var(--accento-tinta);color:var(--accento-txt)}
+.badge.coral{background:var(--accent-soft);color:var(--evidenza-txt)}
 
 /* ---------- righe che si aprono ---------- */
 .acc{
@@ -1208,7 +1248,7 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
 .acc-h:active{background:var(--bg-elev)}
 .acc-i{font-size:16px;flex:none;line-height:1}
 .acc-d{
-  flex:1;min-width:0;font-size:14px;font-weight:750;color:var(--navy-txt);
+  flex:1;min-width:0;font-size:14px;font-weight:750;color:var(--txt-forte);
   letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .acc-d small{
@@ -1216,9 +1256,9 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   text-transform:uppercase;letter-spacing:.04em;margin-top:1px;
 }
 .acc-n{flex:none;font-size:11.5px;color:var(--txt-faint);font-variant-numeric:tabular-nums}
-.acc-k{flex:none;font-size:14px;font-weight:800;color:var(--navy-txt);font-variant-numeric:tabular-nums}
+.acc-k{flex:none;font-size:14px;font-weight:800;color:var(--txt-forte);font-variant-numeric:tabular-nums}
 .acc-k i{font-style:normal;font-size:11px;font-weight:650;color:var(--txt-faint)}
-.acc-c{flex:none;color:var(--teal-txt);transition:transform .18s}
+.acc-c{flex:none;color:var(--secondario-txt);transition:transform .18s}
 .acc-c svg{width:17px;height:17px;display:block}
 .acc.aperto .acc-c{transform:rotate(180deg)}
 /* Il corpo eredita già il riquadro dell'accordion: la tabella dentro non deve
@@ -1252,9 +1292,9 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
 .sp-r.preso .sp-c{background:var(--ok);border-color:var(--ok)}
 .sp-r.preso .sp-c svg{opacity:1}
 .sp-b{flex:1;min-width:0}
-.sp-n{display:block;font-size:14px;font-weight:650;color:var(--navy-txt);line-height:1.3}
+.sp-n{display:block;font-size:14px;font-weight:650;color:var(--txt-forte);line-height:1.3}
 .sp-g{display:block;font-size:11px;color:var(--txt-faint);margin-top:1px}
-.sp-q{flex:none;font-size:14px;font-weight:800;color:var(--teal-txt);font-variant-numeric:tabular-nums}
+.sp-q{flex:none;font-size:14px;font-weight:800;color:var(--secondario-txt);font-variant-numeric:tabular-nums}
 /* Barrato quando è nel carrello: si vede da lontano cosa manca ancora. */
 .sp-r.preso .sp-n{color:var(--txt-faint);text-decoration:line-through}
 .sp-r.preso .sp-q{color:var(--txt-faint)}
@@ -1266,7 +1306,7 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
 .ab-b{flex:1;min-width:0}
 .ab-t{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-bottom:5px}
 .ab-t span{color:var(--txt-dim)}
-.ab-t b{color:var(--navy-txt);font-weight:800;font-variant-numeric:tabular-nums}
+.ab-t b{color:var(--txt-forte);font-weight:800;font-variant-numeric:tabular-nums}
 .ab-n{display:block;font-size:11px;color:var(--txt-faint);margin-top:4px}
 
 /* ---------- il verdetto sul peso ---------- */
@@ -1280,23 +1320,23 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   font-variant-numeric:tabular-nums;line-height:1.2;
 }
 .verdetto span{flex:1;min-width:0;font-size:12px;line-height:1.6;color:var(--txt-dim)}
-.verdetto span b{font-size:12px;color:var(--navy-txt)}
-.verdetto.bene{border-left-color:var(--teal)}
-.verdetto.bene > b{color:var(--teal-txt)}
-.verdetto.fermo{border-left-color:var(--coral)}
-.verdetto.fermo > b{color:var(--coral-txt)}
+.verdetto span b{font-size:12px;color:var(--txt-forte)}
+.verdetto.bene{border-left-color:var(--secondario)}
+.verdetto.bene > b{color:var(--secondario-txt)}
+.verdetto.fermo{border-left-color:var(--evidenza)}
+.verdetto.fermo > b{color:var(--evidenza-txt)}
 .verdetto.male{border-left-color:var(--danger)}
 .verdetto.male > b{color:var(--danger)}
 
 /* la media mobile è la linea che conta: quella grezza si fa da parte */
-.chart .media{fill:none;stroke:var(--coral);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
+.chart .media{fill:none;stroke:var(--evidenza);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
 .chart.con-media .lin{stroke-width:1.2;opacity:.4}
 .chart.con-media .dot{stroke-width:1.6;opacity:.55}
 .chart.con-media .dot.last{opacity:1}
 
 /* il contatore dell'olio quando si sfora */
-.qcard .qv.oltre{color:var(--coral-txt)}
-.qcard .water i.oltre{background:var(--coral)}
+.qcard .qv.oltre{color:var(--evidenza-txt)}
+.qcard .water i.oltre{background:var(--evidenza)}
 .qcard .qnota{font-size:11px;color:var(--txt-faint);line-height:1.4}
 
 /* ---------- report ---------- */
@@ -1304,7 +1344,7 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   display:flex;align-items:baseline;justify-content:space-between;gap:10px;
   margin:0 0 10px;
 }
-.rep-h h3{margin:0;font-size:14.5px;font-weight:750;color:var(--navy-txt);letter-spacing:-.01em}
+.rep-h h3{margin:0;font-size:14.5px;font-weight:750;color:var(--txt-forte);letter-spacing:-.01em}
 .rep-h .hint{font-size:11.5px;color:var(--txt-faint)}
 .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11px;color:var(--txt-dim)}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
@@ -1315,14 +1355,14 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
 .rank .rn{width:20px;flex:none;font-size:11px;font-weight:800;color:var(--txt-faint);font-variant-numeric:tabular-nums}
 .rank .rb{flex:1;min-width:0}
 .rank .rl{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:4px}
-.rank .rl span:first-child{font-weight:650;color:var(--navy-txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank .rl span:first-child{font-weight:650;color:var(--txt-forte);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rank .rl span:last-child{color:var(--txt-dim);font-variant-numeric:tabular-nums;flex:none;font-weight:700}
 /* display:block è necessario, non decorativo: questi sono <span>, e su un
    elemento inline l'altezza viene ignorata — la barra sparirebbe. */
 .rank .rt{display:block;height:6px;border-radius:99px;background:var(--bg-elev2);overflow:hidden}
-.rank .rt i{display:block;height:100%;background:var(--teal);border-radius:99px}
-.rank .rt i.coral{background:var(--coral)}
-.rank .rt i.sky{background:var(--sky)}
+.rank .rt i{display:block;height:100%;background:var(--secondario);border-radius:99px}
+.rank .rt i.coral{background:var(--evidenza)}
+.rank .rt i.sky{background:var(--accento)}
 
 /* ---------- colonna di sinistra (solo Mac) ---------- */
 #side{display:none}
@@ -1330,9 +1370,9 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
 /* ============================================================
    Il Mac — stesso impianto del gestionale budget
    ============================================================
-   Colonna chiara separata da una riga sottile, non un blocco scuro; la voce
-   attiva è una pillola che SCORRE da una voce all'altra invece di accendersi
-   e spegnersi; e la colonna si stringe a barra quando serve spazio.
+   Colonna su un piano suo, un gradino sopra il fondo; la voce attiva è una
+   pillola che SCORRE da una voce all'altra invece di accendersi e spegnersi;
+   e la colonna si stringe a barra quando serve spazio.
 */
 @media (min-width:1000px){
   body{background:var(--fondo)}
@@ -1341,24 +1381,18 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   #side{
     display:flex;flex-direction:column;
     position:fixed;top:0;left:0;bottom:0;width:var(--rail);z-index:45;
-    background:var(--fondo);color:var(--txt);
-    border-right:1px solid var(--line);
+    background:var(--rail-bg);color:var(--txt);
+    border-right:1px solid var(--rail-line);
     padding:20px 14px 14px;gap:16px;
     transition:width .26s cubic-bezier(.4,0,.2,1);
   }
-  .side-logo{display:flex;align-items:center;gap:10px;padding:0 6px;min-height:40px}
-  .side-logo img{
-    width:38px;height:38px;flex:none;object-fit:contain;
-    background:var(--superficie);border:1px solid var(--line);
-    border-radius:11px;padding:5px;margin:0;
-  }
+  .side-logo{display:flex;align-items:center;gap:11px;padding:0 6px;min-height:40px}
   .side-logo .sub{
     font-size:11px;font-weight:700;color:var(--txt);letter-spacing:-.01em;
     white-space:nowrap;overflow:hidden;margin:0;line-height:1.25;
   }
-  .side-logo .sub b{display:block;font-size:13.5px;font-weight:800}
-  .side-logo .sub i{font-style:normal;color:var(--coral)}
-  .side-logo .sub span{display:block;font-size:10px;font-weight:600;color:var(--txt-faint)}
+  .side-logo .sub b{display:block;font-size:15px;font-weight:800;letter-spacing:-.02em}
+  .side-logo .sub span{display:block;font-size:10.5px;font-weight:600;color:var(--txt-faint)}
 
   /* ---------- il menu, con la pillola che scorre ---------- */
   .side-menu{
@@ -1374,7 +1408,7 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
      È questo che si vede muoversi quando cambi schermata. */
   .side-ind{
     position:absolute;left:0;right:0;top:26px;height:var(--voce);
-    border-radius:10px;background:var(--navy-tinta);
+    border-radius:10px;background:var(--primario-tinta);
     box-shadow:inset 3px 0 0 0 var(--rail-barra);
     transform:translateY(calc(var(--i,0) * var(--passo)));
     transition:transform .28s cubic-bezier(.34,1.4,.48,1),background-color .25s ease;
@@ -1388,7 +1422,7 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   }
   .side-menu button svg{width:19px;height:19px;flex:none;opacity:.62;transition:opacity .18s}
   .side-menu button:hover{color:var(--txt)}
-  .side-menu button.on{color:var(--navy-txt);font-weight:650;background:transparent}
+  .side-menu button.on{color:var(--txt-forte);font-weight:650;background:transparent}
   .side-menu button.on svg{opacity:1}
   .side-menu button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
@@ -1402,7 +1436,7 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
     border-radius:10px;background:var(--superficie);border:1px solid var(--line);
     color:var(--txt-dim);font-size:11.5px;font-weight:650;
   }
-  .side-az button:hover{color:var(--navy-txt);border-color:var(--line-forte)}
+  .side-az button:hover{color:var(--txt-forte);border-color:var(--line-forte)}
   .side-az button svg{width:15px;height:15px}
   .side-ver{font-size:10.5px;line-height:1.6;color:var(--txt-faint);padding:0 4px}
   .side-ver b{color:var(--txt-dim);font-weight:700}
@@ -1513,5 +1547,5 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   .board{display:block}
   .panel,.tablewrap,.kpi{box-shadow:none;break-inside:avoid}
   table.dt th{background:#F7F9FC !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .kcal-card{background:var(--superficie) !important;color:var(--navy-txt) !important;border:1px solid var(--line)}
+  .kcal-card{background:var(--superficie) !important;color:var(--txt-forte) !important;border:1px solid var(--line)}
 }

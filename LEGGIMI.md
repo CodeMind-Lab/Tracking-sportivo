@@ -1,8 +1,9 @@
 # Forma — CodeMind.Lab
 
 Gestionale personale di **alimentazione e allenamento**. Diario, filtri, ricerche,
-tabelle e report — nello stile del tuo gestionale budget, con i colori del marchio:
-fondo bianco, navy, azzurro e corallo.
+tabelle e report — nello stile del tuo gestionale budget, in **viola su nero**: un
+colore solo che comanda, tutto il resto in grigi, e i colori vivi lasciati ai dati.
+Parte in scuro; il chiaro c'è, con il tasto **Tema**, e non usa il bianco pieno.
 
 Funziona come un'app sull'iPhone, si apre anche dal Mac, e **funziona senza rete**.
 
@@ -41,8 +42,9 @@ scorrere.
 
 In fondo alla colonna ci sono due pulsanti:
 
-- **Tema** — passa da chiaro a scuro. La scelta resta anche riaprendo l'app, ed
-  è per telefono e Mac insieme.
+- **Tema** — passa da scuro a chiaro. L'app parte in scuro, che è il tema per
+  cui è disegnata la tavolozza; il chiaro sta su un grigio caldo, non sul
+  bianco. La scelta resta anche riaprendo l'app, su telefono e Mac.
 - **Stringi** — riduce la colonna alle sole icone, per far spazio alle tabelle.
 
 Le scorciatoie da tastiera valgono solo quando non stai scrivendo in un campo:
@@ -212,8 +214,8 @@ seguito il programma o hai improvvisato. Toccando l'intestazione il riquadro si 
 se preferisci vedere subito i pasti registrati.
 
 Sulla scheda **Oggi** c'è anche la striscia dei sette giorni della settimana corrente:
-un tocco e ci sei. Il pallino sotto ogni giorno dice **corallo** = ho già registrato,
-**azzurro** = c'è solo il piano.
+un tocco e ci sei. Il pallino sotto ogni giorno dice **viola pieno** = ho già registrato,
+**viola tenue** = c'è solo il piano.
 
 Dentro una giornata, **Copia da un'altra giornata** ne sovrascrive il contenuto,
 **Duplica** ne fa una copia a parte da cui partire.
@@ -379,8 +381,8 @@ e tornando su Oggi sei ancora lì. Riparte da oggi solo quando riapri l'app.
 Le frecce vanno avanti e indietro di un giorno, anche nel futuro: serve per preparare in
 anticipo la giornata di un turno. La striscia Lun‑Dom salta
 dentro la settimana. Toccando la data si apre il **calendario del mese**, dove ogni giorno
-porta i suoi pallini — corallo se hai registrato, azzurro se c'è solo il piano, teal se hai
-allenato — e da lì vai ovunque in un tocco.
+porta i suoi pallini — pieno se hai registrato, tenue se c'è solo il piano, e un punto a
+parte se hai allenato — e da lì vai ovunque in un tocco.
 
 **Caricare la giornata.** Se il giorno della settimana ha un piano, sulla scheda Oggi
 compare *Piano del giorno* → **Carica**: tutte le voci entrano nel diario in un tocco.
@@ -401,7 +403,7 @@ C'è anche **Scrivi il codice a mano**, per quando la confezione è rovinata.
 La prima volta iOS chiede il permesso per la fotocamera. Se lo neghi per sbaglio:
 Impostazioni → Safari → Fotocamera → Consenti.
 
-**Registrare un pasto.** Pulsante rotondo corallo → cerchi l'alimento → tastierino per i
+**Registrare un pasto.** Pulsante rotondo magenta in basso a destra → cerchi l'alimento → tastierino per i
 grammi → **Aggiungi**. I macro si aggiornano mentre scrivi. Gli ultimi alimenti usati
 compaiono in cima senza cercare: dopo una settimana registri una giornata in una decina
 di tocchi. Il pasto è già scelto in base all'ora, e nel tastierino puoi cambiarlo.
@@ -429,8 +431,8 @@ bilanciere.
 l'**aderenza**: due giorni sbagliati in direzioni opposte danno una media perfetta e una
 settimana disastrosa.
 
-**Il peso.** Il grafico mostra ogni pesata in azzurro chiaro e la **media a 7 giorni** in
-corallo: è quella che devi guardare, perché il peso grezzo oscilla di un chilo per il sale
+**Il peso.** Il grafico mostra ogni pesata in viola tenue e la **media a 7 giorni** in
+magenta: è quella che devi guardare, perché il peso grezzo oscilla di un chilo per il sale
 o l'intestino. Sotto c'è il verdetto che il piano ti chiede — la media delle ultime tre
 settimane contro quella delle tre precedenti — con la regola da applicare se sei fermo:
 togliere 150 kcal dai carboidrati, mai dalle proteine.

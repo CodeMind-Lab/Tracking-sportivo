@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <title>Forma</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#F4F7FB">
+<meta name="theme-color" content="#08070E">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Forma">
 <meta name="description" content="Gestionale di alimentazione e allenamento: diario, filtri, report.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -20,14 +20,15 @@
      tema scuro entri in vigore. */
   (function () {
     try {
-      var t = localStorage.getItem('forma.tema') ||
-        (matchMedia('(prefers-color-scheme: dark)').matches ? 'scuro' : 'chiaro');
+      /* Il tema di casa è lo scuro: è quello per cui è disegnata la tavolozza.
+         Il chiaro resta per chi apre l'app al sole, ma va chiesto. */
+      var t = localStorage.getItem('forma.tema') || 'scuro';
       document.documentElement.setAttribute('data-tema', t);
-      if (t === 'scuro') {
-        document.write('<meta name="theme-color" content="#061321">');
+      if (t === 'chiaro') {
+        document.write('<meta name="theme-color" content="#E9E7F0">');
       }
     } catch (e) {
-      document.documentElement.setAttribute('data-tema', 'chiaro');
+      document.documentElement.setAttribute('data-tema', 'scuro');
     }
   })();
 </script>
@@ -38,8 +39,8 @@
      questa colonna sparisce e restano le schede in basso. -->
 <aside id="side">
   <div class="side-logo">
-    <img src="icons/icon-192.png" alt="" width="192" height="192">
-    <div class="sub"><b>CodeMind<i>.Lab</i></b><span>Forma</span></div>
+    <span class="mk">F</span>
+    <div class="sub"><b>Forma</b><span>CodeMind.Lab</span></div>
   </div>
   <nav class="side-menu">
     <span class="side-ind" id="sideInd"></span>

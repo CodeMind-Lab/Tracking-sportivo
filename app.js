@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.06.8';
+const APP_VERSION = '2026.09.06.9';
 
 const KEY = 'forma.v1';
 
@@ -322,13 +322,17 @@ const schede = () => di('s');
 /* I turni di lavoro sono dati, non codice: si rinominano, si cambiano gli
    orari, se ne aggiungono. Un turno con riposo=true abbassa il bersaglio delle
    calorie a quello dei giorni di riposo — è l'unica cosa che il turno decide. */
+/* Gli identificativi restano quelli di prima anche dove il nome è cambiato:
+   sono già scritti nei turni salvati sul telefono, e rinominarli farebbe
+   diventare grigi i turni esistenti al primo aggiornamento. Cambiano solo il
+   nome mostrato e la tinta, che ora è tarata sul pannello viola scuro. */
 const COLORI_TURNO = [
-  { id: 'ambra',   n: 'Ambra',   v: '#E8A317' },
-  { id: 'corallo', n: 'Corallo', v: '#FF664C' },
-  { id: 'viola',   n: 'Viola',   v: '#8E7CF0' },
-  { id: 'azzurro', n: 'Azzurro', v: '#0F90B9' },
-  { id: 'verde',   n: 'Verde',   v: '#2FA37B' },
-  { id: 'grigio',  n: 'Grigio',  v: '#6C7CA8' }
+  { id: 'ambra',   n: 'Ambra',   v: '#F2B33D' },
+  { id: 'corallo', n: 'Magenta', v: '#F0508A' },
+  { id: 'viola',   n: 'Viola',   v: '#A78BFA' },
+  { id: 'azzurro', n: 'Indaco',  v: '#7C8CFF' },
+  { id: 'verde',   n: 'Verde',   v: '#34D399' },
+  { id: 'grigio',  n: 'Grigio',  v: '#8A82A6' }
 ];
 const coloreTurno = t => (COLORI_TURNO.find(c => c.id === (t && t.col)) || COLORI_TURNO[5]).v;
 
@@ -576,12 +580,13 @@ function render() {
      il logo ripetuto ovunque smetterebbe di dire qualcosa e toglierebbe spazio
      al nome della schermata in cui ti trovi. */
   /* Sul telefono la barra in alto porta il marchio, perché è l'unico posto in
-     cui può stare. Sul Mac il marchio è già nella colonna di sinistra:
-     ripeterlo due volte sulla stessa schermata è rumore, e quello spazio serve
-     a dire dove sei. */
+     cui può stare. È scritto, non un'immagine: un PNG a colori fissi non può
+     seguire il tema, e sul fondo nero il vecchio logo spariva. Sul Mac il
+     marchio è già nella colonna di sinistra: ripeterlo due volte sulla stessa
+     schermata è rumore, e quello spazio serve a dire dove sei. */
   const largo = window.innerWidth >= 1000;
   $('#topTitle').innerHTML = (t === 'oggi' && !largo)
-    ? `<img class="brand" src="icons/logo-lockup.png" alt="CodeMind.Lab" width="719" height="90">`
+    ? `<span class="marchio"><i class="mk">F</i><b>Forma</b></span>`
     : `${esc(TITOLI[t] || 'Forma')}${largo && ['oggi', 'agenda'].includes(t)
         ? `<small class="tt-d">${esc(nomeGiorno(view.d))} · ${esc(dataLunga(view.d))}</small>` : ''}`;
   $('#backBtn').hidden = !['scheda', 'sessione', 'spesa', 'giornata'].includes(t);
@@ -893,9 +898,9 @@ function riquadroSettimana(d) {
       </button>`;
     }).join('')}</div>
     <div class="legend" style="margin-top:9px">
-      <span><i style="background:var(--sky)"></i>entro il bersaglio</span>
-      <span><i style="background:var(--coral)"></i>oltre</span>
-      <span><i style="background:var(--teal);border-radius:50%"></i>allenamento</span>
+      <span><i style="background:var(--accento)"></i>entro il bersaglio</span>
+      <span><i style="background:var(--evidenza)"></i>oltre</span>
+      <span><i style="background:var(--secondario);border-radius:50%"></i>allenamento</span>
     </div>
   </div>`;
 
@@ -1412,7 +1417,7 @@ function vistaGiornata() {
     <div class="stat-row"><span>Proteine · carboidrati · grassi</span>
       <span>${r0(tot.p)} · ${r0(tot.c)} · ${r0(tot.g)} g</span></div>
     <div class="split">
-      <i style="width:${Math.min(100, tot.k / bersaglio * 100)}%;background:${tot.k > bersaglio * 1.05 ? 'var(--coral)' : 'var(--teal)'}"></i></div>
+      <i style="width:${Math.min(100, tot.k / bersaglio * 100)}%;background:${tot.k > bersaglio * 1.05 ? 'var(--evidenza)' : 'var(--secondario)'}"></i></div>
     ${gt.tipo ? `<p class="set-note">Caricandola nel diario, il giorno diventa
       ${gt.tipo === 'off' ? 'di riposo' : 'di turno'} e il bersaglio si sposta a ${bersaglio} kcal.</p>` : ''}
   </div>`;
@@ -1591,7 +1596,7 @@ const TABS_ORDINE = ['oggi', 'agenda', 'cibo', 'allena', 'report', 'settings'];
 function applicaTema(t) {
   document.documentElement.setAttribute('data-tema', t);
   const m = document.querySelector('meta[name="theme-color"]');
-  if (m) m.setAttribute('content', t === 'scuro' ? '#061321' : '#F4F7FB');
+  if (m) m.setAttribute('content', t === 'scuro' ? '#08070E' : '#E9E7F0');
 }
 
 function cambiaTema() {
@@ -2371,7 +2376,7 @@ function vistaScheda() {
        quando cambiano: ripeterle su ogni riga sarebbe rumore. */
     if (e.gruppo && e.gruppo !== sezione) {
       sezione = e.gruppo;
-      h += `<p class="set-note" style="margin:14px 0 2px;font-weight:800;color:var(--teal);
+      h += `<p class="set-note" style="margin:14px 0 2px;font-weight:800;color:var(--secondario);
         text-transform:uppercase;font-size:10px;letter-spacing:.06em">${esc(sezione)}</p>`;
     }
     const card = isCardio(e);
@@ -2665,7 +2670,7 @@ function vistaReport() {
 
   /* ---------- andamento calorie ---------- */
   h += `<div class="panel"><div class="rep-h"><h3>Calorie giorno per giorno</h3>
-      <span class="hint">colonna corallo = oltre il bersaglio</span></div>`;
+      <span class="hint">colonna magenta = oltre il bersaglio</span></div>`;
   if (giorni.length) {
     const ultimi = giorni.slice(-21);
     const maxK = Math.max(...ultimi.map(d => perGiorno[d].k), t.kcal) * 1.05;
@@ -2675,8 +2680,8 @@ function vistaReport() {
         <i class="${k > kt * 1.05 ? 'over' : ''}" style="height:${Math.max(3, k / maxK * 100)}%"></i>
         <span>${new Date(d + 'T12:00:00').getDate()}</span></div>`;
     }).join('')}</div>
-    <div class="legend"><span><i style="background:var(--sky)"></i>entro il bersaglio</span>
-      <span><i style="background:var(--coral)"></i>oltre</span>
+    <div class="legend"><span><i style="background:var(--accento)"></i>entro il bersaglio</span>
+      <span><i style="background:var(--evidenza)"></i>oltre</span>
       <span>ultimi ${ultimi.length} giorni registrati</span></div>`;
   } else {
     h += `<p class="set-note">Nessuna registrazione nel periodo.</p>`;
@@ -2858,9 +2863,9 @@ function vistaReport() {
         <span class="hint">obiettivo ${cfg().profilo.pesoObiettivo} kg</span></div>
       ${grafico(pesi, { goal: cfg().profilo.pesoObiettivo, media: mediaMobile(pesi, 7) })}
       <div class="legend">
-        <span><i style="background:var(--teal);opacity:.45"></i>ogni pesata</span>
-        <span><i style="background:var(--coral)"></i>media a 7 giorni</span>
-        <span><i style="background:var(--coral);height:2px;border-radius:0"></i>obiettivo</span>
+        <span><i style="background:var(--secondario);opacity:.45"></i>ogni pesata</span>
+        <span><i style="background:var(--evidenza)"></i>media a 7 giorni</span>
+        <span><i style="background:var(--evidenza);height:2px;border-radius:0"></i>obiettivo</span>
       </div>`;
 
     /* Il verdetto che il piano chiede: tre settimane contro le tre precedenti. */
@@ -3212,8 +3217,8 @@ function sheetNuovoAlimento(nome, a) {
 /* La scelta del turno per una data. Ha anche la via d'uscita: tornare a
    seguire la settimana, che è il caso normale. */
 /* Modifica di un turno. Il colore si sceglie da una tavolozza invece che
-   scrivendolo: sei colori che stanno bene sul navy della barra, e nessun modo
-   di finire con un giallo su bianco che non si legge. */
+   scrivendolo: sei tinte che si vedono sul pannello scuro della barra, e
+   nessun modo di finire con un giallo su chiaro che non si legge. */
 function sheetModTurno(id) {
   const x = id ? turnoInfo(id) : null;
   const nuovo = !x;
@@ -3252,7 +3257,7 @@ function sheetTurno(d) {
     ${turni().map(x => `<button class="sheet-row ${x.id === attuale ? 'sel' : ''}" data-turno="${x.id}">
       <span class="ic">${x.ic || '\u{1F553}'}</span>
       <span>${esc(x.n)}<span class="hint">${esc(x.ore || '')}</span></span>
-      ${x.id === attuale ? '<svg viewBox="0 0 24 24" style="color:var(--teal)"><path d="M5 12l5 5L20 7"/></svg>' : ''}
+      ${x.id === attuale ? '<svg viewBox="0 0 24 24" style="color:var(--secondario)"><path d="M5 12l5 5L20 7"/></svg>' : ''}
     </button>`).join('')}
     ${turni().length ? '' : '<p class="set-note">Non hai nessun turno. Creane uno in Impostazioni.</p>'}
     ${turnoScritto(d)
@@ -3305,9 +3310,9 @@ function sheetCalendario(sel) {
     <div class="cal-h">${GIORNI_SETT.map(g => `<span>${g.b}</span>`).join('')}</div>
     <div class="cal-griglia">${celle}</div>
     <div class="legend" style="justify-content:center">
-      <span><i style="background:var(--coral)"></i>registrato</span>
-      <span><i style="background:var(--sky)"></i>solo piano</span>
-      <span><i style="background:var(--teal)"></i>allenamento</span>
+      <span><i style="background:var(--evidenza)"></i>registrato</span>
+      <span><i style="background:var(--accento)"></i>solo piano</span>
+      <span><i style="background:var(--secondario)"></i>allenamento</span>
     </div>
     <button class="btn sec" data-vaidata="${oggi}">Torna a oggi</button>`;
 }
@@ -3371,7 +3376,7 @@ function sheetEsercizio() {
     const l = ESERCIZI[g].filter(e => !q || e.toLowerCase().includes(q));
     if (!l.length) continue;
     trovati += l.length;
-    h += `<p class="set-note" style="margin:12px 0 2px;font-weight:800;color:var(--teal);text-transform:uppercase;font-size:10px;letter-spacing:.06em">${esc(g)}</p>`;
+    h += `<p class="set-note" style="margin:12px 0 2px;font-weight:800;color:var(--secondario);text-transform:uppercase;font-size:10px;letter-spacing:.06em">${esc(g)}</p>`;
     h += l.map(e => `<button class="sheet-row" data-eserpick="${esc(e)}"><span>${esc(e)}</span></button>`).join('');
   }
   if (!trovati && sheetCtx.q) {

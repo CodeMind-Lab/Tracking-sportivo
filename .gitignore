@@ -3,3 +3,4 @@
 # le chiavi delle notifiche non entrano mai nel repository
 *vapid*
 *chiavi*
+.claude/
