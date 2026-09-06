@@ -65,11 +65,82 @@ Ogni voce ha un **inizio** e una **fine** facoltativa: `09:30–10:45`.
 
 Sulla scheda **Oggi** compaiono le prime tre cose ancora da fare.
 
-### I promemoria
+### Notifiche push · avvisi anche ad app chiusa
 
-Va detto com'è: **un'app web può avvisarti solo mentre è aperta.** Far suonare una notifica
-a telefono chiuso richiede un server che la spinga, e questa app non ne ha uno — gira su
-GitHub Pages, che serve file e basta. Quello che c'è, e che funziona davvero:
+Questa è l'unica strada perché il telefono suoni senza che l'app sia aperta, e richiede
+un pezzo di server: una funzione sul **tuo** Supabase che ogni pochi minuti guarda
+l'agenda e manda gli avvisi. Si installa una volta sola.
+
+Ti avvisa anche quando **esce una versione nuova dell'app**: la funzione legge da sola la
+versione pubblicata e la confronta con quella che gira sul tuo telefono, così non c'è
+nessun numero da tenere aggiornato a mano.
+
+#### 1 · La tabella
+
+Supabase → **SQL Editor** → New query → incolla tutto `supabase-push.sql` → **Run**.
+
+#### 2 · I segreti
+
+Le chiavi VAPID sono nel file `forma-chiavi-vapid.txt` che ti ho lasciato sul Desktop —
+**tienilo fuori dalla cartella del progetto**, che è pubblica.
+
+Supabase → **Project Settings** → **Edge Functions** → **Secrets**, tre voci:
+
+| Nome | Valore |
+|---|---|
+| `VAPID_PUBLIC` | la chiave pubblica |
+| `VAPID_PRIVATE` | la chiave privata |
+| `VAPID_SUBJECT` | `mailto:` seguito dalla tua email |
+
+#### 3 · La funzione
+
+Supabase → **Edge Functions** → **Deploy a new function** → nome **`promemoria`** →
+incolla il contenuto di `supabase/functions/promemoria/index.ts` → Deploy.
+
+Dal computer, in alternativa:
+
+```bash
+supabase functions deploy promemoria
+```
+
+#### 4 · Falla partire da sola
+
+Supabase → **Integrations** → **Cron** → **Create job**: nome `forma-promemoria`,
+ogni **5 minuti**, tipo **Supabase Edge Function**, funzione `promemoria`.
+
+Da SQL, se preferisci:
+
+```sql
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+
+select cron.schedule('forma-promemoria', '*/5 * * * *', $$
+  select net.http_post(
+    url := 'https://IL-TUO-PROGETTO.supabase.co/functions/v1/promemoria',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer LA-TUA-CHIAVE-SERVICE-ROLE'
+    )
+  );
+$$);
+```
+
+#### 5 · Accendile sul telefono
+
+Nell'app: **Impostazioni → Notifiche push → Attiva**.
+
+Perché funzioni servono tutte e tre queste cose:
+
+- la **sincronizzazione collegata** e l'accesso fatto (le notifiche passano da lì);
+- l'app **aggiunta alla schermata Home** — da Safari il push su iPhone non esiste;
+- i quattro passi qui sopra completati.
+
+Se qualcosa non torna, apri la funzione su Supabase e guarda i log: risponde con quanti
+dispositivi ha trovato e quanti avvisi ha mandato.
+
+### I promemoria che non chiedono niente
+
+Se non vuoi installare niente sul server, restano queste tre — funzionano da sole:
 
 1. **Il pallino sull'icona** con quante cose restano da fare. Compare sulla schermata Home
    e **resta anche ad app chiusa**: è l'unico promemoria passivo che il web conceda.

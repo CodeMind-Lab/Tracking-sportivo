@@ -503,7 +503,10 @@ const Sync = (() => {
     });
   }
 
-  return { init, schedule, panel, run, signedIn, configured };
+  /* rest esce dal modulo perché serve alle notifiche push, che devono
+     scrivere la propria riga con il token dell'utente: passare da qui vuol
+     dire riusare il rinnovo della sessione invece di rifarlo. */
+  return { init, schedule, panel, run, signedIn, configured, rest };
 })();
 
 Sync.init();

@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.06.3';
+const APP_VERSION = '2026.09.06.4';
 
 const KEY = 'forma.v1';
 
@@ -578,6 +578,7 @@ function render() {
   else if (t === 'agenda') app.innerHTML = vistaAgenda();
 
   aggiornaPallino();
+  if (t === 'settings') mostraStatoPush();
 
   const sf = $('#sideFoot');
   if (sf) sf.innerHTML = 'Versione <b>' + APP_VERSION + '</b><br>' +
@@ -1346,6 +1347,120 @@ function vistaGiornata() {
      3. l'esportazione nel calendario, che consegna gli avvisi al sistema:
         quelli suonano davvero, anche a telefono in tasca.
 */
+
+/* ---------- notifiche push ----------
+ *
+ * La chiave pubblica VAPID: dice al servizio di Apple chi è autorizzato a
+ * mandare notifiche a questo dispositivo. È pubblica per costruzione, sta
+ * qui dentro senza problemi; quella privata vive solo nei segreti della
+ * funzione su Supabase.
+ */
+const VAPID_PUBBLICA = 'BJx9t_AsQq0fwNzRpH9erbD6hm93D0HXeHLFYxDy0VUn7Vew0MbQAeFoRciKFkcdnJjHq1Ko_2AhwfNABXKkFqc';
+
+/* La chiave va passata al browser come byte, non come testo. */
+function base64UrlABytes(s) {
+  const pad = '='.repeat((4 - s.length % 4) % 4);
+  const b64 = (s + pad).replace(/-/g, '+').replace(/_/g, '/');
+  const grezzo = atob(b64);
+  return Uint8Array.from(grezzo, c => c.charCodeAt(0));
+}
+
+async function iscrizionePush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    return reg ? await reg.pushManager.getSubscription() : null;
+  } catch (e) { return null; }
+}
+
+const pushPossibile = () =>
+  'serviceWorker' in navigator && 'PushManager' in window && typeof Notification !== 'undefined';
+
+async function attivaPush(bottone) {
+  if (!pushPossibile()) {
+    toast('Questo dispositivo non supporta le notifiche push');
+    return;
+  }
+  if (typeof Sync === 'undefined' || !Sync.signedIn()) {
+    toast('Prima collega Supabase e accedi: le notifiche passano da lì');
+    return;
+  }
+  if (bottone) bottone.textContent = 'Attendo il permesso…';
+
+  try {
+    const p = await Notification.requestPermission();
+    if (p !== 'granted') {
+      toast(p === 'denied'
+        ? 'Permesso negato: Impostazioni → Notifiche → Forma'
+        : 'Permesso non concesso');
+      render(); return;
+    }
+
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: base64UrlABytes(VAPID_PUBBLICA)
+      });
+    }
+    await salvaIscrizione(sub);
+    toast('Notifiche attive su questo dispositivo');
+  } catch (e) {
+    /* Su iOS il caso più comune è l'app aperta da Safari invece che dalla
+       schermata Home: lì il push non esiste proprio, e il messaggio deve
+       dirlo invece di lasciare un errore generico. */
+    const inStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                         window.navigator.standalone;
+    toast(inStandalone
+      ? 'Non è riuscita: ' + String(e.message || e).slice(0, 70)
+      : 'Su iPhone le notifiche funzionano solo dall’app aggiunta alla schermata Home');
+  }
+  render();
+}
+
+async function salvaIscrizione(sub) {
+  const j = sub.toJSON();
+  const riga = {
+    endpoint: j.endpoint,
+    p256dh: j.keys.p256dh,
+    auth: j.keys.auth,
+    versione: APP_VERSION,
+    preavviso: num(DB.settings.preavviso, 15),
+    fuso: (Intl.DateTimeFormat().resolvedOptions().timeZone) || 'Europe/Rome',
+    visto: new Date().toISOString()
+  };
+  await Sync.rest('/forma_push', {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(riga)
+  });
+}
+
+async function disattivaPush() {
+  const sub = await iscrizionePush();
+  if (!sub) { render(); return; }
+  try {
+    if (typeof Sync !== 'undefined' && Sync.signedIn()) {
+      await Sync.rest('/forma_push?endpoint=eq.' + encodeURIComponent(sub.endpoint),
+        { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+    }
+    await sub.unsubscribe();
+    toast('Notifiche spente su questo dispositivo');
+  } catch (e) {
+    toast('Non sono riuscito a spegnerle: ' + String(e.message || e).slice(0, 60));
+  }
+  render();
+}
+
+/* A ogni avvio si dice al server che versione gira su questo telefono: è così
+   che può accorgersi che sei rimasto indietro e ricordartelo. */
+async function allineaIscrizione() {
+  if (typeof Sync === 'undefined' || !Sync.signedIn()) return;
+  const sub = await iscrizionePush();
+  if (!sub) return;
+  try { await salvaIscrizione(sub); } catch (e) { /* si riprova al prossimo avvio */ }
+}
 
 /* Il numero sull'icona della schermata Home. */
 function aggiornaPallino() {
@@ -2718,6 +2833,24 @@ function vistaSettings() {
     <p class="set-note" style="margin-top:6px">Il numero delle cose da fare compare
       sull'icona nella schermata Home, e resta anche ad app chiusa.</p>
     <button class="btn" data-act="esporta-calendario">Manda l'agenda al calendario</button>
+    <p class="set-note">Questa è la strada che non chiede niente a nessuno. Se invece
+      vuoi che gli avvisi arrivino da soli, c'è il riquadro qui sotto.</p>
+  </div>`;
+
+  h += `<div class="panel"><div class="label">Notifiche push</div>
+    <div class="stat-row"><span>Su questo dispositivo</span>
+      <span id="statoPush">controllo…</span></div>
+    <div class="btn-row">
+      <button class="btn sec" data-act="attiva-push">Attiva</button>
+      <button class="btn sec" data-act="disattiva-push">Spegni</button>
+    </div>
+    <p class="set-note">Queste arrivano <b>anche ad app chiusa</b>: le manda una funzione
+      sul tuo Supabase, che ogni pochi minuti guarda l'agenda e ti scrive quando qualcosa
+      sta per cominciare. Ti avvisa anche quando esce una versione nuova dell'app.</p>
+    <p class="set-note">Perché funzionino servono tre cose: la sincronizzazione collegata,
+      l'app <b>aggiunta alla schermata Home</b> (da Safari il push su iPhone non esiste), e
+      la funzione installata sul tuo progetto Supabase — le istruzioni sono in
+      <b>LEGGIMI.md</b>, sezione <i>Notifiche push</i>.</p>
     <p class="set-note">Questa è la strada buona: le voci diventano eventi del calendario
       di sistema, con la sveglia ${num(DB.settings.preavviso, 15)} minuti prima. Quelli
       suonano davvero, anche col telefono in tasca. Le voci che si ripetono ogni settimana
@@ -2763,6 +2896,23 @@ function vistaSettings() {
   h += `<div class="brand-foot"><div class="wm">CodeMind<span>.Lab</span></div>
     <p>Forma · alimentazione e allenamento</p></div>`;
   return h;
+}
+
+/* Lo stato delle notifiche si può sapere solo chiedendolo al browser, che
+   risponde con comodo: la riga si riempie dopo che la pagina è già disegnata. */
+async function mostraStatoPush() {
+  const el = $('#statoPush');
+  if (!el) return;
+  if (!pushPossibile()) { el.textContent = 'non supportate'; return; }
+  if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+    el.textContent = 'permesso negato'; return;
+  }
+  const sub = await iscrizionePush();
+  const el2 = $('#statoPush');
+  if (!el2) return;
+  el2.textContent = sub
+    ? (typeof Sync !== 'undefined' && Sync.signedIn() ? 'attive' : 'attive, ma manca l’accesso')
+    : 'spente';
 }
 
 /* ============================================================
@@ -3855,6 +4005,8 @@ function azione(a, b) {
   if (a === 'vai-agenda') { vai({ name: 'agenda' }); return; }
   if (a === 'chiedi-notifiche') { chiediNotifiche(b); return; }
   if (a === 'esporta-calendario') { esportaCalendario(); return; }
+  if (a === 'attiva-push') { attivaPush(b); return; }
+  if (a === 'disattiva-push') { disattivaPush(); return; }
 
   if (a === 'nuovo-turno') {
     apriSheet(sheetModTurno(null), { tnId: null, tnCol: 'azzurro', tnRiposo: false });
@@ -4653,6 +4805,7 @@ window.addEventListener('popstate', e => {
 /* Ogni mezzo minuto: abbastanza da non far arrivare un avviso in ritardo,
    abbastanza poco da non pesare su niente. */
 setInterval(controllaPromemoria, 30000);
+window.addEventListener('load', () => setTimeout(allineaIscrizione, 4000));
 
 load();
 migraPiano();

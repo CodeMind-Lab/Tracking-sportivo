@@ -2,7 +2,7 @@
    Tutti i dati stanno in localStorage, quindi qui basta conservare i file. */
 
 /* Alzare questo numero a ogni pubblicazione: le cache vecchie vengono buttate. */
-const VER = 'forma-2026.09.06.3';
+const VER = 'forma-2026.09.06.4';
 const SHELL = VER + '-shell';
 
 const FILES = [
@@ -33,6 +33,35 @@ self.addEventListener('activate', e => {
       .then(ks => Promise.all(ks.filter(k => !k.startsWith(VER)).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
+});
+
+/* ---------- notifiche push ----------
+   Il messaggio arriva dal server anche ad app chiusa: è l'unico canale del web
+   che funzioni col telefono in tasca. */
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; }
+  catch (err) { d = { title: 'Forma', body: e.data ? e.data.text() : '' }; }
+
+  e.waitUntil(self.registration.showNotification(d.title || 'Forma', {
+    body: d.body || '',
+    tag: d.tag || 'forma',
+    icon: './icons/icon-192.png',
+    badge: './icons/icon-192.png',
+    data: { url: d.url || './' }
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil((async () => {
+    const url = (e.notification.data && e.notification.data.url) || './';
+    /* Se l'app è già aperta si porta in primo piano invece di aprirne una
+       seconda copia, che su iOS confonde e basta. */
+    const finestre = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of finestre) if ('focus' in c) return c.focus();
+    if (self.clients.openWindow) return self.clients.openWindow(url);
+  })());
 });
 
 self.addEventListener('fetch', e => {
