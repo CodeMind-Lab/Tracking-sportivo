@@ -21,7 +21,7 @@ una volta sola e si ritrovano sull'altro dispositivo.
 
 | Scheda | A cosa serve |
 |---|---|
-| **Agenda** | La giornata ora per ora. In cima **dal tuo programma** — il turno e l'allenamento previsto, che l'app sa già e non riscrivi a mano. Sotto le voci **a orario** e le **cose da fare**, con categoria e colore. Le cose non fatte ti seguono nei giorni dopo per due settimane. |
+| **Agenda** | Stessa impaginazione della dashboard: navigazione e **turno** in cima, poi **Orari** (le voci a orario, con dentro l'allenamento previsto), **Da fare**, **In ritardo** e **La settimana** con quanto resta giorno per giorno. Le cose non fatte ti seguono nei giorni dopo per due settimane. |
 | **Oggi** | La giornata: il **turno di lavoro** in cima, anello delle calorie con acqua e macro (con quanti grammi ti restano), **Adesso** — il prossimo pasto del piano da registrare in un tocco — il piano del giorno con i pasti già fatti spuntati, passi e olio, allenamento, agenda, e **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
 | **Cibo → Diario** | Il registro di tutto quello che hai mangiato, **un giorno per riga**: tocchi il giorno e si apre con le sue voci e il totale. Filtri per periodo, pasto, categoria, ricerca sul nome. Export CSV. |
 | **Cibo → Piano** | Le tue **giornate tipo** (“Giorno 1 off”, “Giorno 2 on”) e, per ogni giorno della settimana, **due menu a tendina**: il turno di lavoro e la giornata che mangi. Da qui esce anche la **lista della spesa**, e ci stanno le **combinazioni** salvate. |

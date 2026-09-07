@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.07.7';
+const APP_VERSION = '2026.09.07.8';
 
 const KEY = 'forma.v1';
 
@@ -1839,80 +1839,137 @@ function sommaMinuti(ora, m) {
 
 function vistaAgenda() {
   const d = view.d;
-  let h = barraGiorno(d);
 
+  /* Stessa testata della dashboard: frecce, data e striscia della settimana in
+     un comando solo, e il turno largo sotto. Sono le due cose che inquadrano
+     la giornata, e cambiarle da una scheda all'altra costringeva a ricercarle
+     ogni volta. */
+  let h = `<div class="giorno-bar">` + barraGiorno(d);
   const lun = lunediDi(d);
-  h += `<div class="weekstrip">${GIORNI_SETT.map((wg, i) => {
+  const settimana = GIORNI_SETT.map((wg, i) => {
     const data = spostaData(lun, i);
-    const n = agendaRestano(data);
-    return `<button data-vaidata="${data}" class="${data === d ? 'on' : ''}">
-      ${wg.b}<i class="${n ? 'pieno' : ''}"></i></button>`;
-  }).join('')}</div>`;
+    return { wg, data, restano: agendaRestano(data) };
+  });
+  h += `<div class="weekstrip">${settimana.map(x =>
+    `<button data-vaidata="${x.data}" class="${x.data === d ? 'on' : ''}">
+      ${x.wg.b}<i class="${x.restano ? 'pieno' : ''}"></i></button>`).join('')}</div></div>`;
 
-  h += `<div class="board"><div class="bc-a">`;
-
-  /* Quello che l'app sa già: non si riscrive a mano ogni giorno. */
   const tn = turnoInfo(turnoDi(d));
-  const all = allenamentoDi(gsDiData(d));
-  const sess = di('w').filter(w => w.d === d);
-  if (tn || all || sess.length) {
-    h += `<div class="panel" style="margin-top:0"><div class="label">Dal tuo programma</div>`;
-    if (tn) {
-      h += `<button class="ag-r fisso" data-act="scegli-turno">
-        <span class="ag-o">${esc((tn.ore || '').split('–')[0].trim() || '—')}</span>
-        <span class="ag-c" style="background:${coloreTurno(tn)}"></span>
-        <span class="ag-b"><span class="ag-n"><i class="em">${tn.ic || ''}</i>${esc(tn.n)}</span>
-          <span class="ag-m">${esc(tn.ore || '')}${tn.riposo ? '' : ' · lavoro'}</span></span>
-      </button>`;
-    }
-    if (sess.length) {
-      for (const w of sess) {
-        h += `<button class="ag-r fisso" data-sess="${w.id}">
-          <span class="ag-o">${w.dur ? w.dur + "'" : '—'}</span>
-          <span class="ag-c" style="background:${catAgenda('palestra').col}"></span>
-          <span class="ag-b"><span class="ag-n"><i class="em">\u{1F3CB}\uFE0F</i>${esc(w.gn || 'Allenamento')}</span>
-            <span class="ag-m">${w.fine ? 'fatto' : 'in corso'}</span></span>
-        </button>`;
-      }
-    } else if (all) {
-      h += `<button class="ag-r fisso" data-avvia="${all.sc.id}|${esc(all.g.n)}">
-        <span class="ag-o">—</span>
-        <span class="ag-c" style="background:${catAgenda('palestra').col}"></span>
-        <span class="ag-b"><span class="ag-n"><i class="em">\u{1F3CB}\uFE0F</i>${esc(all.g.n)}</span>
-          <span class="ag-m">${esc(all.sc.n)} · tocca per iniziare</span></span>
-      </button>`;
-    }
-    h += `</div>`;
-  }
+  h += `<button class="turno-bar ${tn ? (tn.riposo ? 'riposo' : '') : 'vuoto'}" data-act="scegli-turno"
+    ${tn ? `style="border-left-color:${coloreTurno(tn)}"` : ''}>
+    <span class="tb-i">${tn ? (tn.ic || '\u{1F553}') : '\u{1F553}'}</span>
+    <span class="tb-t"><b>${tn ? esc(tn.n) : 'Turno non impostato'}</b>
+      <span>${tn ? esc(tn.ore || '') : 'Tocca per dire che turno fai oggi'}</span></span>
+    <span class="tb-c"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+  </button>`;
 
   const voci = agendaDi(d);
   const conOra = voci.filter(v => v.ora);
   const senzaOra = voci.filter(v => !v.ora);
   const vecchie = arretrati(d);
+  const fatte = voci.filter(v => v.fatto).length;
+  const restano = voci.filter(v => !v.fatto).length;
 
+  h += `<div class="board"><div class="bc-a">`;
+
+  /* Gli orari sono la colonna principale, e l'allenamento previsto ci sta
+     dentro invece che in un riquadro a parte: alle sette di sera vuoi vedere
+     una giornata sola, non due elenchi da incrociare. */
+  const all = allenamentoDi(gsDiData(d));
+  const sess = di('w').filter(w => w.d === d);
   h += `<div class="section-head"><h2>Orari</h2>
-    <span class="count">${conOra.length ? conOra.filter(v => !v.fatto).length + ' da fare' : ''}</span></div>`;
-  if (!conOra.length) {
-    h += `<p class="set-note" style="margin-top:0">Niente a orario fisso. Aggiungi con <b>+</b>.</p>`;
+    <span class="count">${conOra.length ? conOra.filter(v => !v.fatto).length + ' da fare' : 'niente a orario'}</span></div>`;
+
+  const fissi = [];
+  if (sess.length) {
+    for (const w of sess) {
+      fissi.push(`<button class="ag-r fisso" data-sess="${w.id}">
+        <span class="ag-o">${w.dur ? w.dur + "'" : '—'}</span>
+        <span class="ag-c" style="background:${catAgenda('palestra').col}"></span>
+        <span class="ag-b"><span class="ag-n"><i class="em">\u{1F3CB}\uFE0F</i>${esc(w.gn || 'Allenamento')}</span>
+          <span class="ag-m">${w.fine ? 'fatto' : 'in corso'}</span></span>
+      </button>`);
+    }
+  } else if (all) {
+    fissi.push(`<button class="ag-r fisso" data-avvia="${all.sc.id}|${esc(all.g.n)}">
+      <span class="ag-o">—</span>
+      <span class="ag-c" style="background:${catAgenda('palestra').col}"></span>
+      <span class="ag-b"><span class="ag-n"><i class="em">\u{1F3CB}\uFE0F</i>${esc(all.g.n)}</span>
+        <span class="ag-m">${esc(all.sc.n)} · tocca per iniziare</span></span>
+    </button>`);
+  }
+
+  if (conOra.length || fissi.length) {
+    h += `<div class="panel" style="margin-top:0">${conOra.map(rigaAgenda).join('')}${fissi.join('')}</div>`;
   } else {
-    h += `<div class="panel" style="margin-top:0">${conOra.map(rigaAgenda).join('')}</div>`;
+    h += `<button class="card-row" data-act="nuova-agenda">
+      <span class="cbadge coral">\uFF0B</span>
+      <span class="cb"><h3>Niente a orario fisso</h3>
+        <span class="meta">Tocca per mettere in agenda qualcosa con un'ora</span></span>
+      <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+    </button>`;
   }
 
   h += `</div><div class="bc-b">`;
 
   h += `<div class="section-head"><h2>Da fare</h2>
-    <span class="count">${senzaOra.filter(v => !v.fatto).length + vecchie.length || ''}</span></div>`;
-  if (!senzaOra.length && !vecchie.length) {
-    h += `<p class="set-note" style="margin-top:0">Niente in sospeso.</p>`;
+    <span class="count">${senzaOra.filter(v => !v.fatto).length || 'niente in sospeso'}</span></div>`;
+  if (senzaOra.length) {
+    h += `<div class="panel" style="margin-top:0">${senzaOra.map(rigaAgenda).join('')}</div>`;
   } else {
-    h += `<div class="panel" style="margin-top:0">
-      ${senzaOra.map(rigaAgenda).join('')}
-      ${vecchie.map(v => rigaAgenda({
+    h += `<button class="card-row" data-act="nuova-agenda">
+      <span class="cbadge">${voci.length ? '\u2705' : '\u{1F4CB}'}</span>
+      <span class="cb"><h3>${voci.length ? 'Tutto fatto' : 'Niente in sospeso'}</h3>
+        <span class="meta">Tocca per scrivere cosa devi fare</span></span>
+      <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+    </button>`;
+  }
+
+  /* Gli arretrati stanno in un blocco loro e non in coda a "Da fare": una cosa
+     rimasta indietro di tre giorni non è una voce di oggi, e mescolarle
+     nascondeva proprio quelle che andavano viste. */
+  if (vecchie.length) {
+    h += `<div class="section-head"><h2>In ritardo</h2>
+      <span class="count">${vecchie.length}</span></div>
+      <div class="panel" style="margin-top:0">${vecchie.map(v => rigaAgenda({
         id: v.id, ric: false, ora: '', n: v.n, cat: v.cat || 'personale',
         fatto: false, note: v.note || '', da: v.d
-      })).join('')}
-    </div>`;
+      })).join('')}</div>`;
   }
+
+  h += `</div><div class="bc-c">`;
+
+  h += `<div class="section-head"><h2>La settimana</h2>
+    <span class="count">${settimana.reduce((n, x) => n + x.restano, 0)} in tutto</span></div>`;
+  const max = Math.max(1, ...settimana.map(x => x.restano));
+  h += `<div class="panel" style="margin-top:0">
+    <div class="wk-bars">${settimana.map(x =>
+      `<button class="wb ${x.data === d ? 'on' : ''}" data-vaidata="${x.data}">
+        <i class="${x.restano ? '' : 'vuoto'}" style="height:${x.restano ? Math.max(10, x.restano / max * 100) : 4}%"></i>
+        <u class="${turnoDi(x.data) && !(turnoInfo(turnoDi(x.data)) || {}).riposo ? 'si' : ''}"></u>
+        <span>${x.wg.b}</span>
+      </button>`).join('')}</div>
+    <div class="legend" style="margin-top:9px">
+      <span><i style="background:var(--accento)"></i>da fare</span>
+      <span><i style="background:var(--secondario);border-radius:50%"></i>giorno di lavoro</span>
+    </div>
+  </div>`;
+
+  h += `<div class="kpis" style="margin-top:12px">
+    <div class="kpi"><div class="kl">Da fare oggi</div>
+      <div class="kv">${restano}</div>
+      <div class="kd ${restano ? 'su' : 'pari'}">${conOra.filter(v => !v.fatto).length} a orario</div></div>
+    <div class="kpi"><div class="kl">Fatte</div>
+      <div class="kv">${fatte}</div>
+      <div class="kd pari">${voci.length ? Math.round(fatte / voci.length * 100) + '% della giornata' : 'niente in agenda'}</div></div>
+    <div class="kpi"><div class="kl">In ritardo</div>
+      <div class="kv">${vecchie.length}</div>
+      <div class="kd ${vecchie.length ? 'su' : 'pari'}">${vecchie.length ? 'dalle due settimane' : 'niente arretrato'}</div></div>
+    <div class="kpi"><div class="kl">Allenamento</div>
+      <div class="kv">${sess.length ? (sess.some(w => w.fine) ? '\u2713' : '\u25B6') : (all ? '\u2014' : '\u2014')}</div>
+      <div class="kd pari">${sess.length ? (sess.some(w => w.fine) ? 'fatto' : 'in corso') : (all ? 'previsto' : 'riposo')}</div></div>
+  </div>`;
+
   h += `</div></div>`;
   return h;
 }
@@ -4589,6 +4646,10 @@ function azione(a, b) {
 
   if (a === 'aggiorna') { aggiornaApp(b); return; }
 
+  if (a === 'nuova-agenda') {
+    apriSheet(sheetAgenda(null, false), { agCat: 'personale', agRic: false });
+    return;
+  }
   if (a === 'sql-push') { copiaOMostraSql('SQL delle notifiche', SQL_PUSH); return; }
   if (a === 'backup') {
     scarica('forma-backup-' + oggiISO() + '.json',
