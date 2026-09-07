@@ -675,13 +675,21 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .pmn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pmi{font-style:normal;margin-right:6px}
 .pmh b{color:var(--secondario-txt);font-variant-numeric:tabular-nums;flex:none}
-.pml{
-  display:block;margin-top:3px;font-size:12.5px;line-height:1.55;color:var(--txt-dim);
+.pml{display:block;margin-top:5px}
+/* Una riga per alimento: nome a sinistra, grammi a destra incolonnati. */
+.pf{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:3px 0;font-size:13px;line-height:1.45;color:var(--txt-dim);
+}
+.pf .pfn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pmm{
+  display:block;margin-top:5px;font-size:11px;font-weight:600;color:var(--txt-faint);
+  font-variant-numeric:tabular-nums;
 }
 /* I grammi sono la sola cosa che devi guardare mentre pesi: vanno letti a
    colpo d'occhio dentro una riga di nomi. Le macro restano dove sono. */
 .pml b{
-  color:var(--txt-forte);font-weight:800;font-variant-numeric:tabular-nums;
+  flex:none;color:var(--txt-forte);font-weight:800;font-variant-numeric:tabular-nums;
   font-size:13.5px;letter-spacing:-.01em;
 }
 /* Il pasto già scritto nel diario si spegne, quello che manca tiene il suo
@@ -701,11 +709,14 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .pm.ok .pmn,.pm.ok .pml{color:var(--txt-faint)}
 .pm.ok .pml b,.pm.ok .pmh b{color:var(--txt-dim);font-weight:700}
 
+/* L'azione principale porta il colore principale: l'arancione qui dentro era
+   l'unico pieno caldo della pagina e tirava l'occhio più del contenuto. */
 .ph-cta{
-  display:block;width:100%;margin-top:12px;padding:11px;border-radius:10px;
-  background:var(--evidenza);color:#fff;font-size:14px;font-weight:750;text-align:center;
-  box-shadow:0 3px 12px rgba(255,102,76,.28);
+  display:block;width:100%;margin-top:12px;padding:12px;border-radius:10px;
+  background:var(--primario);color:#fff;font-size:14px;font-weight:750;text-align:center;
+  box-shadow:var(--shadow-sm);
 }
+.ph-cta:hover{background:var(--primario-vivo)}
 .ph-cta.sec{background:var(--superficie);color:var(--txt-forte);border:1px solid var(--line);box-shadow:none}
 .ph-cta:active{opacity:.85}
 .ph-conf{
@@ -1489,6 +1500,11 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   /* Impostazioni ha già il suo posto a destra: nell'elenco sarebbe due volte */
   .side-menu button[data-tab="settings"]{display:none}
 
+  /* Il riepilogo ripetuto serve solo dove si scorre: sul Mac la scheda delle
+     calorie sta già a sinistra, e ripeterla sarebbe la stessa cosa due volte
+     sulla stessa schermata. */
+  .sez-kcal2{display:none}
+
   .side-foot{margin:0;padding:0;border:0;display:flex;align-items:center;gap:10px;flex:none}
   .side-az{display:flex;gap:6px}
   .side-az button{
@@ -1606,8 +1622,9 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   #app[data-vista="oggi"] .sez-agenda{order:5}    /* cose da fare */
   #app[data-vista="oggi"] .sez-allena{order:6}
   #app[data-vista="oggi"] .sez-integra{order:7}
-  #app[data-vista="oggi"] .tessere{order:8}
-  #app[data-vista="oggi"] .bc-c{order:9}          /* la settimana */
+  #app[data-vista="oggi"] .sez-kcal2{order:8}    /* il riepilogo, di nuovo */
+  #app[data-vista="oggi"] .tessere{order:9}
+  #app[data-vista="oggi"] .bc-c{order:10}         /* la settimana */
 }
 
 /* ---------- stampa: il report diventa un PDF ---------- */

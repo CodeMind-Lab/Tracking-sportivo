@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.08.4';
+const APP_VERSION = '2026.09.08.6';
 
 const KEY = 'forma.v1';
 
@@ -766,34 +766,7 @@ function vistaOggi() {
      schede, impilate o affiancate. La navigazione qui sopra resta larga. */
   h += `<div class="board"><div class="bc-a">`;
 
-  h += `<div class="kcal-card">
-    <div class="kcal-top">
-      ${anello(tot.k, kt)}
-      <div class="kcal-side">
-        <div class="big">${resta >= 0 ? resta + ' kcal disponibili' : Math.abs(resta) + ' kcal oltre'}</div>
-        <div class="sub">
-          ${righe.length
-            ? `<button class="link" data-act="vai-diario">${righe.length}${righe.length === 1 ? ' voce registrata' : ' voci registrate'}</button>`
-            : 'Niente ancora'}
-          ${turnoScritto(d) ? '<span class="ecc">turno cambiato a mano</span>' : ''}
-        </div>
-      </div>
-    </div>
-    <div class="macros">
-      ${barraMacro('p', 'Prot', tot.p, t.prot)}
-      ${barraMacro('c', 'Carb', tot.c, t.carb)}
-      ${barraMacro('g', 'Grassi', tot.g, t.gras)}
-    </div>
-    <div class="acqua-row">
-      <span class="ar-t">💧 Acqua<b>${r1(g.acqua / 1000)}<i> / ${r1(t.acqua / 1000)} L</i></b></span>
-      <span class="ar-b">
-        <button data-acqua="-250" aria-label="Togli un bicchiere">−</button>
-        <button data-acqua="250">+250 ml</button>
-      </span>
-      <span class="water">${Array.from({ length: bicchieri }, (_, i) =>
-        `<i class="${i < bevuti ? 'on' : ''}"></i>`).join('')}</span>
-    </div>
-  </div>`;
+  h += riquadroCalorie(d, righe, tot, kt);
 
   h += riquadroAdesso(d, righe);
   h += riquadroPiano(d, righe, tot);
@@ -812,12 +785,26 @@ function vistaOggi() {
   } else if (prev) {
     /* Quello che tocca oggi, con il pulsante per partire: la scheda giusta la
        sa già il piano della settimana, non deve ricordarsela tu. */
-    const nEser = (prev.g.eser || []).length;
-    h += `<div class="card-row">
-      <span class="cbadge coral">${GIORNI_SETT.find(x => x.id === gsDiData(d)).b}</span>
-      <span class="cb"><h3>${esc(prev.g.n)}</h3>
-        <span class="meta">${esc(prev.sc.n)} · ${nEser} ${nEser === 1 ? 'esercizio' : 'esercizi'}</span></span>
-      <button class="cta" data-avvia="${prev.sc.id}|${esc(prev.g.n)}">Inizia</button>
+    const eser = prev.g.eser || [];
+    const nEser = eser.length;
+    const serieTot = eser.reduce((n, e) => n + (isCardio(e) ? 0 : num(e.serie, 0)), 0);
+    /* Come il piano alimentare mostra i pasti, qui si mostrano gli esercizi:
+       "Upper Body · 11 esercizi" non dice niente che tu non sappia già, mentre
+       sapere che si comincia con 5x5 di panca cambia come ci arrivi. */
+    h += `<div class="plan-hero">
+      <div class="ph-top">
+        <span class="ph-badge">${GIORNI_SETT.find(x => x.id === gsDiData(d)).b}</span>
+        <span class="ph-t"><b>${esc(prev.g.n)}</b><small class="ph-gg">${esc(prev.sc.n)}</small>
+          <span>${nEser} ${nEser === 1 ? 'esercizio' : 'esercizi'}${serieTot ? ' · ' + serieTot + ' serie' : ''}</span></span>
+      </div>
+      <div class="ph-meals">
+        ${eser.slice(0, 5).map(e => `<div class="pm">
+          <span class="pmh"><span class="pmn">${esc(e.n)}</span>
+            <b>${isCardio(e) ? (e.min ? e.min + ' min' : 'cardio') : num(e.serie, 3) + '×' + esc(e.rip || '')}</b></span>
+        </div>`).join('')}
+        ${nEser > 5 ? `<div class="pm"><span class="pmh"><span class="pmn">e altri ${nEser - 5}</span></span></div>` : ''}
+      </div>
+      <button class="ph-cta" data-avvia="${prev.sc.id}|${esc(prev.g.n)}">Inizia l'allenamento</button>
     </div>`;
   } else if (settimanaAllenamento()) {
     /* Il piano c'è ma oggi non prevede niente: dirlo vale più di una casella
@@ -840,36 +827,67 @@ function vistaOggi() {
   h += `</div><div class="sez sez-integra">` + riquadroIntegrazione(d) + `</div>`;
   h += `<div class="sez sez-agenda">`;
 
-  /* L'agenda in breve: le prossime due cose e quante ne restano. Il dettaglio
-     sta nella sua scheda — qui serve solo sapere se c'è qualcosa in sospeso. */
-  const voci = agendaDi(d).filter(v => !v.fatto);
+  /* Le cose da fare si spuntano da qui, senza passare dall'agenda: sono la
+     metà dei tocchi di una giornata, e mandare a un'altra schermata per una
+     casella da barrare è il modo migliore per non barrarla. */
+  const tutte = agendaDi(d);
+  const voci = tutte.filter(v => !v.fatto);
+  const fatte = tutte.length - voci.length;
   const arr = arretrati(d);
   const restano = voci.length + arr.length;
-  h += `<div class="section-head"><h2>Agenda</h2>
-    <button class="act" data-act="vai-agenda">${restano ? 'Vedi tutto' : 'Aggiungi'}</button></div>`;
-  if (!restano) {
-    h += `<button class="card-row" data-act="vai-agenda">
-      <span class="cbadge">${agendaDi(d).length ? '\u2705' : '\u{1F4CB}'}</span>
-      <span class="cb"><h3>${agendaDi(d).length ? 'Tutto fatto' : 'Niente in agenda'}</h3>
-        <span class="meta">${agendaDi(d).length
-          ? 'Non è rimasto niente per ' + esc(nomeGiorno(d).toLowerCase())
-          : 'Tocca per scrivere cosa devi fare'}</span></span>
+  h += `<div class="section-head"><h2>Da fare</h2>
+    <span class="count">${restano ? restano + (fatte ? ' · ' + fatte + ' fatte' : '') : (fatte ? fatte + ' fatte' : '')}</span></div>`;
+
+  if (!restano && !fatte) {
+    h += `<button class="card-row" data-act="nuova-agenda">
+      <span class="cbadge coral">\uFF0B</span>
+      <span class="cb"><h3>Niente in agenda</h3>
+        <span class="meta">Tocca per scrivere cosa devi fare ${esc(nomeGiorno(d).toLowerCase())}</span></span>
+      <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+    </button>`;
+  } else if (!restano) {
+    h += `<button class="card-row" data-act="nuova-agenda">
+      <span class="cbadge">\u2705</span>
+      <span class="cb"><h3>Tutto fatto</h3>
+        <span class="meta">${fatte} ${fatte === 1 ? 'cosa fatta' : 'cose fatte'} · tocca per aggiungerne una</span></span>
       <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
     </button>`;
   } else {
+    /* Prima quelle a orario, che hanno una scadenza dentro la giornata. */
+    const conOra = voci.filter(v => v.ora);
+    const senzaOra = voci.filter(v => !v.ora);
+    const mostra = conOra.concat(senzaOra).slice(0, 4);
     h += `<div class="panel" style="margin-top:0">
-      ${voci.slice(0, 3).map(rigaAgenda).join('')}
-      ${arr.slice(0, Math.max(0, 3 - voci.length)).map(v => rigaAgenda({
-        id: v.id, ric: false, ora: '', n: v.n, cat: v.cat || 'personale',
-        fatto: false, note: '', da: v.d
-      })).join('')}
-      ${restano > 3 ? `<button class="ag-piu" data-act="vai-agenda">e altre ${restano - 3}</button>` : ''}
+      ${mostra.map(rigaAgenda).join('')}
+      ${restano > mostra.length + arr.length
+        ? `<button class="ag-piu" data-act="vai-agenda">e altre ${restano - mostra.length - arr.length}</button>`
+        : ''}
+      <button class="ag-piu" data-act="nuova-agenda">\uFF0B Aggiungi</button>
     </div>`;
+    /* Gli arretrati staccati: una cosa rimasta indietro di tre giorni non è
+       una voce di oggi, e in mezzo alle altre sparisce. */
+    if (arr.length) {
+      h += `<div class="section-head"><h2>In ritardo</h2>
+        <span class="count">${arr.length}</span></div>
+        <div class="panel" style="margin-top:0">${arr.slice(0, 3).map(v => rigaAgenda({
+          id: v.id, ric: false, ora: '', n: v.n, cat: v.cat || 'personale',
+          fatto: false, note: v.note || '', da: v.d
+        })).join('')}</div>`;
+    }
   }
 
   /* La settimana sta in una colonna sua: su schermo molto largo si vede senza
      scorrere, sotto i 1400 px torna in coda alla seconda colonna. */
-  h += `</div></div><div class="bc-c">`;
+  h += `</div>`;
+  /* Il riepilogo di nuovo qui sotto: sul telefono è il punto in cui, dopo aver
+     letto piano, cose da fare e allenamento, ti richiedi quanto ti resta. Sul
+     Mac sta già a sinistra sotto gli occhi, quindi lì si nasconde. */
+  h += `<div class="sez sez-kcal2">
+    <div class="section-head"><h2>Riepilogo</h2>
+      <button class="act" data-act="vai-diario">Vedi il diario</button></div>
+    ${riquadroCalorie(d, righe, tot, kt)}
+  </div>`;
+  h += `</div><div class="bc-c">`;
   h += riquadroSettimana(d);
   h += `</div></div>`;
   return h;
@@ -939,6 +957,46 @@ function tessereOggi(d, tot, kt) {
            </div>`
         : x.act ? `<button class="tess-az sola" data-act="${x.act}">${x.act === 'passi' ? 'Aggiorna' : 'Vedi il diario'}</button>` : ''}
     </div>`).join('')}</div>`;
+}
+
+/* Il riepilogo delle calorie. È una funzione e non un pezzo di vistaOggi
+   perché sul telefono compare due volte: in cima, e di nuovo in fondo dopo
+   piano, cose da fare e allenamento — che è dove ti chiedi di nuovo quanto
+   ti resta, senza voler risalire tutta la pagina. */
+function riquadroCalorie(d, righe, tot, kt) {
+  const g = giorno(d);
+  const t = cfg().target;
+  const resta = r0(kt - tot.k);
+  const bicchieri = Math.round(t.acqua / 250);
+  const bevuti = Math.round(g.acqua / 250);
+  return `<div class="kcal-card">
+    <div class="kcal-top">
+      ${anello(tot.k, kt)}
+      <div class="kcal-side">
+        <div class="big">${resta >= 0 ? resta + ' kcal disponibili' : Math.abs(resta) + ' kcal oltre'}</div>
+        <div class="sub">
+          ${righe.length
+            ? `<button class="link" data-act="vai-diario">${righe.length}${righe.length === 1 ? ' voce registrata' : ' voci registrate'}</button>`
+            : 'Niente ancora'}
+          ${turnoScritto(d) ? '<span class="ecc">turno cambiato a mano</span>' : ''}
+        </div>
+      </div>
+    </div>
+    <div class="macros">
+      ${barraMacro('p', 'Prot', tot.p, t.prot)}
+      ${barraMacro('c', 'Carb', tot.c, t.carb)}
+      ${barraMacro('g', 'Grassi', tot.g, t.gras)}
+    </div>
+    <div class="acqua-row">
+      <span class="ar-t">💧 Acqua<b>${r1(g.acqua / 1000)}<i> / ${r1(t.acqua / 1000)} L</i></b></span>
+      <span class="ar-b">
+        <button data-acqua="-250" aria-label="Togli un bicchiere">−</button>
+        <button data-acqua="250">+250 ml</button>
+      </span>
+      <span class="water">${Array.from({ length: bicchieri }, (_, i) =>
+        `<i class="${i < bevuti ? 'on' : ''}"></i>`).join('')}</span>
+    </div>
+  </div>`;
 }
 
 function riquadroIntegrazione(d) {
@@ -1182,12 +1240,17 @@ function riquadroPiano(d, righe, tot) {
       if (!rp.length) continue;
       const tm = somma(rp);
       const ok = scritti.has(pa.id);
+      /* Un alimento per riga, con i grammi allineati a destra: questa lista
+         si legge con la bilancia in mano, e in una riga unica separata da
+         puntini si perde il segno ogni volta che si alza lo sguardo. */
       h += `<div class="pm ${ok ? 'ok' : ''}">
         <span class="pmh"><span class="pmn"><i class="pmi">${pa.ic}</i>${esc(pa.l)}</span>
           ${ok ? '<span class="pm-ok">✓ registrato</span>'
                : `<button class="pm-add" data-pasto="${gs}|${pa.id}" data-data="${d}">＋</button>`}
           <b>${r0(tm.k)} kcal</b></span>
-        <span class="pml">${rp.map(r => esc(r.n) + ' <b>' + r1(r.q) + ' g</b>').join(' · ')}</span>
+        <span class="pml">${rp.map(r =>
+          `<span class="pf"><span class="pfn">${esc(r.n)}</span><b>${r1(r.q)} g</b></span>`).join('')}</span>
+        <span class="pmm">${r0(tm.p)} g prot · ${r0(tm.c)} g carb · ${r0(tm.g)} g gras</span>
       </div>`;
     }
     h += `</div>`;

@@ -64,8 +64,11 @@ Su una colonna sola l'ordine è una gerarchia, e non è lo stesso del Mac:
 3. **cose da fare**
 4. **allenamento**
 5. integrazione
-6. le quattro tessere (passi, calorie, acqua, olio)
-7. la settimana
+6. **il riepilogo delle calorie di nuovo** — dopo aver letto tutto il resto è
+   il punto in cui ti richiedi quanto ti resta, e risalire la pagina è
+   scomodo. Sul Mac non c'è: lì la scheda sta già a sinistra sotto gli occhi
+7. le quattro tessere (passi, calorie, acqua, olio)
+8. la settimana
 
 Le tessere stanno quasi in fondo di proposito: sono numeri da controllare a
 fine giornata, non quelli da cui parti quando apri l'app. Sul Mac restano in
