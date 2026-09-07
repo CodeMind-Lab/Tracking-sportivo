@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.07.8';
+const APP_VERSION = '2026.09.07.9';
 
 const KEY = 'forma.v1';
 
@@ -356,6 +356,47 @@ const CAT_AGENDA = [
   { id: 'personale',   l: 'Personale',   ic: '\u{1F464}', col: '#6C7CA8' }
 ];
 const catAgenda = id => CAT_AGENDA.find(c => c.id === id) || CAT_AGENDA[5];
+
+/* L'integrazione è un elenco fisso che si spunta ogni giorno, come le voci
+   ricorrenti dell'agenda: la voce è una sola e quello che cambia è l'elenco
+   delle date in cui l'hai presa. Segnare "fatto" con una bandierina la darebbe
+   per presa anche domani. */
+const integratori = () => di('in').sort((a, b) => (a.ord || 0) - (b.ord || 0));
+
+const MOMENTI = [
+  { id: 'digiuno', l: 'A digiuno', ic: '\u{1F305}' },
+  { id: 'colazione', l: 'Colazione', ic: '\u2615' },
+  { id: 'pre', l: 'Pre-allenamento', ic: '\u26A1' },
+  { id: 'post', l: 'Post-allenamento', ic: '\u{1F4AA}' },
+  { id: 'pranzo', l: 'Pranzo', ic: '\u{1F37D}\uFE0F' },
+  { id: 'cena', l: 'Cena', ic: '\u{1F373}' },
+  { id: 'sera', l: 'Prima di dormire', ic: '\u{1F319}' }
+];
+const momento = id => MOMENTI.find(m => m.id === id) || MOMENTI[1];
+
+/* Quando prenderlo: creatina tutti i giorni, ma il pre-workout solo quando ti
+   alleni davvero, e il magnesio magari solo nei giorni di scarico. */
+const QUANDO_INT = [
+  { id: 'sempre', l: 'Tutti i giorni' },
+  { id: 'on', l: 'Giorni di allenamento' },
+  { id: 'off', l: 'Giorni di riposo' }
+];
+
+/* Un giorno è "di allenamento" se ne hai registrato uno o se il programma ne
+   prevede uno: chi prende il pre-workout lo prende prima di andare, cioè
+   quando la sessione non è ancora scritta da nessuna parte. */
+function giornoDiAllenamento(d) {
+  if (di('w').some(w => w.d === d)) return true;
+  return !!allenamentoDi(gsDiData(d));
+}
+
+function integratoriDi(d) {
+  const on = giornoDiAllenamento(d);
+  return integratori().filter(x =>
+    x.quando === 'on' ? on : x.quando === 'off' ? !on : true);
+}
+
+const integratorePreso = (x, d) => (x.fatti || []).includes(d);
 
 const turni = () => di('tn').sort((a, b) => (a.ord || 0) - (b.ord || 0));
 const turnoInfo = id => (id ? DB.items.find(x => x.t === 'tn' && x.id === id) : null) || null;
@@ -789,6 +830,8 @@ function vistaOggi() {
     </button>`;
   }
 
+  h += riquadroIntegrazione(d);
+
   /* L'agenda in breve: le prossime due cose e quante ne restano. Il dettaglio
      sta nella sua scheda — qui serve solo sapere se c'è qualcosa in sospeso. */
   const voci = agendaDi(d).filter(v => !v.fatto);
@@ -851,6 +894,52 @@ function vistaOggi() {
    ripeteva quello che il riquadro del piano mostra già più in alto e che si
    legge comunque nel Diario. Qui invece c'è la sola cosa che la giornata
    singola non può dirti: se la direzione è giusta. */
+/* L'integrazione del giorno. È una lista della spesa che si spunta: quello che
+   conta è vedere in un colpo cosa manca ancora, non la storia. */
+function riquadroIntegrazione(d) {
+  const voci = integratoriDi(d);
+  const presi = voci.filter(x => integratorePreso(x, d)).length;
+
+  let h = `<div class="section-head"><h2>Integrazione</h2>
+    ${voci.length
+      ? `<span class="count">${presi} di ${voci.length}</span>`
+      : `<button class="act" data-act="int-nuovo">Aggiungi</button>`}</div>`;
+
+  if (!voci.length) {
+    /* Distinguo "non ne hai messi" da "oggi non ne prendi": la seconda è una
+       scelta del programma, e dirlo evita di farla sembrare una dimenticanza. */
+    const tutti = integratori().length;
+    return h + `<button class="card-row" data-act="int-nuovo">
+      <span class="cbadge ${tutti ? '' : 'coral'}">${tutti ? '\u{1F4A4}' : '\uFF0B'}</span>
+      <span class="cb"><h3>${tutti ? 'Niente da prendere oggi' : 'Nessun integratore'}</h3>
+        <span class="meta">${tutti
+          ? 'Quelli che hai messo valgono per altri giorni'
+          : 'Tocca per aggiungere il primo'}</span></span>
+      <span class="go"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
+    </button>`;
+  }
+
+  h += `<div class="panel" style="margin-top:0">
+    ${voci.map(x => {
+      const m = momento(x.quando_m);
+      const ok = integratorePreso(x, d);
+      return `<div class="ag-r ${ok ? 'fatto' : ''}">
+        <button class="ag-t" data-intfatto="${x.id}" aria-label="Preso">
+          <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></button>
+        <span class="ag-c" style="background:var(--accento)"></span>
+        <button class="ag-b" data-intmod="${x.id}">
+          <span class="ag-n">${esc(x.n)}${x.dose ? ' <b>' + esc(x.dose) + '</b>' : ''}</span>
+          <span class="ag-m"><i class="em">${m.ic}</i>${esc(m.l)}${
+            x.quando !== 'sempre' ? ' · ' + esc(x.quando === 'on' ? 'giorni di allenamento' : 'giorni di riposo') : ''
+          }${x.note ? ' · ' + esc(x.note) : ''}</span>
+        </button>
+      </div>`;
+    }).join('')}
+    <button class="ag-piu" data-act="int-nuovo">Aggiungi un integratore</button>
+  </div>`;
+  return h;
+}
+
 function riquadroSettimana(d) {
   const t = cfg().target;
   const lun = lunediDi(d);
@@ -1986,6 +2075,36 @@ function rigaAgenda(v) {
         v.da ? ' · da ' + esc(dataCorta(v.da)) : ''}${v.note ? ' · ' + esc(v.note) : ''}</span>
     </button>
   </div>`;
+}
+
+/* Creare o modificare un integratore. Stessa forma della scheda del turno:
+   nome, e poi le due cose che decidono quando compare — il momento della
+   giornata e il tipo di giorno. */
+function sheetIntegratore(id) {
+  const x = id ? DB.items.find(i => i.t === 'in' && i.id === id) : null;
+  const nuovo = !x;
+  const m = x ? (x.quando_m || 'colazione') : 'colazione';
+  const q = x ? (x.quando || 'sempre') : 'sempre';
+
+  return `<h2 class="sheet-title">${nuovo ? 'Nuovo integratore' : 'Modifica integratore'}</h2>
+    <div class="fgrid">
+      <div class="fgroup"><label>Nome</label>
+        <input type="text" id="inNome" value="${esc(x ? x.n : '')}" placeholder="Creatina" autofocus></div>
+      <div class="fgroup"><label>Dose</label>
+        <input type="text" id="inDose" value="${esc(x ? (x.dose || '') : '')}" placeholder="5 g"></div>
+      <div class="fgroup full"><label>Quando</label>
+        <div class="fchips">
+          ${MOMENTI.map(o => `<button data-inmom="${o.id}" class="${o.id === m ? 'on' : ''}">${o.ic} ${esc(o.l)}</button>`).join('')}
+        </div></div>
+      <div class="fgroup full"><label>In che giorni</label>
+        <div class="fchips">
+          ${QUANDO_INT.map(o => `<button data-inquando="${o.id}" class="${o.id === q ? 'on' : ''}">${esc(o.l)}</button>`).join('')}
+        </div></div>
+      <div class="fgroup full"><label>Nota</label>
+        <input type="text" id="inNota" value="${esc(x ? (x.note || '') : '')}" placeholder="lontano dai pasti"></div>
+    </div>
+    <button class="btn" data-act="salva-integratore">${nuovo ? 'Aggiungi' : 'Salva'}</button>
+    ${nuovo ? '' : `<button class="btn danger" data-act="elimina-integratore">Elimina</button>`}`;
 }
 
 /* Il pannello per creare o modificare una voce. */
@@ -4114,6 +4233,24 @@ document.addEventListener('click', e => {
     const gt = giornataById(view.id);
     gt.tipo = d.gttipo; tocca(gt); render(); return;
   }
+  if (d.intfatto) {
+    const x = DB.items.find(i => i.t === 'in' && i.id === d.intfatto);
+    if (!x) return;
+    /* Come le voci ricorrenti dell'agenda: si segna la data, non un booleano.
+       E l'elenco non deve crescere all'infinito. */
+    x.fatti = x.fatti || [];
+    const i = x.fatti.indexOf(view.d);
+    if (i < 0) x.fatti.push(view.d); else x.fatti.splice(i, 1);
+    x.fatti = x.fatti.filter(v => v >= spostaData(oggiISO(), -120));
+    tocca(x); haptic(); render(); return;
+  }
+  if (d.intmod) {
+    const x = DB.items.find(i => i.t === 'in' && i.id === d.intmod);
+    if (!x) return;
+    apriSheet(sheetIntegratore(x.id),
+      { inId: x.id, inMom: x.quando_m || 'colazione', inQuando: x.quando || 'sempre' });
+    return;
+  }
   if (d.agfatto) {
     const [id, ric] = d.agfatto.split('|');
     const it = DB.items.find(x => x.id === id);
@@ -4154,6 +4291,16 @@ document.addEventListener('click', e => {
   if (d.turnomod) {
     const x = turnoInfo(d.turnomod);
     apriSheet(sheetModTurno(d.turnomod), { tnId: d.turnomod, tnCol: x.col || 'grigio', tnRiposo: !!x.riposo });
+    return;
+  }
+  if (d.inmom) {
+    sheetCtx.inMom = d.inmom;
+    $$('#sheetContent [data-inmom]').forEach(b => b.classList.toggle('on', b.dataset.inmom === d.inmom));
+    return;
+  }
+  if (d.inquando) {
+    sheetCtx.inQuando = d.inquando;
+    $$('#sheetContent [data-inquando]').forEach(b => b.classList.toggle('on', b.dataset.inquando === d.inquando));
     return;
   }
   if (d.tncol) {
@@ -4645,6 +4792,37 @@ function azione(a, b) {
   }
 
   if (a === 'aggiorna') { aggiornaApp(b); return; }
+
+  if (a === 'int-nuovo') {
+    apriSheet(sheetIntegratore(null), { inId: null, inMom: 'colazione', inQuando: 'sempre' });
+    return;
+  }
+
+  if (a === 'salva-integratore') {
+    const nome = $('#inNome').value.trim();
+    if (!nome) { toast('Serve un nome'); return; }
+    const dati = {
+      n: nome,
+      dose: $('#inDose').value.trim(),
+      quando_m: sheetCtx.inMom || 'colazione',
+      quando: sheetCtx.inQuando || 'sempre',
+      note: $('#inNota').value.trim()
+    };
+    if (sheetCtx.inId) {
+      const x = DB.items.find(i => i.t === 'in' && i.id === sheetCtx.inId);
+      Object.assign(x, dati); tocca(x);
+    } else {
+      aggiungi(Object.assign({ t: 'in', ord: integratori().length, fatti: [] }, dati));
+    }
+    chiudiSheet(); render(); return;
+  }
+
+  if (a === 'elimina-integratore') {
+    const x = DB.items.find(i => i.t === 'in' && i.id === sheetCtx.inId);
+    if (!x) return;
+    if (!confirm('Eliminare “' + x.n + '”? Si perde anche lo storico di quando l’hai preso.')) return;
+    elimina(x.id); chiudiSheet(); render(); return;
+  }
 
   if (a === 'nuova-agenda') {
     apriSheet(sheetAgenda(null, false), { agCat: 'personale', agRic: false });

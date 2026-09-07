@@ -22,7 +22,7 @@ una volta sola e si ritrovano sull'altro dispositivo.
 | Scheda | A cosa serve |
 |---|---|
 | **Agenda** | Stessa impaginazione della dashboard: navigazione e **turno** in cima, poi **Orari** (le voci a orario, con dentro l'allenamento previsto), **Da fare**, **In ritardo** e **La settimana** con quanto resta giorno per giorno. Le cose non fatte ti seguono nei giorni dopo per due settimane. |
-| **Oggi** | La giornata: il **turno di lavoro** in cima, anello delle calorie con acqua e macro (con quanti grammi ti restano), **Adesso** — il prossimo pasto del piano da registrare in un tocco — il piano del giorno con i pasti già fatti spuntati, passi e olio, allenamento, agenda, e **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
+| **Oggi** | La giornata: il **turno di lavoro** in cima, anello delle calorie con acqua e macro (con quanti grammi ti restano), **Adesso** — il prossimo pasto del piano da registrare in un tocco — il piano del giorno con i pasti già fatti spuntati, passi e olio, allenamento, **integrazione**, agenda, e **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
 | **Cibo → Diario** | Il registro di tutto quello che hai mangiato, **un giorno per riga**: tocchi il giorno e si apre con le sue voci e il totale. Filtri per periodo, pasto, categoria, ricerca sul nome. Export CSV. |
 | **Cibo → Piano** | Le tue **giornate tipo** (“Giorno 1 off”, “Giorno 2 on”) e, per ogni giorno della settimana, **due menu a tendina**: il turno di lavoro e la giornata che mangi. Da qui esce anche la **lista della spesa**, e ci stanno le **combinazioni** salvate. |
 | **Cibo → Alimenti** | L'anagrafica dei 71 alimenti più quelli che aggiungi tu, **raggruppati per categoria**: tocchi la categoria e si apre. Ricerca e filtro. |
@@ -30,6 +30,30 @@ una volta sola e si ritrovano sull'altro dispositivo.
 | **Allenamento → Schede** | I tuoi programmi, e un **menu a tendina per ogni giorno della settimana** che dice quale seduta tocca quel giorno. Una scheda ha i **giorni 1, 2, 3, 4…** con i loro esercizi, serie, ripetizioni, carico, recupero e note. |
 | **Report** | Media calorie e proteine, **aderenza** (quanti giorni sei rimasto entro il 10% del bersaglio), calorie giorno per giorno, ripartizione dei macro, cosa mangi davvero, acqua/passi/olio, volume per gruppo, progressione dei carichi, e il **peso con la media mobile** e il verdetto a tre settimane. Si stampa in PDF. |
 | **Impostazioni** | Bersagli, obiettivi, sincronizzazione, backup. |
+
+### L'integrazione
+
+Sulla dashboard, sotto l'allenamento. Gli integratori si scrivono **una volta
+sola** e poi si spuntano ogni giorno: la voce resta, quello che cambia è
+l'elenco dei giorni in cui l'hai presa. Segnare "fatto" con una bandierina la
+darebbe per presa anche domani.
+
+Ogni voce ha un **momento** (a digiuno, colazione, pre o post allenamento,
+pranzo, cena, prima di dormire) e dice **in che giorni** vale:
+
+| Scelta | Quando compare |
+|---|---|
+| Tutti i giorni | sempre |
+| Giorni di allenamento | se hai registrato una sessione **o** se il programma ne prevede una |
+| Giorni di riposo | negli altri |
+
+La seconda guarda anche l'allenamento *previsto* e non solo quello già
+registrato: il pre-workout lo prendi prima di andare, cioè quando la sessione
+non è ancora scritta da nessuna parte.
+
+Tocchi la riga per modificarla o eliminarla. Se oggi non ti tocca niente ma
+degli integratori li hai messi, l'app lo dice — è una scelta del programma,
+non una dimenticanza.
 
 ### Sul Mac: colonna, temi, scorciatoie
 
