@@ -24,6 +24,13 @@ una volta sola e si ritrovano sull'altro dispositivo.
 | **Agenda** | Stessa impaginazione della dashboard: navigazione e **turno** in cima, poi **Orari** (le voci a orario, con dentro l'allenamento previsto), **Da fare**, **In ritardo** e **La settimana** con quanto resta giorno per giorno. Le cose non fatte ti seguono nei giorni dopo per due settimane. |
 | **Oggi** | La giornata: il **turno di lavoro** in cima, anello delle calorie con acqua e macro (con quanti grammi ti restano), **Adesso** — il prossimo pasto del piano da registrare in un tocco — il piano del giorno con i pasti già fatti spuntati, passi e olio, allenamento, **integrazione**, agenda, e **La settimana** — andamento giorno per giorno, media, aderenza, volume, peso. Ti sposti con le frecce, con la striscia Lun‑Dom, o toccando la data per aprire il **calendario del mese**. |
 | **Cibo → Diario** | Il registro di tutto quello che hai mangiato, **un giorno per riga**: tocchi il giorno e si apre con le sue voci e il totale. Filtri per periodo, pasto, categoria, ricerca sul nome. Export CSV. |
+> **La spunta dei pasti.** Nel piano del giorno ogni pasto ha la sua casella, e
+> la metti tu quando l'hai mangiato. Non è la stessa cosa di "sta nel diario":
+> caricando la giornata si scrivono tutte le voci in un colpo, e prima di
+> questa distinzione l'app dava per mangiata l'intera giornata alle otto di
+> mattina. Registrando un pasto singolo la spunta si mette da sé, perché quello
+> lo stai mangiando adesso.
+
 | **Cibo → Piano** | Le tue **giornate tipo** (“Giorno 1 off”, “Giorno 2 on”) e, per ogni giorno della settimana, **due menu a tendina**: il turno di lavoro e la giornata che mangi. Da qui esce anche la **lista della spesa**, e ci stanno le **combinazioni** salvate. |
 | **Cibo → Alimenti** | L'anagrafica dei 71 alimenti più quelli che aggiungi tu, **raggruppati per categoria**: tocchi la categoria e si apre. Ricerca e filtro. |
 | **Allenamento → Sessioni** | Il registro degli allenamenti svolti: serie, volume in kg, cardio. Filtri per periodo e gruppo muscolare. Export CSV. |
@@ -64,9 +71,10 @@ Su una colonna sola l'ordine è una gerarchia, e non è lo stesso del Mac:
 3. **cose da fare**
 4. **allenamento**
 5. integrazione
-6. **il riepilogo delle calorie di nuovo** — dopo aver letto tutto il resto è
-   il punto in cui ti richiedi quanto ti resta, e risalire la pagina è
-   scomodo. Sul Mac non c'è: lì la scheda sta già a sinistra sotto gli occhi
+6. **il riepilogo delle calorie** — sta qui e non in cima: è dopo aver letto
+   piano, cose da fare e allenamento che ti richiedi quanto resta. Sul Mac
+   invece sta in alto a sinistra, dove le colonne affiancate lo tengono sotto
+   gli occhi senza scorrere
 7. le quattro tessere (passi, calorie, acqua, olio)
 8. la settimana
 

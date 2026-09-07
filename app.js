@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.08.6';
+const APP_VERSION = '2026.09.08.8';
 
 const KEY = 'forma.v1';
 
@@ -361,6 +361,21 @@ const catAgenda = id => CAT_AGENDA.find(c => c.id === id) || CAT_AGENDA[5];
    ricorrenti dell'agenda: la voce è una sola e quello che cambia è l'elenco
    delle date in cui l'hai presa. Segnare "fatto" con una bandierina la darebbe
    per presa anche domani. */
+/* Un pasto "fatto" non è un pasto che sta nel diario. Caricando il piano si
+   scrivono tutte e cinque le voci in un colpo, e prima di questa distinzione
+   l'app dava per mangiata l'intera giornata alle otto di mattina. La spunta la
+   metti tu, e sta sul giorno perché è un fatto di quel giorno. */
+function pastoFatto(d, slot) {
+  return (giorno(d).pasti || []).includes(slot);
+}
+function segnaPasto(d, slot) {
+  const g = giorno(d, true);
+  g.pasti = g.pasti || [];
+  const i = g.pasti.indexOf(slot);
+  if (i < 0) g.pasti.push(slot); else g.pasti.splice(i, 1);
+  tocca(g);
+}
+
 const integratori = () => di('in').sort((a, b) => (a.ord || 0) - (b.ord || 0));
 
 const MOMENTI = [
@@ -560,8 +575,12 @@ function applicaPasto(gs, data, slot) {
     aggiungi({ t: 'l', d: data, slot: r.slot, n: r.n, q: r.q, k: r.k, p: r.p, c: r.c, g: r.g });
   }
   haptic();
+  /* Chi registra un pasto lo sta mangiando adesso: la spunta va da sé.
+     Caricare tutta la giornata invece non spunta niente, ed è la differenza
+     fra "il piano è scritto" e "l'ho mangiato". */
+  if (!pastoFatto(data, slot)) segnaPasto(data, slot);
   const pa = PASTI.find(x => x.id === slot);
-  toast((pa ? pa.l : 'Pasto') + ' nel diario · ' + r0(somma(rp).k) + ' kcal');
+  toast((pa ? pa.l : 'Pasto') + ' fatto · ' + r0(somma(rp).k) + ' kcal');
   render();
 }
 
@@ -766,7 +785,10 @@ function vistaOggi() {
      schede, impilate o affiancate. La navigazione qui sopra resta larga. */
   h += `<div class="board"><div class="bc-a">`;
 
-  h += riquadroCalorie(d, righe, tot, kt);
+  /* Sul telefono questa non si vede: il riepilogo sta più in basso, dopo il
+     piano e le cose da fare. Sul Mac invece è qui in cima a sinistra, dove le
+     colonne affiancate lo tengono sotto gli occhi senza scorrere. */
+  h += `<div class="sez sez-kcal1">` + riquadroCalorie(d, righe, tot, kt) + `</div>`;
 
   h += riquadroAdesso(d, righe);
   h += riquadroPiano(d, righe, tot);
@@ -907,21 +929,68 @@ function intestazioneOggi(d) {
   const ora = new Date().getHours();
   const salda = ora < 5 ? 'Buonanotte' : ora < 13 ? 'Buongiorno' : ora < 18 ? 'Buon pomeriggio' : 'Buonasera';
   const oggi = d === oggiISO();
+
+  /* Quanto dista il giorno che stai guardando. Serve per non perdere il filo
+     quando ti sposti avanti e indietro con le frecce: "3 giorni fa" si capisce
+     al volo, una data no. */
+  const dist = Math.round((new Date(d + 'T12:00:00') - new Date(oggiISO() + 'T12:00:00')) / 864e5);
+  const quando = dist === 0 ? 'oggi' : dist === 1 ? 'domani' : dist === -1 ? 'ieri'
+    : dist > 0 ? 'fra ' + dist + ' giorni' : Math.abs(dist) + ' giorni fa';
+
   return `<div class="hero">
     <div class="hero-t">
       <h1>${oggi ? esc(salda) : esc(nomeGiorno(d))}${nome && oggi ? ' ' + esc(nome) : ''}</h1>
-      <p>${oggi
-        ? 'Oggi è un altro passo verso la tua versione migliore.'
-        : esc(dataLunga(d))}</p>
+      <p>${rigaStato(d)}</p>
     </div>
     <div class="hero-d">
+      ${oggi ? '' : `<button class="hero-oggi" data-act="oggi">Oggi</button>`}
       <button class="arw" data-day="-1" aria-label="Giorno precedente">
         <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <button class="hero-lbl" data-act="calendario">${esc(dataLunga(d))}</button>
+      <button class="hero-lbl" data-act="calendario">${esc(dataLunga(d))}<small>${esc(quando)}</small></button>
       <button class="arw" data-day="1" aria-label="Giorno successivo">
         <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
   </div>`;
+}
+
+/* La riga sotto il saluto. Prima era una frase motivazionale sempre uguale,
+   che dopo due giorni non la leggi più. Adesso dice cosa manca davvero: è
+   l'unico posto della pagina che mette insieme calorie, pasti e allenamento
+   in una frase sola. */
+function rigaStato(d) {
+  const righe = righeDi(d);
+  const kt = kcalTarget(d);
+  const resta = r0(kt - somma(righe).k);
+  const pezzi = [];
+
+  const gt = giornataDi(gsDiData(d));
+  if (righe.length) {
+    pezzi.push(resta >= 0
+      ? `ti restano <b>${resta} kcal</b>`
+      : `sei <b>${Math.abs(resta)} kcal</b> oltre`);
+  } else if (gt && (gt.righe || []).length) {
+    pezzi.push(`il piano di oggi è <b>${esc(gt.n)}</b>, ${r0(somma(gt.righe).k)} kcal`);
+  } else {
+    pezzi.push('non hai ancora registrato niente');
+  }
+
+  /* Quanti pasti del piano mancano: è il numero che decide la serata. */
+  if (gt && (gt.righe || []).length) {
+    const scritti = new Set(righe.map(r => r.slot));
+    const mancano = PASTI.filter(pa => (gt.righe || []).some(r => r.slot === pa.id) && !scritti.has(pa.id)).length;
+    if (mancano) pezzi.push(`<b>${mancano}</b> ${mancano === 1 ? 'pasto' : 'pasti'} da registrare`);
+    else if (righe.length) pezzi.push('piano completato');
+  }
+
+  const sess = di('w').filter(w => w.d === d);
+  const prev = allenamentoDi(gsDiData(d));
+  if (sess.length) pezzi.push(sess.some(w => w.fine) ? 'allenamento fatto' : 'allenamento in corso');
+  else if (prev) pezzi.push(`ti aspetta <b>${esc(prev.g.n)}</b>`);
+
+  const daFare = agendaDi(d).filter(v => !v.fatto).length + arretrati(d).length;
+  if (daFare) pezzi.push(`<b>${daFare}</b> ${daFare === 1 ? 'cosa' : 'cose'} da fare`);
+
+  return pezzi.join(' · ');
 }
 
 /* Le quattro tessere in cima. Sono i numeri che si guardano di sfuggita, e
@@ -1144,13 +1213,14 @@ function riquadroAdesso(d, righe) {
   const gt = giornataDi(gs);
   if (!gt || !(gt.righe || []).length) return '';
 
-  /* I pasti previsti dal piano, nell'ordine dell'orologio, con accanto se sono
-     già stati scritti nel diario. */
-  const scritti = new Set(righe.map(r => r.slot));
+  /* I pasti previsti dal piano, nell'ordine dell'orologio, con accanto se li
+     hai spuntati. La spunta e non il diario: caricare la giornata scrive tutte
+     le voci in una volta, e a quel punto "quale pasto mi tocca" darebbe sempre
+     la stessa risposta sbagliata. */
   const previsti = PASTI
     .map(pa => ({ pa, righe: (gt.righe || []).filter(r => r.slot === pa.id) }))
     .filter(x => x.righe.length);
-  const restano = previsti.filter(x => !scritti.has(x.pa.id));
+  const restano = previsti.filter(x => !pastoFatto(d, x.pa.id));
 
   const kResta = r0(restano.reduce((k, x) => k + somma(x.righe).k, 0));
   const fatti = previsti.length - restano.length;
@@ -1239,14 +1309,16 @@ function riquadroPiano(d, righe, tot) {
       const rp = p.righe.filter(r => r.slot === pa.id);
       if (!rp.length) continue;
       const tm = somma(rp);
-      const ok = scritti.has(pa.id);
-      /* Un alimento per riga, con i grammi allineati a destra: questa lista
-         si legge con la bilancia in mano, e in una riga unica separata da
-         puntini si perde il segno ogni volta che si alza lo sguardo. */
+      const ok = pastoFatto(d, pa.id);
+      const inDiario = scritti.has(pa.id);
+      /* La spunta la metti tu quando hai mangiato. Il "＋" resta solo per i
+         pasti che nel diario non ci sono ancora, e serve a scriverceli. */
       h += `<div class="pm ${ok ? 'ok' : ''}">
-        <span class="pmh"><span class="pmn"><i class="pmi">${pa.ic}</i>${esc(pa.l)}</span>
-          ${ok ? '<span class="pm-ok">✓ registrato</span>'
-               : `<button class="pm-add" data-pasto="${gs}|${pa.id}" data-data="${d}">＋</button>`}
+        <span class="pmh">
+          <button class="pm-t" data-pastofatto="${pa.id}" aria-label="Segna come fatto">
+            <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></button>
+          <span class="pmn"><i class="pmi">${pa.ic}</i>${esc(pa.l)}</span>
+          ${inDiario ? '' : `<button class="pm-add" data-pasto="${gs}|${pa.id}" data-data="${d}">＋</button>`}
           <b>${r0(tm.k)} kcal</b></span>
         <span class="pml">${rp.map(r =>
           `<span class="pf"><span class="pfn">${esc(r.n)}</span><b>${r1(r.q)} g</b></span>`).join('')}</span>
@@ -4345,6 +4417,7 @@ document.addEventListener('click', e => {
     const gt = giornataById(view.id);
     gt.tipo = d.gttipo; tocca(gt); render(); return;
   }
+  if (d.pastofatto) { segnaPasto(view.d, d.pastofatto); haptic(); render(); return; }
   if (d.intfatto) {
     const x = DB.items.find(i => i.t === 'in' && i.id === d.intfatto);
     if (!x) return;
@@ -4936,6 +5009,7 @@ function azione(a, b) {
     elimina(x.id); chiudiSheet(); render(); return;
   }
 
+  if (a === 'oggi') { view.d = oggiISO(); render(); return; }
   if (a === 'nuova-agenda') {
     apriSheet(sheetAgenda(null, false), { agCat: 'personale', agRic: false });
     return;

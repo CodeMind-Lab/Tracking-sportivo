@@ -696,18 +696,25 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
    pulsante: la differenza fra "l'ho mangiato" e "devo ancora" è la sola cosa
    che questo elenco deve dire quando il piano è sempre lo stesso. */
 .pmn{flex:1}
-.pm-ok{
-  flex:none;font-size:10.5px;font-weight:800;letter-spacing:.02em;
-  color:var(--ok-txt);background:var(--ok-bg);border-radius:var(--pillola);padding:2px 8px;
+.pmh{align-items:center}
+/* La spunta del pasto: la stessa casella delle cose da fare, perché è lo
+   stesso gesto — "questo l'ho fatto". */
+.pm-t{
+  width:22px;height:22px;flex:none;border-radius:7px;border:1.8px solid var(--line-forte);
+  display:grid;place-items:center;background:var(--superficie);margin-right:9px;
 }
+.pm-t svg{width:13px;height:13px;stroke:#fff;stroke-width:3.4;opacity:0}
+.pm.ok .pm-t{background:var(--ok);border-color:var(--ok)}
+.pm.ok .pm-t svg{opacity:1}
 .pm-add{
   flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
   background:var(--accent-soft);color:var(--evidenza-txt);font-size:13px;font-weight:800;
   line-height:1;margin:-2px 0;
 }
 .pm-add:active{background:var(--evidenza);color:#fff}
-.pm.ok .pmn,.pm.ok .pml{color:var(--txt-faint)}
+.pm.ok .pmn,.pm.ok .pml,.pm.ok .pf{color:var(--txt-faint)}
 .pm.ok .pml b,.pm.ok .pmh b{color:var(--txt-dim);font-weight:700}
+.pm.ok .pmn{text-decoration:line-through;text-decoration-color:var(--line-forte)}
 
 /* L'azione principale porta il colore principale: l'arancione qui dentro era
    l'unico pieno caldo della pagina e tirava l'occhio più del contenuto. */
@@ -801,10 +808,23 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 }
 .hero-d .arw:hover{background:var(--bg-elev2);color:var(--txt-forte)}
 .hero-lbl{
-  padding:6px 10px;border-radius:9px;font-size:13px;font-weight:650;color:var(--txt-dim);
-  white-space:nowrap;
+  padding:5px 10px;border-radius:9px;font-size:13px;font-weight:650;color:var(--txt-dim);
+  white-space:nowrap;line-height:1.25;text-align:center;
+}
+.hero-lbl small{
+  display:block;font-size:10.5px;font-weight:600;color:var(--txt-faint);
+  letter-spacing:.01em;
 }
 .hero-lbl:hover{background:var(--bg-elev2);color:var(--txt-forte)}
+/* Il ritorno a oggi compare solo quando serve: quando sei già su oggi
+   sarebbe un pulsante che non fa niente. */
+.hero-oggi{
+  padding:6px 12px;margin-right:4px;border-radius:var(--pillola);
+  background:var(--primario-tinta);color:var(--secondario-txt);
+  font-size:12.5px;font-weight:750;
+}
+.hero-oggi:active{background:var(--primario);color:#fff}
+.hero-t p b{color:var(--txt-forte);font-weight:750;font-variant-numeric:tabular-nums}
 
 /* ---------- le quattro tessere ----------
    Valore grande e bersaglio piccolo accanto: si leggono di sfuggita, e per
@@ -1618,6 +1638,9 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   #app[data-vista="oggi"] .hero{order:1}
   #app[data-vista="oggi"] .weekstrip{order:2}
   #app[data-vista="oggi"] .turno-bar{order:3}
+  /* Il riepilogo in cima sparisce: è lo stesso che sta più in basso, e due
+     volte nella stessa colonna è solo strada da scorrere. */
+  #app[data-vista="oggi"] .sez-kcal1{display:none}
   #app[data-vista="oggi"] .bc-a{order:4}          /* alimentazione */
   #app[data-vista="oggi"] .sez-agenda{order:5}    /* cose da fare */
   #app[data-vista="oggi"] .sez-allena{order:6}
