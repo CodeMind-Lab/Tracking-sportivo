@@ -82,3 +82,22 @@ Le righe alternative (*"Pasta 50 g **o** Riso Basmati 50 g"*) vengono
 riconosciute e lasciate fuori: sono una sostituzione, non un secondo alimento,
 e sommarle raddoppierebbe le calorie del pasto. Lo script le elenca a schermo
 perché tu sappia cosa ha scartato.
+
+## Dai PDF del preparatore ai CSV da importare
+
+Due script a parte, che non c'entrano con il database degli alimenti:
+
+```bash
+cd strumenti
+python3 pdftxt3.py "piano.pdf" > piano.txt && python3 estrai_piano.py
+python3 pdftxt3.py "scheda.pdf" > scheda.txt && python3 estrai_scheda.py scheda.txt
+```
+
+`estrai_piano.py` traduce i nomi generici del nutrizionista ("Pesce", "Legumi")
+in voci del database: la tabella `MAPPA` in cima è dove si aggiusta quando un
+piano nuovo usa parole diverse. `estrai_scheda.py` traduce serie e recuperi
+("1 min 30 sec" diventa `1'30"`) e assegna i gruppi muscolari, che nel PDF non
+ci sono ma servono al report.
+
+**Quello che producono non entra nel repository**: sono i tuoi piani, e il
+repository è pubblico. Il `.gitignore` li tiene fuori.

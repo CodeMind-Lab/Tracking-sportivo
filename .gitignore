@@ -4,3 +4,9 @@
 *vapid*
 *chiavi*
 .claude/
+
+# I piani estratti dai PDF sono dati personali: gli script si pubblicano,
+# quello che producono no.
+strumenti/*.txt
+strumenti/piano-*.csv
+strumenti/scheda-*.csv
