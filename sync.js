@@ -16,6 +16,41 @@ const Sync = (() => {
   let timer = null;
   let running = false;
   let lastError = '';
+
+  /* Lo stesso contenuto di supabase-setup.sql. Sta anche qui perché è il
+     passaggio che blocca tutti: la tabella va creata a mano una volta sola, e
+     dal telefono aprire GitHub, copiare un file e tornare indietro è una
+     catena che si spezza. Con il pulsante è un tocco. */
+  const SQL_SETUP = `create table if not exists public.forma_items (
+  id                text primary key,
+  user_id           uuid not null default auth.uid() references auth.users on delete cascade,
+  data              jsonb not null default '{}'::jsonb,
+  deleted           boolean not null default false,
+  client_updated_at bigint not null default 0,
+  updated_at        timestamptz not null default now()
+);
+
+alter table public.forma_items enable row level security;
+
+drop policy if exists "solo le proprie righe" on public.forma_items;
+create policy "solo le proprie righe" on public.forma_items
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create or replace function public.touch_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists forma_items_touch on public.forma_items;
+create trigger forma_items_touch
+  before insert or update on public.forma_items
+  for each row execute function public.touch_updated_at();
+
+create index if not exists forma_items_user_updated
+  on public.forma_items (user_id, updated_at);`;
   let problemaCollegamento = '';
 
   /* Il pannello di Supabase cambia spesso e il "Project URL" non è sempre dove
@@ -399,6 +434,12 @@ const Sync = (() => {
         <input class="txtin" id="syncPass" type="password" autocomplete="current-password" placeholder="password">
         <button class="btn" id="syncIn">Accedi</button>
         <button class="btn sec" id="syncUp">Crea account</button>
+        ${lastError ? `<p class="set-note" style="color:var(--danger);margin-bottom:0">${esc(lastError)}</p>` : ''}
+        <p class="set-note"><b>Prima volta?</b> Su Supabase servono due cose, una volta sola:
+          la tabella (pulsante qui sotto, poi SQL Editor → New query → incolla → Run) e
+          <b>Confirm email</b> disattivato in Authentication → Sign In / Providers → Email.
+          Senza la seconda crei l’account e poi resti chiuso fuori.</p>
+        <button class="btn sec" id="syncSql">Copia l’SQL da incollare</button>
         <button class="btn sec" id="syncReset" style="color:var(--txt-dim)">Cambia progetto Supabase</button>`;
 
     } else {
@@ -426,6 +467,10 @@ const Sync = (() => {
     if (/already registered/i.test(e.message)) return 'Email già registrata: usa Accedi';
     if (/Password should be/i.test(e.message)) return 'Password troppo corta (minimo 6 caratteri)';
     if (/Failed to fetch/i.test(e.message)) return 'Non raggiungo Supabase: controlla l’indirizzo del progetto';
+    if (/PGRST205|Could not find the table|does not exist/i.test(e.message)) {
+      return 'La tabella forma_items non c’è ancora: apri Supabase → SQL Editor → ' +
+             'New query, incolla l’SQL qui sotto e premi Run.';
+    }
     if (/HTTP 404/.test(e.message)) {
       return 'Indirizzo sbagliato: punta a una pagina che non è il tuo progetto. ' +
              'Premi “Cambia progetto Supabase” e reinseriscilo.';
@@ -459,6 +504,21 @@ const Sync = (() => {
       return;
     }
 
+    if (id === 'syncSql') {
+      try {
+        await navigator.clipboard.writeText(SQL_SETUP);
+        toast('SQL copiato: incollalo in Supabase → SQL Editor');
+      } catch (e) {
+        /* Senza permesso per gli appunti resta il modo che funziona sempre:
+           mostrarlo e lasciarlo selezionare a mano. */
+        apriSheet('<h2 class="sheet-title">SQL da incollare in Supabase</h2>' +
+          '<p class="set-note">SQL Editor → New query → incolla tutto → Run.</p>' +
+          '<textarea class="txtin" rows="12" readonly ' +
+          'style="font-family:ui-monospace,monospace;font-size:11px">' +
+          esc(SQL_SETUP) + '</textarea>');
+      }
+      return;
+    }
     if (id === 'syncReset') {
       cfg().url = ''; cfg().anon = '';
       problemaCollegamento = '';

@@ -332,8 +332,10 @@ Serve una volta sola, poi non ci pensi più.
 1. Registrati su [supabase.com](https://supabase.com) (si entra col proprio account GitHub).
 2. **New project**. Nome `forma`, scegli una password per il database — **non ti servirà
    nell'app**, ma salvala — regione **West EU (Ireland)** o **Central EU (Frankfurt)**.
-3. Quando è pronto: **SQL Editor** → **New query**. Incolla tutto il contenuto di
-   `supabase-setup.sql` e premi **Run**.
+3. Quando è pronto: **SQL Editor** → **New query**. Incolla l'SQL e premi **Run**.
+   L'SQL ce l'hai dentro l'app — Impostazioni → Sincronizzazione → **Copia l'SQL
+   da incollare** — così dal telefono non devi andare a cercare il file. In
+   alternativa è `supabase-setup.sql`, qui nel repository.
 4. **Authentication** → **Sign In / Providers** → Email: togli la spunta a
    **Confirm email** (altrimenti dopo la registrazione resti fuori).
 5. Nell'app: ingranaggio in alto a destra → **Sincronizzazione**:
