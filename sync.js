@@ -422,7 +422,11 @@ create index if not exists forma_items_user_updated
         ${problemaCollegamento
           ? `<p class="set-note" style="color:var(--danger);margin:0 0 4px">${esc(problemaCollegamento)}</p>`
           : ''}
-        <button class="btn" id="syncSave">Collega</button>`;
+        <button class="btn" id="syncSave">Collega</button>
+        <p class="set-note">Sul progetto la tabella va creata una volta sola: copia
+          l’SQL qui sotto e su Supabase fai <b>SQL Editor → New query → incolla → Run</b>.
+          Puoi farlo prima o dopo aver collegato, l’ordine non conta.</p>
+        <button class="btn sec" id="syncSql">Copia l’SQL da incollare</button>`;
 
     } else if (!signedIn()) {
       // L'indirizzo va mostrato: se è sbagliato, è qui che si nota.
