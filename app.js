@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.08.3';
+const APP_VERSION = '2026.09.08.4';
 
 const KEY = 'forma.v1';
 
@@ -610,6 +610,9 @@ function vai(v, push) {
 function render() {
   const app = $('#app');
   const t = view.name;
+  /* Il nome della schermata finisce sull'elemento: serve al CSS, che sul
+     telefono riordina la dashboard e non deve toccare le altre pagine. */
+  app.dataset.vista = t;
   /* Anche la sincronizzazione e il ripristino di un backup possono aver
      cambiato i tuoi alimenti senza passare da tocca(). */
   if (DB._alimentiCambiati) { DB._alimentiCambiati = false; scadeCatalogo(); }
@@ -800,6 +803,7 @@ function vistaOggi() {
      "ho già allenato oggi?" viene dopo "quanto ho mangiato?". */
   const sess = di('w').filter(w => w.d === d);
   const prev = allenamentoDi(gsDiData(d));
+  h += `<div class="sez sez-allena">`;
   h += `<div class="section-head"><h2>Allenamento</h2>
     ${settimanaAllenamento() ? '<button class="act" data-act="allena-settimana">Settimana</button>' : ''}</div>`;
 
@@ -833,7 +837,8 @@ function vistaOggi() {
     </button>`;
   }
 
-  h += riquadroIntegrazione(d);
+  h += `</div><div class="sez sez-integra">` + riquadroIntegrazione(d) + `</div>`;
+  h += `<div class="sez sez-agenda">`;
 
   /* L'agenda in breve: le prossime due cose e quante ne restano. Il dettaglio
      sta nella sua scheda — qui serve solo sapere se c'è qualcosa in sospeso. */
@@ -864,7 +869,7 @@ function vistaOggi() {
 
   /* La settimana sta in una colonna sua: su schermo molto largo si vede senza
      scorrere, sotto i 1400 px torna in coda alla seconda colonna. */
-  h += `</div><div class="bc-c">`;
+  h += `</div></div><div class="bc-c">`;
   h += riquadroSettimana(d);
   h += `</div></div>`;
   return h;

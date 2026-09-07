@@ -1584,6 +1584,32 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
   .wrap{max-width:1560px}
 }
 
+/* ---------- l'ordine della dashboard sul telefono ----------
+   Su una colonna sola l'ordine è una gerarchia: quello che sta in cima è
+   quello che apri l'app per fare. Prima l'alimentazione, poi le cose da fare,
+   poi l'allenamento; le quattro tessere scendono quasi in fondo, perché sono
+   numeri da controllare a fine giornata, non da cui partire.
+
+   Si fa con "order" e non riscrivendo l'HTML perché sul Mac l'ordine giusto è
+   un altro — lì le colonne stanno affiancate e le tessere in cima ci stanno
+   bene. display:contents scioglie la plancia e le sue colonne, così le sezioni
+   diventano tutte figlie della stessa fila e si possono ordinare insieme. */
+@media (max-width:999px){
+  #app[data-vista="oggi"] .wrap{display:flex;flex-direction:column}
+  #app[data-vista="oggi"] .board,
+  #app[data-vista="oggi"] .bc-b{display:contents}
+
+  #app[data-vista="oggi"] .hero{order:1}
+  #app[data-vista="oggi"] .weekstrip{order:2}
+  #app[data-vista="oggi"] .turno-bar{order:3}
+  #app[data-vista="oggi"] .bc-a{order:4}          /* alimentazione */
+  #app[data-vista="oggi"] .sez-agenda{order:5}    /* cose da fare */
+  #app[data-vista="oggi"] .sez-allena{order:6}
+  #app[data-vista="oggi"] .sez-integra{order:7}
+  #app[data-vista="oggi"] .tessere{order:8}
+  #app[data-vista="oggi"] .bc-c{order:9}          /* la settimana */
+}
+
 /* ---------- stampa: il report diventa un PDF ---------- */
 @media print{
   #topbar,#tabbar,#fab,#side,#rest,#sheet,#toast,.filters .freset,.fsummary .exp{display:none !important}

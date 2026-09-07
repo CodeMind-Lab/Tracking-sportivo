@@ -55,6 +55,22 @@ Tocchi la riga per modificarla o eliminarla. Se oggi non ti tocca niente ma
 degli integratori li hai messi, l'app lo dice — è una scelta del programma,
 non una dimenticanza.
 
+### L'ordine sul telefono
+
+Su una colonna sola l'ordine è una gerarchia, e non è lo stesso del Mac:
+
+1. saluto, giorni della settimana, turno
+2. **alimentazione** — calorie, prossimo pasto, piano del giorno
+3. **cose da fare**
+4. **allenamento**
+5. integrazione
+6. le quattro tessere (passi, calorie, acqua, olio)
+7. la settimana
+
+Le tessere stanno quasi in fondo di proposito: sono numeri da controllare a
+fine giornata, non quelli da cui parti quando apri l'app. Sul Mac restano in
+cima, dove le colonne affiancate lasciano spazio.
+
 ### Sul Mac: colonna, temi, scorciatoie
 
 Da 1000 pixel in su l'app cambia impaginazione: la barra in basso sparisce e
