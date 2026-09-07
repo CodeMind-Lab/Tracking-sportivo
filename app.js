@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.07.6';
+const APP_VERSION = '2026.09.07.7';
 
 const KEY = 'forma.v1';
 
@@ -1499,6 +1499,47 @@ async function iscrizionePush() {
 const pushPossibile = () =>
   'serviceWorker' in navigator && 'PushManager' in window && typeof Notification !== 'undefined';
 
+/* Copiare un blocco di SQL è un gesto che compare in due posti — la
+   sincronizzazione e le notifiche — e in tutti e due il problema è lo stesso:
+   sul telefono gli appunti a volte non sono accessibili, e allora l'unica
+   strada che funziona sempre è mostrare il testo e lasciarlo selezionare. */
+async function copiaOMostraSql(titolo, sql) {
+  try {
+    await navigator.clipboard.writeText(sql);
+    toast('SQL copiato: incollalo in Supabase → SQL Editor');
+  } catch (e) {
+    apriSheet('<h2 class="sheet-title">' + esc(titolo) + '</h2>' +
+      '<p class="set-note">SQL Editor → New query → incolla tutto → Run.</p>' +
+      '<textarea class="txtin" rows="12" readonly ' +
+      'style="font-family:ui-monospace,monospace;font-size:11px">' +
+      esc(sql) + '</textarea>');
+  }
+}
+
+/* Lo stesso contenuto di supabase-push.sql. La tabella delle notifiche è
+   separata da quella dei dati e va creata a parte: chi lancia solo il primo
+   SQL arriva fin qui e trova un 404 che non dice niente. */
+const SQL_PUSH = `create table if not exists public.forma_push (
+  endpoint      text primary key,
+  user_id       uuid not null default auth.uid() references auth.users on delete cascade,
+  p256dh        text not null,
+  auth          text not null,
+  versione      text not null default '',
+  preavviso     int  not null default 15,
+  fuso          text not null default 'Europe/Rome',
+  inviati       jsonb not null default '[]'::jsonb,
+  visto         timestamptz not null default now(),
+  creato        timestamptz not null default now()
+);
+
+alter table public.forma_push enable row level security;
+
+drop policy if exists "solo i propri dispositivi" on public.forma_push;
+create policy "solo i propri dispositivi" on public.forma_push
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create index if not exists forma_push_user on public.forma_push (user_id);`;
+
 async function attivaPush(bottone) {
   if (!pushPossibile()) {
     toast('Questo dispositivo non supporta le notifiche push');
@@ -1535,9 +1576,12 @@ async function attivaPush(bottone) {
        dirlo invece di lasciare un errore generico. */
     const inStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                          window.navigator.standalone;
-    toast(inStandalone
-      ? 'Non è riuscita: ' + String(e.message || e).slice(0, 70)
-      : 'Su iPhone le notifiche funzionano solo dall’app aggiunta alla schermata Home');
+    const msg = String(e.message || e);
+    toast(!inStandalone
+      ? 'Su iPhone le notifiche funzionano solo dall’app aggiunta alla schermata Home'
+      : /PGRST205|Could not find the table|does not exist/i.test(msg)
+        ? 'Manca la tabella forma_push: premi “Copia l’SQL delle notifiche” qui sotto e lancialo su Supabase'
+        : 'Non è riuscita: ' + msg.slice(0, 70));
   }
   render();
 }
@@ -3049,8 +3093,10 @@ function vistaSettings() {
       sta per cominciare. Ti avvisa anche quando esce una versione nuova dell'app.</p>
     <p class="set-note">Perché funzionino servono tre cose: la sincronizzazione collegata,
       l'app <b>aggiunta alla schermata Home</b> (da Safari il push su iPhone non esiste), e
-      la funzione installata sul tuo progetto Supabase — le istruzioni sono in
-      <b>LEGGIMI.md</b>, sezione <i>Notifiche push</i>.</p>
+      sul tuo progetto Supabase la <b>tabella dei dispositivi</b> più la funzione che manda
+      gli avvisi. La tabella la crei col pulsante qui sotto; per la funzione le istruzioni
+      sono in <b>LEGGIMI.md</b>, sezione <i>Notifiche push</i>.</p>
+    <button class="btn sec" data-act="sql-push">Copia l’SQL delle notifiche</button>
     <p class="set-note">Questa è la strada buona: le voci diventano eventi del calendario
       di sistema, con la sveglia ${num(DB.settings.preavviso, 15)} minuti prima. Quelli
       suonano davvero, anche col telefono in tasca. Le voci che si ripetono ogni settimana
@@ -4543,6 +4589,7 @@ function azione(a, b) {
 
   if (a === 'aggiorna') { aggiornaApp(b); return; }
 
+  if (a === 'sql-push') { copiaOMostraSql('SQL delle notifiche', SQL_PUSH); return; }
   if (a === 'backup') {
     scarica('forma-backup-' + oggiISO() + '.json',
       JSON.stringify({ v: 1, app: 'forma', versione: APP_VERSION, items: DB.items, settings: DB.settings }, null, 1),

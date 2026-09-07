@@ -508,21 +508,7 @@ create index if not exists forma_items_user_updated
       return;
     }
 
-    if (id === 'syncSql') {
-      try {
-        await navigator.clipboard.writeText(SQL_SETUP);
-        toast('SQL copiato: incollalo in Supabase → SQL Editor');
-      } catch (e) {
-        /* Senza permesso per gli appunti resta il modo che funziona sempre:
-           mostrarlo e lasciarlo selezionare a mano. */
-        apriSheet('<h2 class="sheet-title">SQL da incollare in Supabase</h2>' +
-          '<p class="set-note">SQL Editor → New query → incolla tutto → Run.</p>' +
-          '<textarea class="txtin" rows="12" readonly ' +
-          'style="font-family:ui-monospace,monospace;font-size:11px">' +
-          esc(SQL_SETUP) + '</textarea>');
-      }
-      return;
-    }
+    if (id === 'syncSql') { copiaOMostraSql('SQL della sincronizzazione', SQL_SETUP); return; }
     if (id === 'syncReset') {
       cfg().url = ''; cfg().anon = '';
       problemaCollegamento = '';
