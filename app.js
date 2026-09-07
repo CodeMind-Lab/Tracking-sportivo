@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.07.2';
+const APP_VERSION = '2026.09.07.3';
 
 const KEY = 'forma.v1';
 
