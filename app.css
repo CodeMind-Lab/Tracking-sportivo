@@ -1,11 +1,10 @@
-/* Forma — grafite caldo, verde bosco, terracotta
-   Verde per quello che si fa, terracotta per quello che va guardato, e sotto
-   un grigio caldo: né il bianco da laboratorio né il nero assoluto, che sono
-   i due modi di stancare gli occhi di chi apre la stessa pagina ogni giorno.
-   I colori vivi restano ai dati — i macro, gli esiti, gli avvisi — e non
-   all'interfaccia. I nomi delle variabili dicono il ruolo (primario, accento,
-   evidenza, pannello) e non la tinta: cambiare tavolozza costa due blocchi,
-   non duecento regole. */
+/* Forma — schede bianche, blu, molto respiro
+   Blu per quello che si tocca, e i colori vivi solo sui dati: proteine blu,
+   carboidrati verde, grassi ambra. Le schede si staccano dal fondo perché
+   sono bianche su un grigio chiarissimo, non perché hanno un bordo marcato o
+   un'ombra pesante. I nomi delle variabili dicono il ruolo (primario,
+   accento, evidenza, pannello) e non la tinta: cambiare tavolozza costa due
+   blocchi, non duecento regole. */
 
 /* Il carattere sta nel repository e non su un CDN: l'app deve aprirsi in
    aereo, e un font che arriva dalla rete lascerebbe il testo di ripiego. */
@@ -21,132 +20,132 @@
 }
 
 :root, :root[data-tema="chiaro"] {
-  /* Verde bosco per quello che si fa, terracotta per quello che va guardato,
-     e sotto un grigio caldo invece che neutro: un pannello di numeri letto
-     ogni giorno stanca meno su carta che su bianco da laboratorio. */
-  --primario:#1F6B4D;
-  --primario-vivo:#175540;
-  --primario-tinta:rgba(31,107,77,.12);
-  --accento:#3E9E75;
-  --accento-tinta:rgba(62,158,117,.14);
-  --secondario:#2A7C5A;
-  --evidenza:#C0552F;
-  --evidenza-scuro:#A3401F;
+  /* Blu come colore che comanda, schede bianche su un grigio chiarissimo, e i
+     dati con una tinta ciascuno: proteine blu, carboidrati verde, grassi
+     ambra. Molto respiro fra un blocco e l'altro — è quello, più del colore,
+     che fa sembrare ordinata una pagina piena di numeri. */
+  --primario:#2563EB;
+  --primario-vivo:#1D4ED8;
+  --primario-tinta:rgba(37,99,235,.10);
+  --accento:#3B82F6;
+  --accento-tinta:rgba(59,130,246,.12);
+  --secondario:#2563EB;
+  --evidenza:#F97316;
+  --evidenza-scuro:#EA580C;
 
-  /* superfici: carta calda, mai bianco pieno */
-  --fondo:#F2F1EC;
-  --superficie:#FBFAF6;
-  --superficie-2:#F5F4EE;
+  /* superfici: schede bianche, pagina appena grigia perché le schede si vedano */
+  --fondo:#F4F6F9;
+  --superficie:#FFFFFF;
+  --superficie-2:#F8FAFC;
   --bg:var(--superficie);
   --bg-elev:var(--superficie-2);
-  --bg-elev2:#E9E7DF;
-  --line:#DEDBD1;
-  --line-forte:#C5C1B4;
+  --bg-elev2:#EFF3F8;
+  --line:#E6EAF0;
+  --line-forte:#CBD3DF;
 
-  --txt:#1B1A16;
-  --txt-dim:#4C4A42;
-  --txt-faint:#64625A;
-  --txt-forte:#100F0C;
+  --txt:#111827;
+  --txt-dim:#4B5563;
+  --txt-faint:#5F6B7A;
+  --txt-forte:#0B1220;
 
-  --secondario-txt:#1A6047;
-  --accento-txt:#226B4F;
+  --secondario-txt:#1D4ED8;
+  --accento-txt:#1E40AF;
   --rail-barra:var(--primario);
-  --rail-bg:#E8E6DE;
-  --rail-line:#D3CFC3;
+  --rail-bg:#FFFFFF;
+  --rail-line:#E6EAF0;
 
-  /* Il pannello grande è inchiostro, non colore: fa da quadrante, e i colori
-     che ci stanno sopra restano quelli dei dati. */
-  --pannello:#23221D;
-  --pannello-line:#3A3830;
+  /* Il pannello pieno resta scuro ma vira al blu: è il quadrante, e su una
+     pagina bianca deve essere l'unica cosa che pesa. */
+  --pannello:#111827;
+  --pannello-line:#1F2937;
 
-  --ok-bg:rgba(27,122,80,.13);   --ok-txt:#14603D;
-  --no-bg:rgba(179,38,30,.11);   --no-txt:#932018;
-  --evidenza-txt:#A3401F;
+  --ok-bg:rgba(22,163,74,.12);   --ok-txt:#136A33;
+  --no-bg:rgba(220,38,38,.10);   --no-txt:#B91C1C;
+  --evidenza-txt:#C2410C;
 
   --accent:var(--evidenza);
-  --accent-soft:rgba(192,85,47,.12);
+  --accent-soft:rgba(249,115,22,.12);
   --prog:var(--primario);
-  --ok:#1B7A50;
-  --ok-tinta:rgba(27,122,80,.13);
-  --danger:#B3261E;
+  --ok:#16A34A;
+  --ok-tinta:rgba(22,163,74,.12);
+  --danger:#DC2626;
 
-  /* I tre macro sono dati: terra, ardesia e ocra si distinguono anche in una
-     barra alta sette pixel, e nessuno dei tre è il verde dei comandi. */
-  --prot:#C0552F;
-  --carb:#4E7CA8;
-  --gras:#B8862B;
+  --prot:#3B82F6;
+  --carb:#22C55E;
+  --gras:#F59E0B;
 
-  /* Angoli più stretti di prima: uno strumento di lavoro, non una scheda. */
-  --radius:12px;
-  --raggio-xl:16px;
+  /* Angoli larghi e ombre appena accennate: le schede si staccano dal fondo
+     per il bianco, non per il contorno. */
+  --radius:14px;
+  --raggio-xl:18px;
   --pillola:999px;
-  --shadow-sm:0 1px 2px rgba(27,26,22,.06);
-  --shadow-md:0 4px 14px -6px rgba(27,26,22,.20);
-  --shadow-lg:0 14px 30px -14px rgba(27,26,22,.32);
+  --shadow-sm:0 1px 2px rgba(17,24,39,.05);
+  --shadow-md:0 4px 16px -6px rgba(17,24,39,.12);
+  --shadow-lg:0 16px 36px -18px rgba(17,24,39,.22);
 
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bot:env(safe-area-inset-bottom,0px);
   --topbar-h:54px;
   --tabbar-h:58px;
   --rail:240px;
+  --nav-h:64px;
 
   color-scheme:light;
 }
 
-/* Lo scuro cambia i valori, non una regola di impaginazione. Il fondo è un
-   carbone caldo e non il nero pieno: sul nero assoluto i bordi delle schede
-   spariscono e resta un elenco che galleggia nel vuoto. */
+/* Lo scuro tiene la stessa impaginazione e sposta solo i valori: blu più
+   chiaro perché sul fondo notte quello pieno si spegne. */
 :root[data-tema="scuro"] {
-  --primario:#1F6B4D;
-  --primario-vivo:#2A8862;
-  --primario-tinta:rgba(62,158,117,.18);
-  --accento:#52C495;
-  --accento-tinta:rgba(82,196,149,.16);
-  --secondario:#3E9E75;
-  --evidenza:#C0552F;
-  --evidenza-scuro:#A3401F;
+  --primario:#2563EB;
+  --primario-vivo:#3B82F6;
+  --primario-tinta:rgba(59,130,246,.18);
+  --accento:#60A5FA;
+  --accento-tinta:rgba(96,165,250,.16);
+  --secondario:#60A5FA;
+  --evidenza:#FB923C;
+  --evidenza-scuro:#F97316;
 
-  --fondo:#131311;
-  --superficie:#1C1B18;
-  --superficie-2:#232220;
+  --fondo:#0B1120;
+  --superficie:#141B2D;
+  --superficie-2:#1B2438;
   --bg:var(--superficie);
   --bg-elev:var(--superficie-2);
-  --bg-elev2:#2C2B27;
-  --line:#33322D;
-  --line-forte:#47463F;
+  --bg-elev2:#232D45;
+  --line:#273249;
+  --line-forte:#3A4863;
 
-  --txt:#F4F2EC;
-  --txt-dim:#C3C0B6;
-  --txt-faint:#9C998D;
+  --txt:#F3F6FC;
+  --txt-dim:#C3CBDA;
+  --txt-faint:#98A2B6;
   --txt-forte:#FFFFFF;
 
-  --secondario-txt:#6FD3A2;
-  --accento-txt:#8BDCB6;
+  --secondario-txt:#93C5FD;
+  --accento-txt:#BFDBFE;
   --rail-barra:var(--accento);
-  --rail-bg:#1A1916;
-  --rail-line:#2E2D28;
+  --rail-bg:#111827;
+  --rail-line:#232D45;
 
-  --pannello:#20201B;
-  --pannello-line:#38372F;
+  --pannello:#182238;
+  --pannello-line:#2B3854;
 
-  --ok-bg:rgba(52,201,138,.18);   --ok-txt:#6EDCA8;
-  --no-bg:rgba(240,115,106,.18);  --no-txt:#F5A29B;
-  --evidenza-txt:#F0906A;
+  --ok-bg:rgba(74,222,128,.18);   --ok-txt:#86EFAC;
+  --no-bg:rgba(248,113,113,.18);  --no-txt:#FCA5A5;
+  --evidenza-txt:#FDBA74;
 
   --accent:var(--evidenza);
-  --accent-soft:rgba(192,85,47,.20);
+  --accent-soft:rgba(251,146,60,.18);
   --prog:var(--accento);
-  --ok:#34C98A;
-  --ok-tinta:rgba(52,201,138,.16);
-  --danger:#F0736A;
+  --ok:#4ADE80;
+  --ok-tinta:rgba(74,222,128,.16);
+  --danger:#F87171;
 
-  --prot:#E08050;
-  --carb:#7FA8D4;
-  --gras:#E0B355;
+  --prot:#60A5FA;
+  --carb:#4ADE80;
+  --gras:#FBBF24;
 
   --shadow-sm:0 1px 2px rgba(0,0,0,.4);
-  --shadow-md:0 6px 18px -8px rgba(0,0,0,.65);
-  --shadow-lg:0 16px 34px -16px rgba(0,0,0,.75);
+  --shadow-md:0 6px 18px -8px rgba(0,0,0,.6);
+  --shadow-lg:0 16px 34px -16px rgba(0,0,0,.7);
 
   color-scheme:dark;
 }
@@ -401,12 +400,12 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .daynav .lbl:active{background:var(--superficie)}
 
 /* ---------- striscia dei giorni ---------- */
-.weekstrip{display:flex;gap:5px;margin-bottom:12px}
+.weekstrip{display:flex;gap:6px;margin-bottom:16px}
 .weekstrip button{
-  flex:1;min-width:0;padding:8px 2px 7px;border-radius:9px;
-  background:var(--bg-elev2);border:1px solid var(--line);
-  font-size:11.5px;font-weight:750;color:var(--txt-dim);
-  display:flex;flex-direction:column;align-items:center;gap:4px;
+  flex:1;min-width:0;padding:7px 2px 6px;border-radius:var(--pillola);
+  background:var(--superficie);border:1px solid var(--line);
+  font-size:11.5px;font-weight:700;color:var(--txt-dim);
+  display:flex;flex-direction:column;align-items:center;gap:3px;
 }
 .weekstrip button.on{background:var(--primario);color:#fff;border-color:var(--primario)}
 /* Il pallino dice a colpo d'occhio dove c'è già qualcosa: corallo = registrato
@@ -427,32 +426,34 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .weekstrip.giorni button.piu{flex:0 0 46px;color:var(--evidenza-txt);font-size:17px;justify-content:center}
 
 /* ---------- riepilogo calorie ---------- */
+/* Bianca come tutte le altre: nel riferimento non c'è nessun blocco scuro, e
+   il contrasto lo fa il colore dell'anello, non il fondo della scheda. */
 .kcal-card{
-  background:var(--pannello);border:1px solid var(--pannello-line);
-  border-radius:var(--raggio-xl);padding:16px 16px 14px;color:#fff;
-  box-shadow:var(--shadow-md);
+  background:var(--superficie);border:1px solid var(--line);
+  border-radius:var(--raggio-xl);padding:16px 16px 14px;color:var(--txt);
+  box-shadow:var(--shadow-sm);
 }
 .kcal-top{display:flex;align-items:center;gap:16px}
 .ring{width:96px;height:96px;flex:none;position:relative}
 .ring svg{width:96px;height:96px;stroke:none}
-.ring .rest{fill:none;stroke:rgba(255,255,255,.16);stroke-width:9}
-.ring .arc{fill:none;stroke:var(--accento);stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .45s}
+.ring .rest{fill:none;stroke:var(--bg-elev2);stroke-width:9}
+.ring .arc{fill:none;stroke:var(--primario);stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .45s}
 .ring.over .arc{stroke:var(--evidenza)}
 .ring .mid{
   position:absolute;inset:0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;line-height:1;
 }
-.ring .mid b{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
-.ring .mid span{font-size:9.5px;color:rgba(255,255,255,.78);margin-top:4px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.ring .mid b{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em;color:var(--txt-forte)}
+.ring .mid span{font-size:9.5px;color:var(--txt-faint);margin-top:4px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
 .kcal-side{flex:1;min-width:0}
 .kcal-side .big{font-size:15px;font-weight:700;margin-bottom:2px}
 .kcal-side .sub{
-  font-size:12px;color:rgba(255,255,255,.74);
+  font-size:12px;color:var(--txt-dim);
   display:flex;align-items:center;flex-wrap:wrap;gap:6px;
 }
 .kcal-side .sub .link{
-  color:rgba(255,255,255,.72);font-size:12px;font-weight:650;
-  text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(255,255,255,.28);
+  color:var(--secondario-txt);font-size:12px;font-weight:650;
+  text-decoration:underline;text-underline-offset:2px;text-decoration-color:var(--line-forte);
 }
 /* L'etichetta è anche l'interruttore: dice quale dei due giorni è e cambiarlo
    costa un tocco sulla parola che stai già leggendo. */
@@ -463,17 +464,17 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   font-size:11.5px;font-weight:750;letter-spacing:.01em;
   font-variant-numeric:tabular-nums;
 }
-.tipo-sw.off{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
+.tipo-sw.off{background:var(--bg-elev2);color:var(--txt-dim)}
 .tipo-sw svg{width:12px;height:12px;stroke-width:2.4;opacity:.75}
 .tipo-sw:active{background:var(--accento);color:var(--primario)}
 
-.macros{display:flex;gap:12px;margin-top:14px;padding-top:13px;border-top:1px solid rgba(255,255,255,.12)}
+.macros{display:flex;gap:12px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
 .macro{flex:1;min-width:0}
 .macro .mh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
-.macro .mn{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.74)}
+.macro .mn{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--txt-faint)}
 .macro .mv{font-size:13.5px;font-weight:750;font-variant-numeric:tabular-nums}
-.macro .mv i{font-style:normal;color:rgba(255,255,255,.68);font-weight:600}
-.macro .bar{height:7px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden}
+.macro .mv i{font-style:normal;color:var(--txt-faint);font-weight:600}
+.macro .bar{height:7px;border-radius:99px;background:var(--bg-elev2);overflow:hidden}
 .macro .bar i{display:block;height:100%;border-radius:99px;transition:width .4s}
 .macro.p .bar i{background:var(--prot)}
 .macro.c .bar i{background:var(--carb)}
@@ -481,7 +482,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .macro .bar i.over{background:var(--danger)}
 /* I grammi che restano stanno sotto la barra, non dentro: dentro avrebbero
    costretto a rimpicciolire i numeri che si leggono davvero. */
-.macro .mr{margin-top:6px;font-size:11px;font-weight:600;color:rgba(255,255,255,.74);letter-spacing:.01em}
+.macro .mr{margin-top:6px;font-size:11px;font-weight:600;color:var(--txt-faint);letter-spacing:.01em}
 
 /* ---------- assegnazione giorno → giornata tipo ---------- */
 /* Due righe: sopra il giorno con le sue calorie, sotto i due menu. Su una
@@ -571,8 +572,8 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .turno-bar{
   display:flex;align-items:center;gap:12px;width:100%;text-align:left;
   padding:12px 14px;border-radius:var(--radius);margin-bottom:12px;
-  background:var(--pannello);border:1px solid var(--pannello-line);
-  color:#fff;box-shadow:var(--shadow-sm);
+  background:var(--superficie);border:1px solid var(--line);
+  color:var(--txt);box-shadow:var(--shadow-sm);
   border-left:4px solid var(--accento);
 }
 /* Il colore arriva da come hai impostato il turno, non da una classe fissa:
@@ -584,19 +585,19 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 }
 .tb-i{font-size:22px;flex:none;line-height:1}
 .tb-t{flex:1;min-width:0}
-.tb-t b{display:block;font-size:16px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.tb-t b{display:block;font-size:16px;font-weight:800;letter-spacing:-.02em;line-height:1.2;color:var(--txt-forte)}
 .tb-t span{
-  display:block;font-size:11.5px;margin-top:2px;opacity:.78;
+  display:block;font-size:11.5px;margin-top:2px;color:var(--txt-dim);
   font-variant-numeric:tabular-nums;
 }
-.tb-c{flex:none;opacity:.5}
+.tb-c{flex:none;color:var(--txt-faint)}
 .tb-c svg{width:18px;height:18px;display:block}
 .turno-bar:active{opacity:.88}
 
 /* quando il turno del giorno non segue la settimana */
 .kcal-side .ecc{
-  font-size:10.5px;font-weight:700;color:#8BDCB6;
-  background:rgba(82,196,149,.18);padding:2px 7px;border-radius:99px;
+  font-size:10.5px;font-weight:700;color:var(--evidenza-txt);
+  background:var(--accent-soft);padding:2px 7px;border-radius:99px;
 }
 
 /* la riga selezionata nel pannello di scelta */
@@ -717,20 +718,21 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 /* ---------- l'acqua, dentro la scheda delle calorie ---------- */
 .acqua-row{
   display:grid;grid-template-columns:1fr auto;gap:9px 12px;align-items:center;
-  margin-top:13px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);
+  margin-top:13px;padding-top:12px;border-top:1px solid var(--line);
 }
 .ar-t{display:flex;align-items:baseline;gap:9px;font-size:10.5px;font-weight:800;
-  letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.74);min-width:0}
-.ar-t b{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.ar-t b i{font-style:normal;font-size:11.5px;font-weight:650;color:rgba(255,255,255,.68);letter-spacing:0}
+  letter-spacing:.05em;text-transform:uppercase;color:var(--txt-faint);min-width:0}
+.ar-t b{font-size:17px;font-weight:800;color:var(--txt-forte);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.ar-t b i{font-style:normal;font-size:11.5px;font-weight:650;color:var(--txt-faint);letter-spacing:0}
 .ar-b{display:flex;gap:6px;flex:none}
 .ar-b button{
-  padding:6px 11px;border-radius:9px;background:rgba(255,255,255,.14);
-  color:#fff;font-size:12px;font-weight:750;
+  padding:6px 11px;border-radius:9px;background:var(--bg-elev2);border:1px solid var(--line);
+  color:var(--txt-dim);font-size:12px;font-weight:750;
 }
-.ar-b button:active{background:var(--accento);color:var(--primario)}
+.ar-b button:hover{color:var(--txt-forte);border-color:var(--line-forte)}
+.ar-b button:active{background:var(--primario);color:#fff;border-color:var(--primario)}
 .acqua-row .water{grid-column:1 / -1;margin-top:0}
-.acqua-row .water i{background:rgba(255,255,255,.16)}
+.acqua-row .water i{background:var(--bg-elev2)}
 .acqua-row .water i.on{background:var(--accento)}
 
 /* ---------- contatori rapidi ---------- */
@@ -773,6 +775,70 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .wk-bars .wb u.si{background:var(--secondario)}
 .wk-bars .wb span{font-size:9.5px;font-weight:750;color:var(--txt-faint);text-transform:uppercase}
 .wk-bars .wb.on span{color:var(--txt-forte)}
+
+/* ---------- intestazione della dashboard ---------- */
+/* Sul telefono saluto e data non stanno sulla stessa riga: il nome andrebbe a
+   capo sotto la data, che è il modo più brutto di rompere un titolo. */
+.hero{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.hero-d{align-self:flex-start}
+.hero-t h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--txt-forte)}
+.hero-t p{margin:4px 0 0;font-size:13.5px;color:var(--txt-dim)}
+.hero-d{display:flex;align-items:center;gap:2px;flex:none}
+.hero-d .arw{
+  width:32px;height:32px;display:grid;place-items:center;border-radius:9px;
+  color:var(--txt-dim);
+}
+.hero-d .arw:hover{background:var(--bg-elev2);color:var(--txt-forte)}
+.hero-lbl{
+  padding:6px 10px;border-radius:9px;font-size:13px;font-weight:650;color:var(--txt-dim);
+  white-space:nowrap;
+}
+.hero-lbl:hover{background:var(--bg-elev2);color:var(--txt-forte)}
+
+/* ---------- le quattro tessere ----------
+   Valore grande e bersaglio piccolo accanto: si leggono di sfuggita, e per
+   questo non hanno grafici dentro. La barra sotto è l'unica cosa che serve
+   per sapere se sei a metà o quasi in fondo. */
+.tessere{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.tess{
+  background:var(--superficie);border:1px solid var(--line);border-radius:var(--radius);
+  padding:13px 14px;box-shadow:var(--shadow-sm);min-width:0;
+}
+.tess-h{
+  display:flex;align-items:center;gap:7px;
+  font-size:11.5px;font-weight:700;color:var(--txt-dim);letter-spacing:.01em;
+}
+.tess-i{
+  width:26px;height:26px;flex:none;border-radius:8px;display:grid;place-items:center;
+  font-size:13px;line-height:1;
+}
+.tess.verde .tess-i{background:rgba(34,197,94,.14)}
+.tess.ambra .tess-i{background:rgba(245,158,11,.16)}
+.tess.blu   .tess-i{background:rgba(59,130,246,.14)}
+.tess.oliva .tess-i{background:rgba(132,164,58,.16)}
+.tess-v{
+  margin-top:9px;font-size:23px;font-weight:800;letter-spacing:-.03em;
+  color:var(--txt-forte);font-variant-numeric:tabular-nums;line-height:1.1;
+}
+.tess-v small{
+  display:block;margin-top:2px;font-size:11.5px;font-weight:600;
+  color:var(--txt-faint);letter-spacing:0;
+}
+.tess-b{height:5px;border-radius:99px;background:var(--bg-elev2);overflow:hidden;margin-top:10px}
+.tess-b i{display:block;height:100%;border-radius:99px;transition:width .4s}
+.tess.verde .tess-b i{background:#22C55E}
+.tess.ambra .tess-b i{background:#F59E0B}
+.tess.blu   .tess-b i{background:#3B82F6}
+.tess.oliva .tess-b i{background:#84A43A}
+.tess.oltre .tess-b i{background:var(--danger)}
+.tess.oltre .tess-v{color:var(--danger)}
+.tess-az{display:flex;gap:6px;margin-top:10px}
+.tess-az button{
+  flex:1;height:30px;border-radius:8px;font-size:12px;font-weight:650;
+  background:var(--bg-elev2);border:1px solid var(--line);color:var(--txt-dim);
+}
+.tess-az button:hover{color:var(--txt-forte);border-color:var(--line-forte)}
+.tess-az button:active{background:var(--primario);color:#fff;border-color:var(--primario)}
 
 /* ---------- adesso: il prossimo pasto del piano ---------- */
 /* Sta in cima perché è l'unica scheda che risponde con un'azione invece che
@@ -1377,111 +1443,89 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
 @media (min-width:1000px){
   body{background:var(--fondo)}
 
-  /* ---------- colonna ---------- */
+  /* ---------- barra di navigazione in alto ----------
+     Non più una colonna a sinistra: una barra bianca larga tutta la pagina,
+     con il marchio a sinistra e le schede in fila. Toglie 240 px di larghezza
+     al contenuto, che su una plancia a tre colonne è l'unica cosa che conta. */
   #side{
-    display:flex;flex-direction:column;
-    position:fixed;top:0;left:0;bottom:0;width:var(--rail);z-index:45;
+    display:flex;flex-direction:row;align-items:center;gap:26px;
+    position:fixed;top:0;left:0;right:0;height:var(--nav-h);width:auto;z-index:45;
     background:var(--rail-bg);color:var(--txt);
-    border-right:1px solid var(--rail-line);
-    padding:20px 14px 14px;gap:16px;
-    transition:width .26s cubic-bezier(.4,0,.2,1);
+    border-right:0;border-bottom:1px solid var(--rail-line);
+    padding:0 26px;
   }
-  .side-logo{display:flex;align-items:center;gap:11px;padding:0 6px;min-height:40px}
+  .side-logo{display:flex;align-items:center;gap:10px;flex:none}
   .side-logo .sub{
     font-size:11px;font-weight:700;color:var(--txt);letter-spacing:-.01em;
-    white-space:nowrap;overflow:hidden;margin:0;line-height:1.25;
+    white-space:nowrap;margin:0;line-height:1.2;
   }
-  .side-logo .sub b{display:block;font-size:15px;font-weight:800;letter-spacing:-.02em}
-  .side-logo .sub span{display:block;font-size:10.5px;font-weight:600;color:var(--txt-faint)}
+  .side-logo .sub b{display:block;font-size:16px;font-weight:800;letter-spacing:-.025em}
+  .side-logo .sub span{display:block;font-size:10px;font-weight:600;color:var(--txt-faint)}
 
-  /* ---------- il menu, con la pillola che scorre ---------- */
-  .side-menu{
-    --voce:44px; --passo:46px;
-    position:relative;display:flex;flex-direction:column;gap:2px;
-  }
-  .side-menu::before{
-    content:"MENU";
-    display:block;padding:0 12px 8px;
-    font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--txt-faint);
-  }
-  /* La pillola non è lo sfondo della voce: è un elemento solo, che si sposta.
-     È questo che si vede muoversi quando cambi schermata. */
+  /* ---------- le schede, con la riga che scorre ----------
+     La riga sotto la voce attiva si sposta invece di accendersi e spegnersi.
+     Larghezza e posizione le misura il codice, perché "Allenamento" e "Cibo"
+     non sono larghe uguale e un passo fisso le mancherebbe entrambe. */
+  .side-menu{position:relative;display:flex;flex-direction:row;gap:4px;flex:1;min-width:0}
+  .side-menu::before{content:none}
   .side-ind{
-    position:absolute;left:0;right:0;top:26px;height:var(--voce);
-    border-radius:10px;background:var(--primario-tinta);
-    box-shadow:inset 3px 0 0 0 var(--rail-barra);
-    transform:translateY(calc(var(--i,0) * var(--passo)));
-    transition:transform .28s cubic-bezier(.34,1.4,.48,1),background-color .25s ease;
+    position:absolute;left:0;top:auto;bottom:-1px;height:2.5px;width:var(--w,0px);
+    border-radius:3px 3px 0 0;background:var(--rail-barra);box-shadow:none;
+    transform:translateX(var(--x,0px));
+    transition:transform .3s cubic-bezier(.4,0,.2,1),width .3s cubic-bezier(.4,0,.2,1),opacity .2s;
     pointer-events:none;
   }
   .side-menu button{
     position:relative;z-index:1;
-    display:flex;align-items:center;gap:12px;height:var(--voce);padding:0 12px;
-    border-radius:10px;color:var(--txt-dim);font-size:14.5px;font-weight:500;
-    text-align:left;transition:color .18s ease;
+    display:flex;align-items:center;gap:7px;height:var(--nav-h);padding:0 12px;
+    border-radius:0;color:var(--txt-dim);font-size:14.5px;font-weight:600;
+    transition:color .18s ease;
   }
-  .side-menu button svg{width:19px;height:19px;flex:none;opacity:.62;transition:opacity .18s}
+  .side-menu button svg{width:18px;height:18px;flex:none;opacity:.6;transition:opacity .18s}
   .side-menu button:hover{color:var(--txt)}
-  .side-menu button.on{color:var(--txt-forte);font-weight:650;background:transparent}
+  .side-menu button.on{color:var(--secondario-txt)}
   .side-menu button.on svg{opacity:1}
-  .side-menu button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .side-menu button span{white-space:nowrap}
+  /* Impostazioni ha già il suo posto a destra: nell'elenco sarebbe due volte */
+  .side-menu button[data-tab="settings"]{display:none}
 
-  .side-foot{
-    margin-top:auto;padding-top:12px;border-top:1px solid var(--line);
-    display:flex;flex-direction:column;gap:8px;
-  }
+  .side-foot{margin:0;padding:0;border:0;display:flex;align-items:center;gap:10px;flex:none}
   .side-az{display:flex;gap:6px}
   .side-az button{
-    flex:1;height:34px;display:flex;align-items:center;justify-content:center;gap:6px;
-    border-radius:10px;background:var(--superficie);border:1px solid var(--line);
-    color:var(--txt-dim);font-size:11.5px;font-weight:650;
+    height:36px;padding:0 12px;display:flex;align-items:center;justify-content:center;gap:6px;
+    border-radius:var(--pillola);background:var(--superficie-2);border:1px solid var(--line);
+    color:var(--txt-dim);font-size:12px;font-weight:650;
   }
   .side-az button:hover{color:var(--txt-forte);border-color:var(--line-forte)}
   .side-az button svg{width:15px;height:15px}
-  .side-ver{font-size:10.5px;line-height:1.6;color:var(--txt-faint);padding:0 4px}
-  .side-ver b{color:var(--txt-dim);font-weight:700}
-
-  /* ---------- colonna stretta ---------- */
-  :root:has(#side.stretta){--rail:74px}
-  #side.stretta{padding-left:11px;padding-right:11px;align-items:stretch}
-  #side.stretta .side-logo{justify-content:center;padding:0}
-  #side.stretta .side-logo .sub{display:none}
-  #side.stretta .side-menu::before{content:"";padding:0 0 8px}
-  #side.stretta .side-menu button{justify-content:center;padding:0;gap:0}
-  #side.stretta .side-menu button span{display:none}
-  #side.stretta .side-ind{box-shadow:none}
-  #side.stretta .side-az{flex-direction:column}
-  #side.stretta .side-az button span{display:none}
-  #side.stretta .side-ver{display:none}
+  /* La versione stava in fondo alla colonna; in una barra alta 64 px non ci
+     sta, e comunque la si legge in Impostazioni. */
+  .side-ver{display:none}
+  #btnStringi{display:none}
 
   #tabbar{display:none}
 
-  /* ---------- barra in alto ---------- */
-  #topbar{
-    left:var(--rail);height:calc(60px + var(--safe-top));
-    padding-left:30px;padding-right:22px;gap:10px;
-    transition:left .26s cubic-bezier(.4,0,.2,1);
-  }
-  #topTitle{
-    font-size:21px;letter-spacing:-.024em;padding-left:0;
-    flex-direction:column;align-items:flex-start;justify-content:center;gap:0;
-  }
-  .tt-d{font-size:11.5px;font-weight:600;color:var(--txt-faint);letter-spacing:0}
+  /* La barra grigia col titolo non serve più: il titolo lo dice
+     l'intestazione dentro il contenuto, e le schede stanno nella barra di
+     navigazione qui sopra. */
+  #topbar{display:none}
 
   #app{
-    margin:0 0 0 var(--rail);max-width:none;
-    padding:calc(60px + var(--safe-top) + 22px) 30px 48px;
-    transition:margin-left .26s cubic-bezier(.4,0,.2,1);
+    margin:0;max-width:none;
+    padding:calc(var(--nav-h) + 26px) 30px 56px;
   }
-  .wrap{max-width:1180px;margin:0 auto}
-
-  /* Sul Mac il tema si cambia dalla colonna, dove il pulsante ha anche il
-     nome scritto: quello tondo nella barra servirebbe solo a ripeterlo. */
-  #btnTemaTop{display:none}
+  .wrap{max-width:1240px;margin:0 auto}
 
   #fab{right:30px;bottom:30px;width:52px;height:52px}
   #rest{left:auto;right:30px;bottom:30px;width:340px;margin:0}
   #toast{left:auto;right:30px;transform:none;bottom:30px}
+
+  .tessere{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}
+  .tess{padding:16px 17px}
+  .tess-v{font-size:26px}
+  .hero{flex-direction:row;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}
+  .hero-d{align-self:center}
+  .hero-t h1{font-size:30px}
 
   /* Frecce e striscia della settimana su una riga sola: sono lo stesso comando
      e in colonna sprecavano la fascia più preziosa della pagina. */

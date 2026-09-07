@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.07.9';
+const APP_VERSION = '2026.09.08.3';
 
 const KEY = 'forma.v1';
 
@@ -157,7 +157,7 @@ const TARGET_DEFAULT = {
   kcal: 2000, kcalOff: 1900, prot: 130, carb: 200, gras: 65,
   acqua: 2500, passi: 8000, olio: 25
 };
-const PROFILO_DEFAULT = { altezza: 175, pesoObiettivo: 75, giroObiettivo: 90 };
+const PROFILO_DEFAULT = { nome: '', altezza: 175, pesoObiettivo: 75, giroObiettivo: 90 };
 
 function cfg() {
   let c = DB.items.find(i => i.t === 'cfg');
@@ -723,20 +723,21 @@ function vistaOggi() {
   const kt = kcalTarget(d);
   const resta = r0(kt - tot.k);
 
+  let h = intestazioneOggi(d);
+
   /* Frecce, data e striscia della settimana sono un comando solo: su schermo
      largo stanno affiancati, e la data smette di essere scritta tre volte fra
      titolo della pagina, navigatore e striscia. */
-  let h = `<div class="giorno-bar">` + barraGiorno(d);
-
   /* La settimana in cui cade il giorno mostrato: toccare "Gio" costa un tocco,
-     mentre con le sole frecce ce ne vorrebbero tre. */
+     mentre con le sole frecce ce ne vorrebbero tre. Le frecce e la data stanno
+     già nell'intestazione, quindi qui resta la sola striscia. */
   const lun = lunediDi(d);
   h += `<div class="weekstrip">${GIORNI_SETT.map((wg, i) => {
     const data = spostaData(lun, i);
     const suo = righeDi(data).length > 0;
     return `<button data-vaidata="${data}" class="${data === d ? 'on' : ''}">
       ${wg.b}<i class="${suo ? 'pieno' : (pianoPieno(wg.id) ? 'piano' : '')}"></i></button>`;
-  }).join('')}</div></div>`;
+  }).join('')}</div>`;
 
   /* Turno o riposo non è sparito, è diventato la scritta stessa: dice già quale
      dei due sei e toccandola passi all'altro. Due pulsanti che ripetevano i
@@ -755,6 +756,8 @@ function vistaOggi() {
       <span>${tn ? esc(tn.ore || '') : 'Tocca per dire che turno fai oggi'}</span></span>
     <span class="tb-c"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>
   </button>`;
+
+  h += tessereOggi(d, tot, kt);
 
   /* Da qui in giù, due colonne sul Mac e una sola sul telefono: le stesse
      schede, impilate o affiancate. La navigazione qui sopra resta larga. */
@@ -859,29 +862,6 @@ function vistaOggi() {
     </div>`;
   }
 
-  /* Passi e olio: il primo si aggiorna una volta al giorno, il secondo si
-     conta da solo dalle righe del diario. Nessuno dei due ha bisogno di stare
-     nella scheda principale, ma tutti e due vanno visti prima di cena. */
-  const olio = olioDi(d);
-  h += `<div class="quick">
-    <div class="qcard">
-      <div class="qh">👟 Passi</div>
-      <div class="qv">${g.passi ? g.passi.toLocaleString('it-IT') : '—'}<small> / ${t.passi.toLocaleString('it-IT')}</small></div>
-      <div class="water">${Array.from({ length: 10 }, (_, i) =>
-        `<i class="${g.passi >= t.passi * (i + 1) / 10 ? 'on' : ''}"></i>`).join('')}</div>
-      <div class="qb"><button data-act="passi">Aggiorna</button></div>
-    </div>
-    <div class="qcard">
-      <div class="qh">🫒 Olio</div>
-      <div class="qv ${olio > t.olio ? 'oltre' : ''}">${olio ? r1(olio) : '—'}<small> / ${t.olio} g</small></div>
-      <div class="water">${Array.from({ length: 10 }, (_, i) =>
-        `<i class="${olio >= t.olio * (i + 1) / 10 ? (olio > t.olio ? 'oltre' : 'on') : ''}"></i>`).join('')}</div>
-      <div class="qb"><span class="qnota">${olio > t.olio
-        ? r1(olio - t.olio) + ' g oltre il massimo'
-        : olio ? 'ne restano ' + r1(t.olio - olio) + ' g' : 'si conta da solo'}</span></div>
-    </div>
-  </div>`;
-
   /* La settimana sta in una colonna sua: su schermo molto largo si vede senza
      scorrere, sotto i 1400 px torna in coda alla seconda colonna. */
   h += `</div><div class="bc-c">`;
@@ -896,6 +876,66 @@ function vistaOggi() {
    singola non può dirti: se la direzione è giusta. */
 /* L'integrazione del giorno. È una lista della spesa che si spunta: quello che
    conta è vedere in un colpo cosa manca ancora, non la storia. */
+/* L'intestazione della dashboard: saluto a sinistra, data a destra. Il saluto
+   cambia con l'ora — non è un vezzo, è il modo più corto di dire "questa è la
+   giornata di adesso" senza scrivere una data due volte. */
+function intestazioneOggi(d) {
+  const nome = (cfg().profilo.nome || '').trim();
+  const ora = new Date().getHours();
+  const salda = ora < 5 ? 'Buonanotte' : ora < 13 ? 'Buongiorno' : ora < 18 ? 'Buon pomeriggio' : 'Buonasera';
+  const oggi = d === oggiISO();
+  return `<div class="hero">
+    <div class="hero-t">
+      <h1>${oggi ? esc(salda) : esc(nomeGiorno(d))}${nome && oggi ? ' ' + esc(nome) : ''}</h1>
+      <p>${oggi
+        ? 'Oggi è un altro passo verso la tua versione migliore.'
+        : esc(dataLunga(d))}</p>
+    </div>
+    <div class="hero-d">
+      <button class="arw" data-day="-1" aria-label="Giorno precedente">
+        <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="hero-lbl" data-act="calendario">${esc(dataLunga(d))}</button>
+      <button class="arw" data-day="1" aria-label="Giorno successivo">
+        <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>`;
+}
+
+/* Le quattro tessere in cima. Sono i numeri che si guardano di sfuggita, e
+   per questo non hanno grafici dentro: valore grande, bersaglio piccolo. */
+function tessereOggi(d, tot, kt) {
+  const g = giorno(d);
+  const t = cfg().target;
+  const olio = olioDi(d);
+  const acqua = g.acqua || 0;
+  const tess = [
+    { ic: '\u{1F45F}', cls: 'verde', l: 'Passi',
+      v: g.passi ? g.passi.toLocaleString('it-IT') : '—', su: '/ ' + t.passi.toLocaleString('it-IT'),
+      q: t.passi ? Math.min(1, (g.passi || 0) / t.passi) : 0, act: 'passi' },
+    { ic: '\u{1F525}', cls: 'ambra', l: 'Calorie',
+      v: r0(tot.k).toLocaleString('it-IT'), su: '/ ' + r0(kt).toLocaleString('it-IT') + ' kcal',
+      q: kt ? Math.min(1, tot.k / kt) : 0, act: 'vai-diario' },
+    { ic: '\u{1F4A7}', cls: 'blu', l: 'Acqua',
+      v: r1(acqua / 1000) + ' L', su: '/ ' + r1(t.acqua / 1000) + ' L',
+      q: t.acqua ? Math.min(1, acqua / t.acqua) : 0, acqua: true },
+    { ic: '\u{1FAD2}', cls: 'oliva', l: 'Olio',
+      v: olio ? r1(olio) + ' g' : '—', su: '/ ' + t.olio + ' g',
+      q: t.olio ? Math.min(1, olio / t.olio) : 0, oltre: olio > t.olio }
+  ];
+  return `<div class="tessere">${tess.map(x => `
+    <div class="tess ${x.cls} ${x.oltre ? 'oltre' : ''}">
+      <div class="tess-h"><span class="tess-i">${x.ic}</span>${esc(x.l)}</div>
+      <div class="tess-v">${x.v}<small>${esc(x.su)}</small></div>
+      <div class="tess-b"><i style="width:${(x.q * 100).toFixed(0)}%"></i></div>
+      ${x.acqua
+        ? `<div class="tess-az">
+             <button data-acqua="-250" aria-label="Togli un bicchiere">−</button>
+             <button data-acqua="250">+250 ml</button>
+           </div>`
+        : x.act ? `<button class="tess-az sola" data-act="${x.act}">${x.act === 'passi' ? 'Aggiorna' : 'Vedi il diario'}</button>` : ''}
+    </div>`).join('')}</div>`;
+}
+
 function riquadroIntegrazione(d) {
   const voci = integratoriDi(d);
   const presi = voci.filter(x => integratorePreso(x, d)).length;
@@ -1769,13 +1809,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   if (temaSalvato() === 'auto') applicaTema('auto');
 });
 
-function stringiColonna() {
-  const side = $('#side');
-  const stretta = side.classList.toggle('stretta');
-  try { localStorage.setItem('forma.rail', stretta ? '1' : '0'); } catch (e) {}
-  /* La pillola sta ferma solo se ricalcolata: il menu ha cambiato larghezza. */
-  muoviPillola();
-}
+
 
 /* La pillola che segue la voce accesa. Si sposta di un passo per voce invece
    di accendersi e spegnersi: è l'unico pezzo di movimento della schermata, e
@@ -1784,11 +1818,15 @@ function muoviPillola() {
   const ind = $('#sideInd');
   if (!ind) return;
   const radice = { scheda: 'allena', sessione: 'allena', spesa: 'cibo', giornata: 'cibo' };
-  const i = TABS_ORDINE.indexOf(radice[view.name] || view.name);
-  if (i < 0) { ind.style.opacity = '0'; return; }
+  const b = $('.side-menu button[data-tab="' + (radice[view.name] || view.name) + '"]');
+  if (!b || !b.offsetParent) { ind.style.opacity = '0'; return; }
+  /* Misurata e non calcolata con un passo fisso: "Allenamento" è larga il
+     doppio di "Cibo", e una riga di larghezza fissa le mancherebbe entrambe. */
   ind.style.opacity = '1';
-  ind.style.setProperty('--i', i);
+  ind.style.setProperty('--x', b.offsetLeft + 'px');
+  ind.style.setProperty('--w', b.offsetWidth + 'px');
 }
+
 
 /* Il numero sull'icona della schermata Home. */
 function aggiornaPallino() {
@@ -2920,7 +2958,7 @@ function vistaReport() {
 
   /* ---------- andamento calorie ---------- */
   h += `<div class="panel"><div class="rep-h"><h3>Calorie giorno per giorno</h3>
-      <span class="hint">colonna terracotta = oltre il bersaglio</span></div>`;
+      <span class="hint">colonna arancione = oltre il bersaglio</span></div>`;
   if (giorni.length) {
     const ultimi = giorni.slice(-21);
     const maxK = Math.max(...ultimi.map(d => perGiorno[d].k), t.kcal) * 1.05;
@@ -3302,6 +3340,13 @@ function vistaSettings() {
   /* L'aspetto sta prima delle cose tecniche: è la sola voce di questa pagina
      che si cambia più di una volta nella vita dell'app. */
   const tSalv = temaSalvato();
+  h += `<div class="panel"><div class="label">Profilo</div>
+    <div class="field"><label>Come ti chiami</label>
+      <input type="text" data-nome value="${esc(cfg().profilo.nome || '')}" placeholder="Renato"></div>
+    <p class="set-note">Serve solo per il saluto in cima alla dashboard. Lascialo
+      vuoto e l'app saluta e basta.</p>
+  </div>`;
+
   h += `<div class="panel"><div class="label">Aspetto</div>
     <div class="seg" role="group" aria-label="Tema">
       ${[['auto', 'Sistema'], ['chiaro', 'Chiaro'], ['scuro', 'Scuro']].map(([id, l]) =>
@@ -4121,7 +4166,6 @@ document.addEventListener('click', e => {
   /* ---------- barra del recupero ---------- */
   if (b.id === 'btnTema' || b.id === 'btnTemaTop') { cambiaTema(); return; }
   if (b.dataset.temaScelta) { scegliTema(b.dataset.temaScelta); return; }
-  if (b.id === 'btnStringi') { stringiColonna(); return; }
 
   if (b.id === 'scanChiudi') { Scanner.chiudi(); return; }
   if (b.id === 'scanManuale') { Scanner.chiudi(); sheetCodiceManuale(''); return; }
@@ -5201,6 +5245,9 @@ document.addEventListener('input', e => {
     c[gruppo][chiave] = num(el.value);
     tocca(c); return;
   }
+  if (d.nome !== undefined) {
+    const c = cfg(); c.profilo.nome = el.value.trim().slice(0, 24); tocca(c); return;
+  }
   if (d.rec !== undefined) { DB.settings.recDefault = Math.max(10, r0(num(el.value, 90))); save(); return; }
   if (d.preav !== undefined) {
     DB.settings.preavviso = Math.max(0, Math.min(240, r0(num(el.value, 15))));
@@ -5347,12 +5394,6 @@ window.addEventListener('popstate', e => {
    abbastanza poco da non pesare su niente. */
 setInterval(controllaPromemoria, 30000);
 window.addEventListener('load', () => setTimeout(allineaIscrizione, 4000));
-
-/* La colonna stretta o larga: la scelta si ripristina prima del primo disegno,
-   così non si vede scattare. */
-try {
-  if (localStorage.getItem('forma.rail') === '1') $('#side').classList.add('stretta');
-} catch (e) {}
 
 load();
 migraPiano();
