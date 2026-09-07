@@ -2,7 +2,7 @@
    Tutti i dati stanno in localStorage, quindi qui basta conservare i file. */
 
 /* Alzare questo numero a ogni pubblicazione: le cache vecchie vengono buttate. */
-const VER = 'forma-2026.09.07.3';
+const VER = 'forma-2026.09.07.4';
 const SHELL = VER + '-shell';
 
 const FILES = [
@@ -16,10 +16,10 @@ const FILES = [
   './sync.js',
   './manifest.webmanifest',
   './font/inter-var.woff2',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable.png',
-  './icons/apple-touch-icon.png',
+  './icons/icon-192-v3.png',
+  './icons/icon-512-v3.png',
+  './icons/icon-maskable-v3.png',
+  './icons/apple-touch-icon-v3.png',
 ];
 
 self.addEventListener('install', e => {
@@ -45,8 +45,8 @@ self.addEventListener('push', e => {
   e.waitUntil(self.registration.showNotification(d.title || 'Forma', {
     body: d.body || '',
     tag: d.tag || 'forma',
-    icon: './icons/icon-192.png',
-    badge: './icons/icon-192.png',
+    icon: './icons/icon-192-v3.png',
+    badge: './icons/icon-192-v3.png',
     data: { url: d.url || './' }
   }));
 });
