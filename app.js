@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.06.9';
+const APP_VERSION = '2026.09.07.2';
 
 const KEY = 'forma.v1';
 
@@ -327,12 +327,12 @@ const schede = () => di('s');
    diventare grigi i turni esistenti al primo aggiornamento. Cambiano solo il
    nome mostrato e la tinta, che ora è tarata sul pannello viola scuro. */
 const COLORI_TURNO = [
-  { id: 'ambra',   n: 'Ambra',   v: '#F2B33D' },
-  { id: 'corallo', n: 'Magenta', v: '#F0508A' },
-  { id: 'viola',   n: 'Viola',   v: '#A78BFA' },
-  { id: 'azzurro', n: 'Indaco',  v: '#7C8CFF' },
-  { id: 'verde',   n: 'Verde',   v: '#34D399' },
-  { id: 'grigio',  n: 'Grigio',  v: '#8A82A6' }
+  { id: 'ambra',   n: 'Ambra',      v: '#E0A93C' },
+  { id: 'corallo', n: 'Terracotta', v: '#D06438' },
+  { id: 'viola',   n: 'Prugna',     v: '#9B6C8F' },
+  { id: 'azzurro', n: 'Ardesia',    v: '#5E8CB8' },
+  { id: 'verde',   n: 'Verde',      v: '#3E9E75' },
+  { id: 'grigio',  n: 'Grigio',     v: '#8A877C' }
 ];
 const coloreTurno = t => (COLORI_TURNO.find(c => c.id === (t && t.col)) || COLORI_TURNO[5]).v;
 
@@ -1593,18 +1593,48 @@ async function allineaIscrizione() {
  */
 const TABS_ORDINE = ['oggi', 'agenda', 'cibo', 'allena', 'report', 'settings'];
 
+/* Tre stati e non due: "sistema" è quello che serve davvero, perché il
+   telefono passa da solo allo scuro la sera e l'app deve seguirlo senza che
+   glielo si dica ogni volta. Chiaro e scuro restano per chi vuole decidere. */
+const TEMI = ['auto', 'chiaro', 'scuro'];
+const FONDI = { chiaro: '#F2F1EC', scuro: '#131311' };
+
+const temaSalvato = () => {
+  try { return TEMI.includes(localStorage.getItem('forma.tema')) ? localStorage.getItem('forma.tema') : 'auto'; }
+  catch (e) { return 'auto'; }
+};
+const temaEffettivo = t => (t !== 'auto' ? t
+  : (matchMedia('(prefers-color-scheme: dark)').matches ? 'scuro' : 'chiaro'));
+
 function applicaTema(t) {
-  document.documentElement.setAttribute('data-tema', t);
+  const vero = temaEffettivo(t);
+  document.documentElement.setAttribute('data-tema', vero);
   const m = document.querySelector('meta[name="theme-color"]');
-  if (m) m.setAttribute('content', t === 'scuro' ? '#08070E' : '#E9E7F0');
+  if (m) m.setAttribute('content', FONDI[vero]);
+  /* Il pulsante nella barra dice cosa succede se lo premi, non dove sei. */
+  const b = $('#btnTemaTop');
+  if (b) b.setAttribute('aria-label', vero === 'scuro' ? 'Passa al tema chiaro' : 'Passa al tema scuro');
+  $$('[data-tema-scelta]').forEach(x => x.classList.toggle('on', x.dataset.temaScelta === t));
 }
 
-function cambiaTema() {
-  const ora = document.documentElement.getAttribute('data-tema') === 'scuro' ? 'chiaro' : 'scuro';
-  try { localStorage.setItem('forma.tema', ora); } catch (e) {}
-  applicaTema(ora);
+function scegliTema(t) {
+  try { localStorage.setItem('forma.tema', t); } catch (e) {}
+  applicaTema(t);
   haptic();
 }
+
+/* Il tasto nella barra e la scorciatoia T fanno la cosa semplice: passano
+   all'altro tema. La scelta a tre sta nelle impostazioni, dove c'è lo spazio
+   per spiegarla. */
+function cambiaTema() {
+  scegliTema(temaEffettivo(temaSalvato()) === 'scuro' ? 'chiaro' : 'scuro');
+}
+
+/* Se il tema segue il sistema, il sistema può cambiarlo mentre l'app è aperta:
+   di sera succede da solo, e restare chiari a metà serata è un difetto. */
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (temaSalvato() === 'auto') applicaTema('auto');
+});
 
 function stringiColonna() {
   const side = $('#side');
@@ -2670,7 +2700,7 @@ function vistaReport() {
 
   /* ---------- andamento calorie ---------- */
   h += `<div class="panel"><div class="rep-h"><h3>Calorie giorno per giorno</h3>
-      <span class="hint">colonna magenta = oltre il bersaglio</span></div>`;
+      <span class="hint">colonna terracotta = oltre il bersaglio</span></div>`;
   if (giorni.length) {
     const ultimi = giorni.slice(-21);
     const maxK = Math.max(...ultimi.map(d => perGiorno[d].k), t.kcal) * 1.05;
@@ -3045,6 +3075,19 @@ function vistaSettings() {
     <button class="btn sec" data-act="ripristina">Ripristina da un backup</button>
     <p class="set-note">Il backup contiene tutto: diario, allenamenti, misure, bersagli.
       Senza sincronizzazione è l'unica copia che esiste oltre a questo dispositivo.</p>
+  </div>`;
+
+  /* L'aspetto sta prima delle cose tecniche: è la sola voce di questa pagina
+     che si cambia più di una volta nella vita dell'app. */
+  const tSalv = temaSalvato();
+  h += `<div class="panel"><div class="label">Aspetto</div>
+    <div class="seg" role="group" aria-label="Tema">
+      ${[['auto', 'Sistema'], ['chiaro', 'Chiaro'], ['scuro', 'Scuro']].map(([id, l]) =>
+        `<button data-tema-scelta="${id}" class="${tSalv === id ? 'on' : ''}">${l}</button>`).join('')}
+    </div>
+    <p class="set-note"><b>Sistema</b> segue l'iPhone: chiaro di giorno e scuro
+      la sera, senza toccare niente. Il tondo in alto a destra passa da uno
+      all'altro al volo, e sul Mac c'è il tasto <b>Tema</b> in fondo alla colonna.</p>
   </div>`;
 
   h += `<div class="panel"><div class="label">Questa app</div>
@@ -3854,7 +3897,8 @@ document.addEventListener('click', e => {
   if (d.sub) { SUB[view.name] = d.sub; render(); return; }
 
   /* ---------- barra del recupero ---------- */
-  if (b.id === 'btnTema') { cambiaTema(); return; }
+  if (b.id === 'btnTema' || b.id === 'btnTemaTop') { cambiaTema(); return; }
+  if (b.dataset.temaScelta) { scegliTema(b.dataset.temaScelta); return; }
   if (b.id === 'btnStringi') { stringiColonna(); return; }
 
   if (b.id === 'scanChiudi') { Scanner.chiudi(); return; }
@@ -4979,6 +5023,11 @@ document.addEventListener('visibilitychange', () => {
   } else {
     controllaAggiornamenti();
     controllaPromemoria();
+    /* Tornando all'app si ricontrolla anche il tema: su iPhone l'app resta in
+       sottofondo per ore, e non tutti i browser mandano l'evento del cambio
+       chiaro/scuro a una pagina che non si vede. Senza questo, la sera si
+       riapre ancora chiara finché non la si ricarica. */
+    if (temaSalvato() === 'auto') applicaTema('auto');
   }
   aggiornaPallino();
 });

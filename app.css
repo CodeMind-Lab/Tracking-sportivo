@@ -1,10 +1,11 @@
-/* Forma — tema viola su nero
-   Un colore solo che comanda, il viola, e tutto il resto in grigi neutri: è
-   quello che rende leggibile un pannello pieno di numeri per ore. Il bianco
-   pieno non è una superficie in nessuno dei due temi — di sera abbaglia e di
-   giorno appiattisce le schede una sull'altra. I nomi delle variabili dicono
-   il ruolo (primario, accento, evidenza) e non la tinta: cambiare tavolozza
-   deve costare due blocchi, non duecento regole. */
+/* Forma — grafite caldo, verde bosco, terracotta
+   Verde per quello che si fa, terracotta per quello che va guardato, e sotto
+   un grigio caldo: né il bianco da laboratorio né il nero assoluto, che sono
+   i due modi di stancare gli occhi di chi apre la stessa pagina ogni giorno.
+   I colori vivi restano ai dati — i macro, gli esiti, gli avvisi — e non
+   all'interfaccia. I nomi delle variabili dicono il ruolo (primario, accento,
+   evidenza, pannello) e non la tinta: cambiare tavolozza costa due blocchi,
+   non duecento regole. */
 
 /* Il carattere sta nel repository e non su un CDN: l'app deve aprirsi in
    aereo, e un font che arriva dalla rete lascerebbe il testo di ripiego. */
@@ -19,71 +20,69 @@
                  U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-:root, :root[data-tema="scuro"] {
-  /* Viola su nero. Il viola è l'unico colore che comanda: tutto il resto è
-     grigio, e i colori vivi restano ai dati (macro, esiti, avvisi). Il bianco
-     non è più una superficie, è solo inchiostro. */
-  --primario:#7C4DFF;
-  --primario-vivo:#9670FF;
-  --primario-tinta:rgba(124,77,255,.18);
-  --accento:#B79BFF;
-  --accento-tinta:rgba(167,139,250,.16);
-  --secondario:#A78BFA;
-  --evidenza:#F0508A;
-  --evidenza-scuro:#D83A72;
+:root, :root[data-tema="chiaro"] {
+  /* Verde bosco per quello che si fa, terracotta per quello che va guardato,
+     e sotto un grigio caldo invece che neutro: un pannello di numeri letto
+     ogni giorno stanca meno su carta che su bianco da laboratorio. */
+  --primario:#1F6B4D;
+  --primario-vivo:#175540;
+  --primario-tinta:rgba(31,107,77,.12);
+  --accento:#3E9E75;
+  --accento-tinta:rgba(62,158,117,.14);
+  --secondario:#2A7C5A;
+  --evidenza:#C0552F;
+  --evidenza-scuro:#A3401F;
 
-  /* superfici: nero con una punta di viola, così i grigi non virano al verde */
-  --fondo:#08070E;
-  --superficie:#121020;
-  --superficie-2:#191529;
+  /* superfici: carta calda, mai bianco pieno */
+  --fondo:#F2F1EC;
+  --superficie:#FBFAF6;
+  --superficie-2:#F5F4EE;
   --bg:var(--superficie);
   --bg-elev:var(--superficie-2);
-  --bg-elev2:#221D36;
-  --line:#2A2440;
-  --line-forte:#3B3355;
+  --bg-elev2:#E9E7DF;
+  --line:#DEDBD1;
+  --line-forte:#C5C1B4;
 
-  /* testo: tre gradini, tutti sopra la soglia di leggibilità sul fondo */
-  --txt:#F5F3FF;
-  --txt-dim:#C4BDD9;
-  --txt-faint:#9C94B5;
-  --txt-forte:#FFFFFF;
+  --txt:#1B1A16;
+  --txt-dim:#4C4A42;
+  --txt-faint:#64625A;
+  --txt-forte:#100F0C;
 
-  --secondario-txt:#C4B0FF;
-  --accento-txt:#CBB8FF;
+  --secondario-txt:#1A6047;
+  --accento-txt:#226B4F;
   --rail-barra:var(--primario);
-  /* La colonna non è il fondo: è un pannello, e si stacca alzandola di un
-     gradino invece che con una riga più marcata. */
-  --rail-bg:#100D1B;
-  --rail-line:#241E38;
-  /* Il viola pieno va bene su un pulsante, non su mezza schermata: i pannelli
-     grandi usano un viola profondo, e l'accento resta un accento. */
-  --pannello:#1E1638;
-  --pannello-line:#332A52;
+  --rail-bg:#E8E6DE;
+  --rail-line:#D3CFC3;
 
-  /* etichette: fondo tenue e testo dello stesso colore, mai riempimenti pieni */
-  --ok-bg:rgba(52,211,153,.18);   --ok-txt:#6EE7B7;
-  --no-bg:rgba(248,113,113,.18);  --no-txt:#FCA5A5;
-  --evidenza-txt:#FF8FB4;
+  /* Il pannello grande è inchiostro, non colore: fa da quadrante, e i colori
+     che ci stanno sopra restano quelli dei dati. */
+  --pannello:#23221D;
+  --pannello-line:#3A3830;
+
+  --ok-bg:rgba(27,122,80,.13);   --ok-txt:#14603D;
+  --no-bg:rgba(179,38,30,.11);   --no-txt:#932018;
+  --evidenza-txt:#A3401F;
 
   --accent:var(--evidenza);
-  --accent-soft:rgba(240,80,138,.18);
+  --accent-soft:rgba(192,85,47,.12);
   --prog:var(--primario);
-  --ok:#34D399;
-  --ok-tinta:rgba(52,211,153,.16);
-  --danger:#F87171;
+  --ok:#1B7A50;
+  --ok-tinta:rgba(27,122,80,.13);
+  --danger:#B3261E;
 
-  /* I tre macro sono dati, non decorazione: servono tre tinte che si
-     distinguono anche in una barra alta cinque pixel e anche di fianco. */
-  --prot:#B79BFF;
-  --carb:#F0508A;
-  --gras:#F2B33D;
+  /* I tre macro sono dati: terra, ardesia e ocra si distinguono anche in una
+     barra alta sette pixel, e nessuno dei tre è il verde dei comandi. */
+  --prot:#C0552F;
+  --carb:#4E7CA8;
+  --gras:#B8862B;
 
-  --radius:16px;
-  --raggio-xl:22px;
+  /* Angoli più stretti di prima: uno strumento di lavoro, non una scheda. */
+  --radius:12px;
+  --raggio-xl:16px;
   --pillola:999px;
-  --shadow-sm:0 1px 2px rgba(0,0,0,.45);
-  --shadow-md:0 6px 18px -8px rgba(0,0,0,.7);
-  --shadow-lg:0 16px 36px -16px rgba(0,0,0,.8);
+  --shadow-sm:0 1px 2px rgba(27,26,22,.06);
+  --shadow-md:0 4px 14px -6px rgba(27,26,22,.20);
+  --shadow-lg:0 14px 30px -14px rgba(27,26,22,.32);
 
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bot:env(safe-area-inset-bottom,0px);
@@ -91,64 +90,65 @@
   --tabbar-h:58px;
   --rail:240px;
 
-  color-scheme:dark;
+  color-scheme:light;
 }
 
-/* Il tema chiaro cambia solo i valori, non una regola di impaginazione. Anche
-   qui il bianco pieno non c'è: le schede stanno su un grigio caldo, che di
-   giorno stanca meno e non spara in faccia la sera. */
-:root[data-tema="chiaro"] {
-  --primario:#5B2ED6;
-  --primario-vivo:#4A22B8;
-  --primario-tinta:rgba(91,46,214,.11);
-  --accento:#8B6BF0;
-  --accento-tinta:rgba(139,107,240,.13);
-  --secondario:#6D45D9;
-  --evidenza:#D6266A;
-  --evidenza-scuro:#B01554;
+/* Lo scuro cambia i valori, non una regola di impaginazione. Il fondo è un
+   carbone caldo e non il nero pieno: sul nero assoluto i bordi delle schede
+   spariscono e resta un elenco che galleggia nel vuoto. */
+:root[data-tema="scuro"] {
+  --primario:#1F6B4D;
+  --primario-vivo:#2A8862;
+  --primario-tinta:rgba(62,158,117,.18);
+  --accento:#52C495;
+  --accento-tinta:rgba(82,196,149,.16);
+  --secondario:#3E9E75;
+  --evidenza:#C0552F;
+  --evidenza-scuro:#A3401F;
 
-  --fondo:#E9E7F0;
-  --superficie:#F6F5FA;
-  --superficie-2:#EFEDF6;
+  --fondo:#131311;
+  --superficie:#1C1B18;
+  --superficie-2:#232220;
   --bg:var(--superficie);
   --bg-elev:var(--superficie-2);
-  --bg-elev2:#E4E1EE;
-  --line:#D7D3E4;
-  --line-forte:#BFB9D2;
+  --bg-elev2:#2C2B27;
+  --line:#33322D;
+  --line-forte:#47463F;
 
-  --txt:#16121F;
-  --txt-dim:#443C58;
-  --txt-faint:#5C5474;
-  --txt-forte:#0F0B18;
+  --txt:#F4F2EC;
+  --txt-dim:#C3C0B6;
+  --txt-faint:#9C998D;
+  --txt-forte:#FFFFFF;
 
-  --secondario-txt:#5B2ED6;
-  --accento-txt:#5A3AB8;
-  --rail-barra:var(--primario);
-  --rail-bg:#DFDCEB;
-  --rail-line:#CBC6DC;
-  --pannello:#241A47;
-  --pannello-line:#3A2C68;
+  --secondario-txt:#6FD3A2;
+  --accento-txt:#8BDCB6;
+  --rail-barra:var(--accento);
+  --rail-bg:#1A1916;
+  --rail-line:#2E2D28;
 
-  --ok-bg:rgba(4,120,87,.13);    --ok-txt:#046B4E;
-  --no-bg:rgba(190,24,60,.12);   --no-txt:#A5133C;
-  --evidenza-txt:#AE1256;
+  --pannello:#20201B;
+  --pannello-line:#38372F;
+
+  --ok-bg:rgba(52,201,138,.18);   --ok-txt:#6EDCA8;
+  --no-bg:rgba(240,115,106,.18);  --no-txt:#F5A29B;
+  --evidenza-txt:#F0906A;
 
   --accent:var(--evidenza);
-  --accent-soft:rgba(214,38,106,.12);
-  --prog:var(--primario);
-  --ok:#059669;
-  --ok-tinta:rgba(5,150,105,.13);
-  --danger:#C01B33;
+  --accent-soft:rgba(192,85,47,.20);
+  --prog:var(--accento);
+  --ok:#34C98A;
+  --ok-tinta:rgba(52,201,138,.16);
+  --danger:#F0736A;
 
-  --prot:#6D45D9;
-  --carb:#D6266A;
-  --gras:#B07407;
+  --prot:#E08050;
+  --carb:#7FA8D4;
+  --gras:#E0B355;
 
-  --shadow-sm:0 1px 2px rgba(22,18,31,.07);
-  --shadow-md:0 5px 16px -7px rgba(22,18,31,.22);
-  --shadow-lg:0 14px 32px -16px rgba(22,18,31,.34);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:0 6px 18px -8px rgba(0,0,0,.65);
+  --shadow-lg:0 16px 34px -16px rgba(0,0,0,.75);
 
-  color-scheme:light;
+  color-scheme:dark;
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -169,14 +169,14 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 /* Il monogramma sostituisce il logo a colori fissi: è testo dentro un
    quadrato, quindi segue il tema e resta nitido a qualunque densità. */
 .mk{
-  width:34px;height:34px;flex:none;border-radius:10px;
+  width:34px;height:34px;flex:none;border-radius:9px;
   display:grid;place-items:center;
   background:var(--primario);color:#fff;
   font-size:17px;font-weight:800;line-height:1;letter-spacing:-.02em;
-  box-shadow:0 2px 10px -3px var(--primario);
+  box-shadow:var(--shadow-sm);
 }
 .marchio{display:flex;align-items:center;gap:10px}
-.marchio .mk{width:30px;height:30px;font-size:15px;border-radius:9px}
+.marchio .mk{width:30px;height:30px;font-size:15px;border-radius:8px}
 .marchio b{font-size:18px;font-weight:800;letter-spacing:-.025em;color:var(--txt-forte)}
 
 /* ---------- barra superiore ---------- */
@@ -229,9 +229,9 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke
   position:fixed;right:18px;z-index:41;
   bottom:calc(var(--tabbar-h) + var(--safe-bot) + 16px);
   width:54px;height:54px;border-radius:50%;
-  background:var(--evidenza);color:#fff;
+  background:var(--primario);color:#fff;
   display:grid;place-items:center;
-  box-shadow:0 6px 20px rgba(255,102,76,.42);
+  box-shadow:0 8px 22px -8px rgba(27,26,22,.55);
 }
 #fab svg{width:26px;height:26px;stroke-width:2.5}
 #fab:active{transform:scale(.92)}
@@ -286,7 +286,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 .btn{
   display:block;width:100%;padding:14px;border-radius:12px;text-align:center;
   font-size:15.5px;font-weight:750;background:var(--primario);color:#fff;margin-top:13px;
-  box-shadow:0 4px 16px -6px var(--primario);
+  box-shadow:var(--shadow-sm);
 }
 .btn:active{background:var(--primario-vivo)}
 .btn.sec{background:var(--superficie);color:var(--txt-forte);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
@@ -331,7 +331,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   outline:none;border-color:var(--secondario);background:var(--superficie);
   box-shadow:0 0 0 3px rgba(15,144,185,.13);
 }
-.seg{display:flex;gap:5px;background:var(--bg-elev2);padding:4px;border-radius:11px}
+.seg{display:flex;gap:5px;background:var(--bg-elev2);padding:4px;border-radius:10px}
 .seg button{
   flex:1;padding:8px 4px;border-radius:8px;font-size:12px;font-weight:650;color:var(--txt-dim);
   white-space:nowrap;
@@ -403,7 +403,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 /* ---------- striscia dei giorni ---------- */
 .weekstrip{display:flex;gap:5px;margin-bottom:12px}
 .weekstrip button{
-  flex:1;min-width:0;padding:8px 2px 7px;border-radius:11px;
+  flex:1;min-width:0;padding:8px 2px 7px;border-radius:9px;
   background:var(--bg-elev2);border:1px solid var(--line);
   font-size:11.5px;font-weight:750;color:var(--txt-dim);
   display:flex;flex-direction:column;align-items:center;gap:4px;
@@ -429,7 +429,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 /* ---------- riepilogo calorie ---------- */
 .kcal-card{
   background:var(--pannello);border:1px solid var(--pannello-line);
-  border-radius:18px;padding:16px 16px 14px;color:#fff;
+  border-radius:var(--raggio-xl);padding:16px 16px 14px;color:#fff;
   box-shadow:var(--shadow-md);
 }
 .kcal-top{display:flex;align-items:center;gap:16px}
@@ -595,8 +595,8 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 
 /* quando il turno del giorno non segue la settimana */
 .kcal-side .ecc{
-  font-size:10.5px;font-weight:700;color:var(--accento);
-  background:rgba(108,211,240,.16);padding:2px 7px;border-radius:99px;
+  font-size:10.5px;font-weight:700;color:#8BDCB6;
+  background:rgba(82,196,149,.18);padding:2px 7px;border-radius:99px;
 }
 
 /* la riga selezionata nel pannello di scelta */
@@ -641,7 +641,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 }
 .ph-top{display:flex;align-items:center;gap:11px}
 .ph-badge{
-  width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
+  width:38px;height:38px;border-radius:10px;flex:none;display:grid;place-items:center;
   background:var(--accento-tinta);color:var(--accento-txt);
   font-size:11px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
 }
@@ -701,7 +701,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .pm.ok .pml b,.pm.ok .pmh b{color:var(--txt-dim);font-weight:700}
 
 .ph-cta{
-  display:block;width:100%;margin-top:12px;padding:11px;border-radius:11px;
+  display:block;width:100%;margin-top:12px;padding:11px;border-radius:10px;
   background:var(--evidenza);color:#fff;font-size:14px;font-weight:750;text-align:center;
   box-shadow:0 3px 12px rgba(255,102,76,.28);
 }
@@ -785,7 +785,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .adesso.fatto{border-left-color:var(--ok);display:flex;align-items:center;gap:11px}
 .ad-h{display:flex;align-items:center;gap:11px}
 .ad-i{
-  width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;
+  width:38px;height:38px;flex:none;border-radius:10px;display:grid;place-items:center;
   background:var(--accento-tinta);font-size:18px;line-height:1;
 }
 .ad-t{flex:1;min-width:0}
@@ -845,7 +845,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 /* ---------- ricerca alimenti ---------- */
 .searchbar{
   display:flex;align-items:center;gap:9px;
-  background:var(--bg-elev2);border:1px solid var(--line);border-radius:11px;
+  background:var(--bg-elev2);border:1px solid var(--line);border-radius:10px;
   padding:10px 12px;margin-bottom:12px;
 }
 .searchbar:focus-within{background:var(--superficie);border-color:var(--secondario);box-shadow:0 0 0 3px rgba(15,144,185,.13)}
@@ -881,7 +881,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
 .qty .qmac b{color:var(--txt-forte);font-weight:750}
 .pads{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .pads button{
-  padding:12px 0;border-radius:11px;background:var(--bg-elev2);border:1px solid var(--line);
+  padding:12px 0;border-radius:10px;background:var(--bg-elev2);border:1px solid var(--line);
   font-size:16px;font-weight:750;color:var(--txt-forte);font-variant-numeric:tabular-nums;
 }
 .pads button:active{background:var(--secondario);color:#fff;border-color:var(--secondario)}
@@ -979,7 +979,7 @@ textarea.notes:focus,.field input:focus,.txtin:focus{
   bottom:calc(var(--tabbar-h) + var(--safe-bot) + 12px);
   display:flex;align-items:center;gap:11px;
   background:var(--pannello);border:1px solid var(--pannello-line);
-  color:#fff;border-radius:14px;
+  color:#fff;border-radius:12px;
   padding:11px 13px;box-shadow:var(--shadow-lg);
   max-width:736px;margin:0 auto;
 }
@@ -1474,6 +1474,10 @@ table.dt .sub{display:block;font-size:10.5px;color:var(--txt-faint);font-weight:
     transition:margin-left .26s cubic-bezier(.4,0,.2,1);
   }
   .wrap{max-width:1180px;margin:0 auto}
+
+  /* Sul Mac il tema si cambia dalla colonna, dove il pulsante ha anche il
+     nome scritto: quello tondo nella barra servirebbe solo a ripeterlo. */
+  #btnTemaTop{display:none}
 
   #fab{right:30px;bottom:30px;width:52px;height:52px}
   #rest{left:auto;right:30px;bottom:30px;width:340px;margin:0}

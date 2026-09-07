@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Forma</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#08070E">
+<meta name="theme-color" content="#F2F1EC">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,15 +20,20 @@
      tema scuro entri in vigore. */
   (function () {
     try {
-      /* Il tema di casa è lo scuro: è quello per cui è disegnata la tavolozza.
-         Il chiaro resta per chi apre l'app al sole, ma va chiesto. */
-      var t = localStorage.getItem('forma.tema') || 'scuro';
-      document.documentElement.setAttribute('data-tema', t);
-      if (t === 'chiaro') {
-        document.write('<meta name="theme-color" content="#E9E7F0">');
+      /* Di serie il tema segue il sistema: l'iPhone passa allo scuro la sera
+         e l'app deve seguirlo senza che glielo si dica. */
+      var scelto = localStorage.getItem('forma.tema');
+      if (scelto !== 'chiaro' && scelto !== 'scuro') {
+        scelto = matchMedia('(prefers-color-scheme: dark)').matches ? 'scuro' : 'chiaro';
       }
+      document.documentElement.setAttribute('data-tema', scelto);
+      /* Si aggiorna il meta che sta qui sopra invece di scriverne un secondo:
+         con due, vince l'ultimo, e quello aggiornato dal codice sarebbe il
+         primo — cioè quello ignorato. */
+      document.querySelector('meta[name="theme-color"]')
+        .setAttribute('content', scelto === 'scuro' ? '#131311' : '#F2F1EC');
     } catch (e) {
-      document.documentElement.setAttribute('data-tema', 'scuro');
+      document.documentElement.setAttribute('data-tema', 'chiaro');
     }
   })();
 </script>
@@ -69,6 +74,9 @@
     <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
   </button>
   <h1 id="topTitle">Forma</h1>
+  <button class="icon-btn" id="btnTemaTop" aria-label="Cambia tema">
+    <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
+  </button>
   <button class="icon-btn" id="settingsBtn" aria-label="Impostazioni">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 14a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9h-.2a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 8a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5v-.2a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V10a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1z"/></svg>
   </button>
