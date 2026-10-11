@@ -10,7 +10,7 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.09.08.8';
+const APP_VERSION = '2026.10.11.1';
 
 const KEY = 'forma.v1';
 
@@ -58,6 +58,7 @@ function save(now) {
         v: 1, items: DB.items, settings: DB.settings,
         sync: DB.sync, dirty: DB.dirty, graves: DB.graves
       }));
+      window.dispatchEvent(new Event('forma:data-changed'));
     } catch (e) {
       toast('Memoria piena: esporta un backup e libera spazio');
     }

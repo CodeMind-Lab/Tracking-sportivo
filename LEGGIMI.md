@@ -576,3 +576,10 @@ arrivati dalla scansione — invece sì.
 ---
 
 CodeMind.Lab
+
+
+## Collegamento a CodeMind Projects
+
+Da CodeMind Projects, apri **Sport → Collega Forma**. Forma mostra un’anteprima: puoi condividere il riepilogo degli allenamenti e, facoltativamente, applicare i turni indicati per la settimana. Il collegamento conserva il diario alimentare, le misure, i programmi e tutti i dati di sincronizzazione nell’app originale.
+
+Il riepilogo si aggiorna mentre le due finestre sono aperte. Le attività si aggiungono all’Agenda da Projects con un’anteprima; le correzioni dei consuntivi importati si effettuano in Agenda. Le durate e gli orari mancanti non vengono inventati. Usa il browser che contiene già il tuo archivio Forma, oppure attendi la sua normale sincronizzazione prima di confermare.

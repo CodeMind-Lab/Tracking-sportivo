@@ -2,7 +2,7 @@
    Tutti i dati stanno in localStorage, quindi qui basta conservare i file. */
 
 /* Alzare questo numero a ogni pubblicazione: le cache vecchie vengono buttate. */
-const VER = 'forma-2026.09.08.8';
+const VER = 'forma-2026.10.11.1';
 const SHELL = VER + '-shell';
 
 const FILES = [
@@ -14,6 +14,7 @@ const FILES = [
   './scanner.js',
   './app.js',
   './sync.js',
+  './codemind-bridge.js',
   './manifest.webmanifest',
   './font/inter-var.woff2',
   './icons/icon-192-v3.png',
