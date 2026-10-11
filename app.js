@@ -10,7 +10,8 @@
 
 /* Da alzare a ogni pubblicazione: si legge nelle impostazioni e dice a colpo
    d'occhio se il telefono sta usando i file nuovi o quelli vecchi. */
-const APP_VERSION = '2026.10.11.1';
+const APP_VERSION = '2026.10.12.1';
+const PROJECTS_EMBEDDED = globalThis.FORMA_PROJECTS_HOST === true && window.parent !== window;
 
 const KEY = 'forma.v1';
 
@@ -34,6 +35,7 @@ const DB = {
 };
 
 function load() {
+  if (PROJECTS_EMBEDDED) return;
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) {
@@ -53,6 +55,7 @@ let saveTimer = null;
 function save(now) {
   clearTimeout(saveTimer);
   const write = () => {
+    if (PROJECTS_EMBEDDED) { window.dispatchEvent(new Event('forma:data-changed')); return; }
     try {
       localStorage.setItem(KEY, JSON.stringify({
         v: 1, items: DB.items, settings: DB.settings,
@@ -63,7 +66,7 @@ function save(now) {
       toast('Memoria piena: esporta un backup e libera spazio');
     }
   };
-  if (now) write(); else saveTimer = setTimeout(write, 400);
+  if (now || PROJECTS_EMBEDDED) write(); else saveTimer = setTimeout(write, 400);
 }
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -4200,7 +4203,7 @@ function esporta(cosa) {
 */
 
 const FILE_APP = ['./', 'index.html', 'app.css', 'data.js', 'importa.js',
-                  'scanner.js', 'app.js', 'sync.js', 'manifest.webmanifest'];
+                  'scanner.js', 'app.js', 'sync.js', 'codemind-bridge.js', 'forma-model.js', 'codemind-workspace.js', 'manifest.webmanifest'];
 
 async function aggiornaApp(bottone) {
   if (!navigator.onLine) {
@@ -5538,14 +5541,12 @@ window.addEventListener('popstate', e => {
 setInterval(controllaPromemoria, 30000);
 window.addEventListener('load', () => setTimeout(allineaIscrizione, 4000));
 
-load();
-migraPiano();
-migraElencoTurni();
-migraTurni();
-history.replaceState(view, '', '');
-render();
+if (!PROJECTS_EMBEDDED) {
+  load(); migraPiano(); migraElencoTurni(); migraTurni();
+  history.replaceState(view, '', ''); render();
+}
 
-if ('serviceWorker' in navigator) {
+if (!PROJECTS_EMBEDDED && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then(reg => {
       /* Quando ne arriva uno nuovo lo si dice, invece di lasciare che il

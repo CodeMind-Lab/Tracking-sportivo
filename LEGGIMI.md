@@ -583,3 +583,12 @@ CodeMind.Lab
 Da CodeMind Projects, apri **Sport → Collega Forma**. Forma mostra un’anteprima: puoi condividere il riepilogo degli allenamenti e, facoltativamente, applicare i turni indicati per la settimana. Il collegamento conserva il diario alimentare, le misure, i programmi e tutti i dati di sincronizzazione nell’app originale.
 
 Il riepilogo si aggiorna mentre le due finestre sono aperte. Le attività si aggiungono all’Agenda da Projects con un’anteprima; le correzioni dei consuntivi importati si effettuano in Agenda. Le durate e gli orari mancanti non vengono inventati. Usa il browser che contiene già il tuo archivio Forma, oppure attendi la sua normale sincronizzazione prima di confermare.
+
+
+### Forma completa dentro Projects
+
+In Projects apri **Forma → Collega Forma completa** e conferma **Collega tutto a Projects** nell’archivio che usi già. Puoi poi modificare dieta e giornate tipo, diario alimentare, cibi, combinazioni, lista della spesa, schede, esercizi, sessioni, misure, report, agenda e preferenze nelle stesse schermate di Forma, direttamente dentro Projects. La sincronizzazione dell’editor integrato usa l’account Projects; le credenziali di Forma non vengono trasferite.
+
+I turni con una data inseriti in Projects sono la sorgente condivisa: Apertura, Chiusura, Notte e OFF si applicano automaticamente al giorno di Forma, mantenendo pasti, acqua e passi. Per cambiare un turno nell’editor integrato si apre la scheda Turni di Projects. L’ora di tragitto rimane nell’Agenda Projects.
+
+Le due app indipendenti si scambiano modifiche mentre la finestra di collegamento è aperta. Se le utilizzi separatamente, premi **Allinea con Forma** in Projects: vengono riunite le modifiche indipendenti; modifiche contemporanee dello stesso campo si fermano e mantengono una copia da recuperare. Il salvataggio dentro Projects funziona anche senza tenere aperta Forma. Esporta un backup prima di sostituire o svuotare un archivio.
